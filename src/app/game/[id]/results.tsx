@@ -59,7 +59,7 @@ export default function Results({
                   {gameResult.nickname}
                 </p>
                 {participant.id === gameResult.participant_id && (
-                  <p className="text-sm text-green-300 mt-1">That's you!</p>
+                  <p className="text-sm text-green-300 mt-1">Eres tu!</p>
                 )}
               </div>
               <div className="text-right">
