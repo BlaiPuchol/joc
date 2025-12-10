@@ -1,75 +1,62 @@
 'use client'
 
-import { QuizSet, supabase } from '@/types/types'
-import { useEffect, useState } from 'react'
+import { supabase } from '@/types/types'
+import { useState } from 'react'
 
-export default function Home() {
-  const [quizSet, setQuizSet] = useState<QuizSet[]>([])
+export default function HostDashboard() {
+  const [isCreating, setIsCreating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const getQuizSets = async () => {
-      const { data, error } = await supabase
-        .from('quiz_sets')
-        .select(`*, questions(*, choices(*))`)
-        .order('created_at', { ascending: false })
-      if (error) {
-        alert('Failed to fetch quiz sets')
+  const startGame = async () => {
+    setIsCreating(true)
+    setError(null)
+
+    const { data: sessionData } = await supabase.auth.getSession()
+    if (!sessionData.session) {
+      const { error: anonError } = await supabase.auth.signInAnonymously()
+      if (anonError) {
+        setError(anonError.message)
+        setIsCreating(false)
         return
       }
-      setQuizSet(data)
-    }
-    getQuizSets()
-  }, [])
-
-  const startGame = async (quizSetId: string) => {
-    const { data: sessionData, error: sessionError } =
-      await supabase.auth.getSession()
-
-    if (!sessionData.session) {
-      await supabase.auth.signInAnonymously()
     }
 
-    const { data, error } = await supabase
+    const { data, error: gameError } = await supabase
       .from('games')
-      .insert({
-        quiz_set_id: quizSetId,
-      })
+      .insert({})
       .select()
       .single()
-    if (error) {
-      console.error(error)
-      alert('Failed to start game')
+
+    if (gameError || !data) {
+      setError(gameError?.message ?? 'Failed to start game')
+      setIsCreating(false)
       return
     }
 
-    const gameId = data.id
-    window.open(`/host/game/${gameId}`, '_blank', 'noopener,noreferrer')
+    window.open(`/host/game/${data.id}`, '_blank', 'noopener,noreferrer')
+    setIsCreating(false)
   }
 
   return (
-    <>
-      {quizSet.map((quizSet) => (
-        <div
-          key={quizSet.id}
-          className="flex justify-start shadow my-4 mx-2 rounded"
-        >
-          <img className="h-28" src="/default.png" alt="default quiz image" />
-          <div className="p-2 flex flex-col justify-between items-stretch flex-grow">
-            <h2 className="font-bold">{quizSet.name}</h2>
-            <div className="flex justify-between items-end">
-              <div>{quizSet.questions.length} questions</div>
-              <div>
-                <button
-                  className="bg-green-500 text-white py-1 px-4 rounded"
-                  onClick={() => startGame(quizSet.id)}
-                >
-                  Start Game
-                </button>
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center px-4">
+      <div className="bg-black/70 border border-white/10 rounded-3xl p-10 w-full max-w-3xl space-y-6">
+        <div>
+          <p className="text-sm uppercase tracking-[0.4em] text-white/40">Live Betting Game</p>
+          <h1 className="text-4xl font-bold mt-3">Launch a new room</h1>
+          <p className="text-white/70 mt-3">
+            Create a fresh room for your audience. Each round walks through leader
+            selection, betting, action, and resolution.
+          </p>
         </div>
-      ))}
-    </>
+        {error && <p className="text-red-400 text-sm">{error}</p>}
+        <button
+          onClick={startGame}
+          disabled={isCreating}
+          className="w-full bg-green-500 text-black font-bold py-4 rounded-2xl text-xl hover:bg-green-400 disabled:opacity-60"
+        >
+          {isCreating ? 'Creating room...' : 'Create game room'}
+        </button>
+      </div>
+    </div>
   )
 }

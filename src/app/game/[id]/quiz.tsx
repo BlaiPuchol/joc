@@ -1,206 +1,192 @@
-import { QUESTION_ANSWER_TIME, TIME_TIL_CHOICE_REVEAL } from '@/constants'
-import { Choice, Question, supabase } from '@/types/types'
-import { useState, useEffect } from 'react'
-import { ColorFormat, CountdownCircleTimer } from 'react-countdown-circle-timer'
+import { GameRound, Participant, RoundVote, Team } from '@/types/types'
+import { useMemo } from 'react'
 
-export default function Quiz({
-  question: question,
-  questionCount: questionCount,
-  participantId: playerId,
-  isAnswerRevealed,
+type Phase =
+  | 'lobby'
+  | 'leader_selection'
+  | 'voting'
+  | 'action'
+  | 'resolution'
+  | 'results'
+
+export default function Challenge({
+  phase,
+  participant,
+  round,
+  teams,
+  votes,
+  playerVoteTeamId,
+  onVote,
 }: {
-  question: Question
-  questionCount: number
-  participantId: string
-  isAnswerRevealed: boolean
+  phase: Phase
+  participant: Participant
+  round: GameRound | null
+  teams: Team[]
+  votes: RoundVote[]
+  playerVoteTeamId: string | null
+  onVote: (teamId: string) => void
 }) {
-  const [chosenChoice, setChosenChoice] = useState<Choice | null>(null)
+  const losingTeamId = round?.losing_team_id ?? null
 
-  const [hasShownChoices, setHasShownChoices] = useState(false)
+  const groupedVotes = useMemo(() => {
+    return teams.map((team) => ({
+      team,
+      voters: votes.filter((vote) => vote.team_id === team.id),
+    }))
+  }, [teams, votes])
 
-  const [questionStartTime, setQuestionStartTime] = useState(Date.now())
-
-  useEffect(() => {
-    setChosenChoice(null)
-    setHasShownChoices(false)
-  }, [question.id])
-
-  const answer = async (choice: Choice) => {
-    setChosenChoice(choice)
-
-    const now = Date.now()
-    const score = !choice.is_correct
-      ? 0
-      : 1000 -
-        Math.round(
-          Math.max(
-            0,
-            Math.min((now - questionStartTime) / QUESTION_ANSWER_TIME, 1)
-          ) * 1000
-        )
-
-    const { error } = await supabase.from('answers').insert({
-      participant_id: playerId,
-      question_id: question.id,
-      choice_id: choice.id,
-      score,
-    })
-    if (error) {
-      setChosenChoice(null)
-      alert(error.message)
-    }
+  const statusCopy: Record<Phase, string> = {
+    lobby: 'Waiting for the host to begin the first challenge.',
+    leader_selection: 'Waiting for leaders to choose who competes...',
+    voting: 'Place your bet on the team you think will lose!',
+    action: 'Challenge in progress... Good luck!',
+    resolution: 'Results are in!',
+    results: 'Game finished.',
   }
 
+  const renderVotingGrid = () => (
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 px-4 pb-12 max-w-4xl mx-auto">
+      {teams.map((team) => (
+        <button
+          key={team.id}
+          onClick={() => onVote(team.id)}
+          disabled={phase !== 'voting'}
+          style={{ backgroundColor: team.color_hex }}
+          className={`rounded-2xl text-white font-semibold text-2xl py-8 px-6 transition shadow-lg shadow-black/20 border border-white/10
+            ${
+              playerVoteTeamId === team.id
+                ? 'ring-4 ring-white'
+                : 'ring-0'
+            }
+            ${phase !== 'voting' ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-90'}`}
+        >
+          <div className="flex justify-between items-center">
+            <span>{team.name}</span>
+            {playerVoteTeamId === team.id && (
+              <span className="text-sm font-normal uppercase tracking-wide">
+                Your bet
+              </span>
+            )}
+          </div>
+        </button>
+      ))}
+    </div>
+  )
+
   return (
-    <div className="h-screen flex flex-col items-stretch bg-slate-900 relative">
-      <div className="text-center">
-        <h2 className="pb-4 text-2xl bg-white font-bold mx-4 my-12 p-4 rounded inline-block md:text-3xl md:px-24">
-          {question.body}
-        </h2>
+    <div className="min-h-screen flex flex-col text-white">
+      <div className="text-center pt-12 pb-6 px-4">
+        <p className="text-sm uppercase tracking-[0.3em] text-white/60">Live Challenge</p>
+        <h1 className="text-3xl font-bold mt-2">Hey {participant.nickname}!</h1>
+        <p className="mt-4 text-lg text-white/80">{statusCopy[phase]}</p>
+        {round?.leader_notes && (
+          <div className="mt-6 inline-block bg-white/10 border border-white/15 rounded-xl px-6 py-3 text-lg">
+            Participants: <span className="font-semibold">{round.leader_notes}</span>
+          </div>
+        )}
       </div>
 
-      {!isAnswerRevealed && chosenChoice && (
-        <div className="flex-grow flex justify-center items-center">
-          <div className="text-white text-2xl text-center p-4">
-            Wait for others to answer...
+      {phase === 'voting' && renderVotingGrid()}
+
+      {phase === 'leader_selection' && (
+        <MessageBlock text="Waiting for leaders to choose players..." />
+      )}
+
+      {phase === 'lobby' && (
+        <MessageBlock text="Sit tight while the host sets things up." />
+      )}
+
+      {phase === 'action' && (
+        <MessageBlock text="Challenge in progress... bets are locked!" />
+      )}
+
+      {phase === 'resolution' && (
+        <div className="flex-grow w-full px-4 pb-16">
+          <div className="text-center mb-8">
+            {losingTeamId && playerVoteTeamId === losingTeamId && (
+              <p className="text-2xl font-semibold text-green-400">
+                You guessed correctly! 🎉
+              </p>
+            )}
+            {losingTeamId && playerVoteTeamId && playerVoteTeamId !== losingTeamId && (
+              <p className="text-2xl font-semibold text-red-400">
+                Not this time — better luck in the next round!
+              </p>
+            )}
+            {!losingTeamId && (
+              <p className="text-xl text-white/70">
+                Waiting for the host to announce the losing team.
+              </p>
+            )}
           </div>
+          <TransparencyPanel
+            groupedVotes={groupedVotes}
+            losingTeamId={losingTeamId}
+          />
         </div>
       )}
+    </div>
+  )
+}
 
-      {!hasShownChoices && !isAnswerRevealed && (
-        <div className="flex-grow text-transparent flex justify-center">
-          <CountdownCircleTimer
-            onComplete={() => {
-              setHasShownChoices(true)
-              setQuestionStartTime(Date.now())
-            }}
-            isPlaying
-            duration={TIME_TIL_CHOICE_REVEAL / 1000}
-            colors={['#fff', '#fff', '#fff', '#fff']}
-            trailColor={'transparent' as ColorFormat}
-            colorsTime={[7, 5, 2, 0]}
-          >
-            {({ remainingTime }) => remainingTime}
-          </CountdownCircleTimer>
-        </div>
-      )}
-
-      {hasShownChoices && !isAnswerRevealed && !chosenChoice && (
-        <div className="flex-grow flex flex-col items-stretch">
-          <div className="flex-grow"></div>
-          <div className="flex justify-between flex-wrap p-4">
-            {question.choices.map((choice, index) => (
-              <div key={choice.id} className="w-1/2 p-1">
-                <button
-                  onClick={() => answer(choice)}
-                  disabled={chosenChoice !== null || isAnswerRevealed}
-                  className={`px-4 py-6 w-full text-xl rounded text-white flex justify-between md:text-2xl md:font-bold
-              ${
-                index === 0
-                  ? 'bg-red-500'
-                  : index === 1
-                  ? 'bg-blue-500'
-                  : index === 2
-                  ? 'bg-yellow-500'
-                  : 'bg-green-500'
-              }
-              ${isAnswerRevealed && !choice.is_correct ? 'opacity-60' : ''}
-             `}
-                >
-                  <div>{choice.body}</div>
-                  {isAnswerRevealed && (
-                    <div>
-                      {choice.is_correct && (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={5}
-                          stroke="currentColor"
-                          className="w-6 h-6"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="m4.5 12.75 6 6 9-13.5"
-                          />
-                        </svg>
-                      )}
-                      {!choice.is_correct && (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={5}
-                          stroke="currentColor"
-                          className="w-6 h-6"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M6 18 18 6M6 6l12 12"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                  )}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {isAnswerRevealed && (
-        <div className="flex-grow flex justify-center items-center flex-col">
-          <h2 className="text-white text-2xl text-center pb-2">
-            {chosenChoice?.is_correct ? 'Correct' : 'Incorrect'}
-          </h2>
+function TransparencyPanel({
+  groupedVotes,
+  losingTeamId,
+}: {
+  groupedVotes: { team: Team; voters: RoundVote[] }[]
+  losingTeamId: string | null
+}) {
+  return (
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+      {groupedVotes.map(({ team, voters }) => {
+        const sortedVoters = [...voters].sort((a, b) =>
+          a.participant.nickname.localeCompare(b.participant.nickname)
+        )
+        return (
           <div
-            className={`text-white rounded-full p-4  ${
-              chosenChoice?.is_correct ? 'bg-green-500' : 'bg-red-500'
-            }`}
+            key={team.id}
+            className="rounded-2xl border px-4 py-4 bg-white/5 backdrop-blur border-white/10"
           >
-            {chosenChoice?.is_correct && (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={5}
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="m4.5 12.75 6 6 9-13.5"
-                />
-              </svg>
-            )}
-            {!chosenChoice?.is_correct && (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={5}
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18 18 6M6 6l12 12"
-                />
-              </svg>
-            )}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm uppercase tracking-wide text-white/60">
+                  {team.name}
+                </p>
+                <p className="text-3xl font-bold" style={{ color: team.color_hex }}>
+                  {voters.length} vote{voters.length === 1 ? '' : 's'}
+                </p>
+              </div>
+              {losingTeamId === team.id && (
+                <span className="px-3 py-1 rounded-full text-sm bg-white/20 font-semibold">
+                  Losing team
+                </span>
+              )}
+            </div>
+            <div className="mt-4 space-y-2 max-h-48 overflow-y-auto pr-2">
+              {sortedVoters.length === 0 && (
+                <p className="text-white/50 text-sm">No bets</p>
+              )}
+              {sortedVoters.map((vote) => (
+                <div
+                  key={vote.id}
+                  className="bg-white/10 rounded-lg px-3 py-2 text-sm"
+                >
+                  {vote.participant.nickname}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })}
+    </div>
+  )
+}
 
-      <div className="flex text-white py-2 px-4 items-center bg-black">
-        <div className="text-2xl">
-          {question.order + 1}/{questionCount}
-        </div>
+function MessageBlock({ text }: { text: string }) {
+  return (
+    <div className="flex-grow flex items-center justify-center px-4">
+      <div className="bg-white/5 border border-white/10 rounded-2xl px-6 py-12 text-center text-xl text-white/80 max-w-xl">
+        {text}
       </div>
     </div>
   )

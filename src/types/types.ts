@@ -8,17 +8,14 @@ export const supabase = createClient<Database>(
 
 export type Participant = Database['public']['Tables']['participants']['Row']
 
-export type Choice = Database['public']['Tables']['choices']['Row']
+export type Team = Database['public']['Tables']['teams']['Row']
 
-export type Question = Database['public']['Tables']['questions']['Row'] & {
-  choices: Choice[]
+export type GameRound = Database['public']['Tables']['game_rounds']['Row']
+
+export type RoundVote = Database['public']['Tables']['round_votes']['Row'] & {
+  participant: Participant
+  team: Team
 }
-
-export type QuizSet = Database['public']['Tables']['quiz_sets']['Row'] & {
-  questions: Question[]
-}
-
-export type Answer = Database['public']['Tables']['answers']['Row']
 
 export type Game = Database['public']['Tables']['games']['Row']
 

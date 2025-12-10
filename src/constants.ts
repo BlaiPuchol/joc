@@ -1,4 +1,6 @@
-/** Time until the choices for the question are revealed in ms */
-export const TIME_TIL_CHOICE_REVEAL = 5000
-/** Time that the users have to answer a question in ms */
-export const QUESTION_ANSWER_TIME = 20000
+export const TEAM_DISPLAY_ORDER = ['red', 'blue', 'green', 'yellow'] as const
+
+export const TEAM_ORDER_LOOKUP: Record<string, number> = TEAM_DISPLAY_ORDER.reduce(
+	(acc, slug, index) => ({ ...acc, [slug]: index }),
+	{} as Record<string, number>
+)

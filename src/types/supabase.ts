@@ -100,32 +100,39 @@ export type Database = {
       games: {
         Row: {
           created_at: string
-          current_question_sequence: number
+          current_round_sequence: number
+          active_round_id: string | null
           host_user_id: string | null
           id: string
-          is_answer_revealed: boolean
           phase: string
-          quiz_set_id: string
+          quiz_set_id: string | null
         }
         Insert: {
           created_at?: string
-          current_question_sequence?: number
+          current_round_sequence?: number
+          active_round_id?: string | null
           host_user_id?: string | null
           id?: string
-          is_answer_revealed?: boolean
           phase?: string
-          quiz_set_id: string
+          quiz_set_id?: string | null
         }
         Update: {
           created_at?: string
-          current_question_sequence?: number
+          current_round_sequence?: number
+          active_round_id?: string | null
           host_user_id?: string | null
           id?: string
-          is_answer_revealed?: boolean
           phase?: string
-          quiz_set_id?: string
+          quiz_set_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "games_active_round_id_fkey"
+            columns: ["active_round_id"]
+            isOneToOne: false
+            referencedRelation: "game_rounds"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "games_host_user_id_fkey"
             columns: ["host_user_id"]
@@ -138,6 +145,51 @@ export type Database = {
             columns: ["quiz_set_id"]
             isOneToOne: false
             referencedRelation: "quiz_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_rounds: {
+        Row: {
+          created_at: string
+          game_id: string
+          id: string
+          leader_notes: string | null
+          losing_team_id: string | null
+          sequence: number
+          state: string
+        }
+        Insert: {
+          created_at?: string
+          game_id: string
+          id?: string
+          leader_notes?: string | null
+          losing_team_id?: string | null
+          sequence: number
+          state?: string
+        }
+        Update: {
+          created_at?: string
+          game_id?: string
+          id?: string
+          leader_notes?: string | null
+          losing_team_id?: string | null
+          sequence?: number
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_rounds_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_rounds_losing_team_id_fkey"
+            columns: ["losing_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -241,6 +293,76 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      round_votes: {
+        Row: {
+          created_at: string
+          id: string
+          participant_id: string
+          round_id: string
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          participant_id: string
+          round_id: string
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          participant_id?: string
+          round_id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_votes_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_votes_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "game_rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_votes_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          color_hex: string
+          created_at: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          color_hex: string
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          color_hex?: string
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
         }
         Relationships: []
       }
