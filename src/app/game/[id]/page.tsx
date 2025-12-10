@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Game,
   GameRound,
@@ -33,6 +33,40 @@ export default function Home({
   const [activeRound, setActiveRound] = useState<GameRound | null>(null)
   const [roundVotes, setRoundVotes] = useState<RoundVote[]>([])
 
+  const fetchVotes = useCallback(async (roundId: string) => {
+    const { data, error } = await supabase
+      .from('round_votes')
+      .select('*, participant:participants(*), team:teams(*)')
+      .eq('round_id', roundId)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      console.error(error.message)
+      return
+    }
+
+    setRoundVotes((data ?? []) as unknown as RoundVote[])
+  }, [])
+
+  const fetchRound = useCallback(
+    async (roundId: string) => {
+      const { data, error } = await supabase
+        .from('game_rounds')
+        .select('*')
+        .eq('id', roundId)
+        .single()
+
+      if (error) {
+        console.error(error.message)
+        return
+      }
+
+      setActiveRound(data)
+      fetchVotes(roundId)
+    },
+    [fetchVotes]
+  )
+
   useEffect(() => {
     const fetchInitialData = async () => {
       const [{ data: teamData }, { data: gameData }] = await Promise.all([
@@ -53,7 +87,7 @@ export default function Home({
     }
 
     fetchInitialData()
-  }, [gameId])
+  }, [gameId, fetchRound])
 
   useEffect(() => {
     const channel = supabase
@@ -79,23 +113,25 @@ export default function Home({
   }, [gameId])
 
   useEffect(() => {
-    if (!game?.active_round_id) {
+    const roundId = game?.active_round_id
+
+    if (!roundId) {
       setActiveRound(null)
       setRoundVotes([])
       return
     }
 
-    fetchRound(game.active_round_id)
+    fetchRound(roundId)
 
     const channel = supabase
-      .channel(`round_${game.active_round_id}`)
+      .channel(`round_${roundId}`)
       .on(
         'postgres_changes',
         {
           event: 'UPDATE',
           schema: 'public',
           table: 'game_rounds',
-          filter: `id=eq.${game.active_round_id}`,
+          filter: `id=eq.${roundId}`,
         },
         (payload) => setActiveRound(payload.new as GameRound)
       )
@@ -105,47 +141,17 @@ export default function Home({
           event: '*',
           schema: 'public',
           table: 'round_votes',
-          filter: `round_id=eq.${game.active_round_id}`,
+          filter: `round_id=eq.${roundId}`,
         },
-        () => fetchVotes(game.active_round_id)
+        () => fetchVotes(roundId)
       )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [game?.active_round_id])
+}, [game?.active_round_id, fetchRound, fetchVotes])
 
-  const fetchRound = async (roundId: string) => {
-    const { data, error } = await supabase
-      .from('game_rounds')
-      .select('*')
-      .eq('id', roundId)
-      .single()
-
-    if (error) {
-      console.error(error.message)
-      return
-    }
-
-    setActiveRound(data)
-    fetchVotes(roundId)
-  }
-
-  const fetchVotes = async (roundId: string) => {
-    const { data, error } = await supabase
-      .from('round_votes')
-      .select('*, participant:participants(*), team:teams(*)')
-      .eq('round_id', roundId)
-      .order('created_at', { ascending: true })
-
-    if (error) {
-      console.error(error.message)
-      return
-    }
-
-    setRoundVotes((data ?? []) as unknown as RoundVote[])
-  }
 
   const onRegisterCompleted = (newParticipant: Participant) => {
     setParticipant(newParticipant)
