@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import { Game, supabase } from '@/types/types'
 
 type GameWithCounts = Game & {
@@ -17,11 +18,16 @@ export default function HostDashboard() {
   const [creating, setCreating] = useState(false)
   const [newGameTitle, setNewGameTitle] = useState('')
 
-  const ensureHostSession = useCallback(async () => {
-    const { data } = await supabase.auth.getSession()
-    if (data.session) return data.session
-    const { data: anonData, error } = await supabase.auth.signInAnonymously()
+  const ensureHostSession = useCallback(async (): Promise<Session> => {
+    const { data, error } = await supabase.auth.getSession()
     if (error) throw error
+    if (data.session) return data.session
+
+    const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously()
+    if (anonError) throw anonError
+    if (!anonData.session) {
+      throw new Error('Unable to establish a host session')
+    }
     return anonData.session
   }, [])
 
@@ -89,24 +95,54 @@ export default function HostDashboard() {
   }, [])
 
   const createGame = async () => {
-    try {
-      setCreating(true)
-      await ensureHostSession()
+    setCreating(true)
+    setError(null)
+
+    const attemptCreate = async (forceFreshSession = false) => {
+      if (forceFreshSession) {
+        await supabase.auth.signOut()
+      }
+      const session = await ensureHostSession()
+      const hostUserId = session.user?.id
+      if (!hostUserId) {
+        throw new Error('Unable to resolve the host user')
+      }
       const { data, error } = await supabase
         .from('games')
         .insert({
           title: newGameTitle.trim() || 'Untitled Game',
           status: 'draft',
           phase: 'lobby',
+          host_user_id: hostUserId,
         })
         .select()
         .single()
       if (error || !data) throw error ?? new Error('Unable to create game')
 
       await Promise.all([seedDefaultTeams(data.id), seedDefaultChallenge(data.id)])
+    }
+
+    try {
+      await attemptCreate()
       setNewGameTitle('')
       await fetchGames()
+      return
     } catch (err) {
+      if (isHostForeignKeyError(err)) {
+        try {
+          await attemptCreate(true)
+          setNewGameTitle('')
+          await fetchGames()
+          return
+        } catch (retryErr) {
+          console.error(retryErr)
+          setError(
+            retryErr instanceof Error ? retryErr.message : 'Unable to create game'
+          )
+          return
+        }
+      }
+
       console.error(err)
       setError(err instanceof Error ? err.message : 'Unable to create game')
     } finally {
@@ -273,5 +309,17 @@ function Stat({ label, value }: { label: string; value: number }) {
       <p className="text-xs uppercase tracking-[0.3em] text-white/50">{label}</p>
       <p className="text-2xl font-semibold">{value}</p>
     </div>
+  )
+}
+
+const isHostForeignKeyError = (error: unknown) => {
+  if (!error || typeof error !== 'object') {
+    return false
+  }
+  const maybePostgrest = error as { code?: string; message?: string }
+  return (
+    maybePostgrest.code === '23503' &&
+    typeof maybePostgrest.message === 'string' &&
+    maybePostgrest.message.includes('games_host_user_id_fkey')
   )
 }
