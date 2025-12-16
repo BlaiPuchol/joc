@@ -36,24 +36,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "answers_choice_id_fkey"
-            columns: ["choice_id"]
-            isOneToOne: false
-            referencedRelation: "choices"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "answers_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "game_results"
-            referencedColumns: ["participant_id"]
-          },
-          {
             foreignKeyName: "answers_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
             referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answers_choice_id_fkey"
+            columns: ["choice_id"]
+            isOneToOne: false
+            referencedRelation: "choices"
             referencedColumns: ["id"]
           },
           {
@@ -62,13 +55,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "questions"
             referencedColumns: ["id"]
-          },
-        ]
-      }
-      choices: {
-        Row: {
-          body: string
-          created_at: string
           id: string
           is_correct: boolean
           question_id: string
@@ -99,6 +85,12 @@ export type Database = {
       }
       games: {
         Row: {
+          description: string
+          title: string
+          status: string
+          lobby_code: string
+          max_teams: number
+          max_players_per_team: number | null
           created_at: string
           current_round_sequence: number
           active_round_id: string | null
@@ -108,6 +100,12 @@ export type Database = {
           quiz_set_id: string | null
         }
         Insert: {
+          description?: string
+          title?: string
+          status?: string
+          lobby_code?: string
+          max_teams?: number
+          max_players_per_team?: number | null
           created_at?: string
           current_round_sequence?: number
           active_round_id?: string | null
@@ -117,6 +115,12 @@ export type Database = {
           quiz_set_id?: string | null
         }
         Update: {
+          description?: string
+          title?: string
+          status?: string
+          lobby_code?: string
+          max_teams?: number
+          max_players_per_team?: number | null
           created_at?: string
           current_round_sequence?: number
           active_round_id?: string | null
@@ -149,8 +153,47 @@ export type Database = {
           },
         ]
       }
+      game_challenges: {
+        Row: {
+          id: string
+          created_at: string
+          game_id: string
+          position: number
+          title: string
+          description: string | null
+          participants_per_team: number | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          game_id: string
+          position: number
+          title: string
+          description?: string | null
+          participants_per_team?: number | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          game_id?: string
+          position?: number
+          title?: string
+          description?: string | null
+          participants_per_team?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_challenges_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_rounds: {
         Row: {
+          challenge_id: string | null
           created_at: string
           game_id: string
           id: string
@@ -160,6 +203,7 @@ export type Database = {
           state: string
         }
         Insert: {
+          challenge_id?: string | null
           created_at?: string
           game_id: string
           id?: string
@@ -169,6 +213,7 @@ export type Database = {
           state?: string
         }
         Update: {
+          challenge_id?: string | null
           created_at?: string
           game_id?: string
           id?: string
@@ -178,6 +223,13 @@ export type Database = {
           state?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "game_rounds_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "game_challenges"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "game_rounds_game_id_fkey"
             columns: ["game_id"]
@@ -189,6 +241,67 @@ export type Database = {
             foreignKeyName: "game_rounds_losing_team_id_fkey"
             columns: ["losing_team_id"]
             isOneToOne: false
+            referencedRelation: "game_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_teams: {
+        Row: {
+          id: string
+          created_at: string
+          game_id: string
+          template_team_id: string | null
+          slug: string | null
+          name: string
+          color_hex: string
+          position: number
+          is_active: boolean
+          leader_participant_id: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          game_id: string
+          template_team_id?: string | null
+          slug?: string | null
+          name: string
+          color_hex: string
+          position: number
+          is_active?: boolean
+          leader_participant_id?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          game_id?: string
+          template_team_id?: string | null
+          slug?: string | null
+          name?: string
+          color_hex?: string
+          position?: number
+          is_active?: boolean
+          leader_participant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_teams_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_teams_leader_participant_id_fkey"
+            columns: ["leader_participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_teams_template_team_id_fkey"
+            columns: ["template_team_id"]
+            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -198,6 +311,7 @@ export type Database = {
         Row: {
           created_at: string
           game_id: string
+          game_team_id: string | null
           id: string
           nickname: string
           user_id: string
@@ -205,6 +319,7 @@ export type Database = {
         Insert: {
           created_at?: string
           game_id: string
+          game_team_id?: string | null
           id?: string
           nickname: string
           user_id?: string
@@ -212,6 +327,7 @@ export type Database = {
         Update: {
           created_at?: string
           game_id?: string
+          game_team_id?: string | null
           id?: string
           nickname?: string
           user_id?: string
@@ -221,14 +337,14 @@ export type Database = {
             foreignKeyName: "participants_game_id_fkey"
             columns: ["game_id"]
             isOneToOne: false
-            referencedRelation: "game_results"
-            referencedColumns: ["game_id"]
+            referencedRelation: "games"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "participants_game_id_fkey"
-            columns: ["game_id"]
+            foreignKeyName: "participants_game_team_id_fkey"
+            columns: ["game_team_id"]
             isOneToOne: false
-            referencedRelation: "games"
+            referencedRelation: "game_teams"
             referencedColumns: ["id"]
           },
           {
@@ -302,21 +418,21 @@ export type Database = {
           id: string
           participant_id: string
           round_id: string
-          team_id: string
+          game_team_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           participant_id: string
           round_id: string
-          team_id: string
+          game_team_id: string
         }
         Update: {
           created_at?: string
           id?: string
           participant_id?: string
           round_id?: string
-          team_id?: string
+          game_team_id?: string
         }
         Relationships: [
           {
@@ -334,10 +450,56 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "round_votes_team_id_fkey"
+            foreignKeyName: "round_votes_game_team_id_fkey"
+            columns: ["game_team_id"]
+            isOneToOne: false
+            referencedRelation: "game_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      round_lineups: {
+        Row: {
+          id: string
+          created_at: string
+          round_id: string
+          team_id: string
+          participant_id: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          round_id: string
+          team_id: string
+          participant_id: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          round_id?: string
+          team_id?: string
+          participant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_lineups_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_lineups_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "game_rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_lineups_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "teams"
+            referencedRelation: "game_teams"
             referencedColumns: ["id"]
           },
         ]
@@ -368,11 +530,12 @@ export type Database = {
       }
     }
     Views: {
-      game_results: {
+      team_scores: {
         Row: {
           game_id: string | null
-          nickname: string | null
-          participant_id: string | null
+          team_id: string | null
+          name: string | null
+          color_hex: string | null
           total_score: number | null
         }
         Relationships: []
@@ -422,6 +585,40 @@ export type Tables<
         Row: infer R
       }
       ? R
+      choices: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_correct: boolean
+          question_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          question_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "choices_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+  }
       : never
     : never
 

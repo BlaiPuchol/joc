@@ -72,7 +72,7 @@ export default function Lobby({
               onClick={onStart}
               className="mt-6 bg-green-500 text-black font-bold py-3 px-6 rounded-2xl hover:bg-green-400 transition"
             >
-              Start First Round
+              Organize teams
             </button>
           </div>
         </div>

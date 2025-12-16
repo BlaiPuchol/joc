@@ -2,41 +2,62 @@
 
 import {
   Game,
+  GameChallenge,
   GameRound,
+  GameTeam,
   Participant,
+  RoundLineup,
   RoundVote,
-  Team,
   supabase,
 } from '@/types/types'
-import { TEAM_ORDER_LOOKUP } from '@/constants'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Lobby from './lobby'
+import TeamBuilder from './team-builder'
 import RoundController from './quiz'
 import Results from './results'
 
 type HostPhase =
   | 'lobby'
+  | 'team_setup'
   | 'leader_selection'
   | 'voting'
   | 'action'
   | 'resolution'
   | 'results'
 
-export default function Home({
+type LineupEntry = RoundLineup & { participant: Participant }
+
+export default function HostGame({
   params: { id: gameId },
 }: {
   params: { id: string }
 }) {
   const [game, setGame] = useState<Game | null>(null)
   const [participants, setParticipants] = useState<Participant[]>([])
-  const [teams, setTeams] = useState<Team[]>([])
+  const [teams, setTeams] = useState<GameTeam[]>([])
+  const [challenges, setChallenges] = useState<GameChallenge[]>([])
   const [activeRound, setActiveRound] = useState<GameRound | null>(null)
   const [votes, setVotes] = useState<RoundVote[]>([])
+  const [lineups, setLineups] = useState<LineupEntry[]>([])
+
+  const sortedTeams = useMemo(
+    () => [...teams].sort((a, b) => a.position - b.position),
+    [teams]
+  )
+  const sortedChallenges = useMemo(
+    () => [...challenges].sort((a, b) => a.position - b.position),
+    [challenges]
+  )
+
+  const activeChallenge = useMemo(() => {
+    if (!activeRound?.challenge_id) return null
+    return sortedChallenges.find((challenge) => challenge.id === activeRound.challenge_id) ?? null
+  }, [activeRound?.challenge_id, sortedChallenges])
 
   const fetchVotes = useCallback(async (roundId: string) => {
     const { data, error } = await supabase
       .from('round_votes')
-      .select('*, participant:participants(*), team:teams(*)')
+      .select('*, participant:participants(*), game_team:game_teams(*)')
       .eq('round_id', roundId)
       .order('created_at', { ascending: true })
     if (error) {
@@ -44,6 +65,18 @@ export default function Home({
       return
     }
     setVotes((data ?? []) as unknown as RoundVote[])
+  }, [])
+
+  const fetchLineups = useCallback(async (roundId: string) => {
+    const { data, error } = await supabase
+      .from('round_lineups')
+      .select('*, participant:participants(*)')
+      .eq('round_id', roundId)
+    if (error) {
+      console.error(error.message)
+      return
+    }
+    setLineups((data ?? []) as unknown as LineupEntry[])
   }, [])
 
   const fetchRound = useCallback(
@@ -59,39 +92,47 @@ export default function Home({
       }
       setActiveRound(data)
       fetchVotes(roundId)
+      fetchLineups(roundId)
     },
-    [fetchVotes]
+    [fetchLineups, fetchVotes]
   )
 
   useEffect(() => {
     const fetchInitial = async () => {
-      const [{ data: gameData }, { data: participantData }, { data: teamData }] =
-        await Promise.all([
-          supabase.from('games').select('*').eq('id', gameId).single(),
-          supabase
-            .from('participants')
-            .select('*')
-            .eq('game_id', gameId)
-            .order('created_at'),
-          supabase.from('teams').select('*').order('slug'),
-        ])
+      const [gameRes, participantRes, teamRes, challengeRes] = await Promise.all([
+        supabase.from('games').select('*').eq('id', gameId).single(),
+        supabase.from('participants').select('*').eq('game_id', gameId).order('created_at'),
+        supabase
+          .from('game_teams')
+          .select('*')
+          .eq('game_id', gameId)
+          .order('position', { ascending: true }),
+        supabase
+          .from('game_challenges')
+          .select('*')
+          .eq('game_id', gameId)
+          .order('position', { ascending: true }),
+      ])
 
-      if (gameData) {
-        setGame(gameData)
-        if (gameData.active_round_id) {
-          fetchRound(gameData.active_round_id)
+      if (gameRes.data) {
+        setGame(gameRes.data)
+        if (gameRes.data.active_round_id) {
+          fetchRound(gameRes.data.active_round_id)
         }
       }
-      if (participantData) {
-        setParticipants(participantData)
+      if (participantRes.data) {
+        setParticipants(participantRes.data)
       }
-      if (teamData) {
-        setTeams(orderTeams(teamData))
+      if (teamRes.data) {
+        setTeams(teamRes.data)
+      }
+      if (challengeRes.data) {
+        setChallenges(challengeRes.data)
       }
     }
 
     fetchInitial()
-  }, [gameId, fetchRound])
+  }, [fetchRound, gameId])
 
   useEffect(() => {
     const channel = supabase
@@ -113,12 +154,50 @@ export default function Home({
         {
           event: 'UPDATE',
           schema: 'public',
+          table: 'participants',
+          filter: `game_id=eq.${gameId}`,
+        },
+        (payload) => {
+          setParticipants((prev) =>
+            prev.map((participant) =>
+              participant.id === payload.new.id ? (payload.new as Participant) : participant
+            )
+          )
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
           table: 'games',
           filter: `id=eq.${gameId}`,
         },
+        (payload) => setGame(payload.new as Game)
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'game_teams',
+          filter: `game_id=eq.${gameId}`,
+        },
         (payload) => {
-          const updated = payload.new as Game
-          setGame(updated)
+          setTeams((prev) => {
+            if (payload.eventType === 'INSERT') {
+              return [...prev, payload.new as GameTeam].sort((a, b) => a.position - b.position)
+            }
+            if (payload.eventType === 'UPDATE') {
+              return prev
+                .map((team) => (team.id === payload.new.id ? (payload.new as GameTeam) : team))
+                .sort((a, b) => a.position - b.position)
+            }
+            if (payload.eventType === 'DELETE') {
+              return prev.filter((team) => team.id !== payload.old.id)
+            }
+            return prev
+          })
         }
       )
       .subscribe()
@@ -130,10 +209,10 @@ export default function Home({
 
   useEffect(() => {
     const roundId = game?.active_round_id
-
     if (!roundId) {
       setActiveRound(null)
       setVotes([])
+      setLineups([])
       return
     }
 
@@ -143,35 +222,43 @@ export default function Home({
       .channel(`host_round_${roundId}`)
       .on(
         'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'game_rounds',
-          filter: `id=eq.${roundId}`,
-        },
+        { event: 'UPDATE', schema: 'public', table: 'game_rounds', filter: `id=eq.${roundId}` },
         (payload) => setActiveRound(payload.new as GameRound)
       )
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'round_votes',
-          filter: `round_id=eq.${roundId}`,
-        },
+        { event: '*', schema: 'public', table: 'round_votes', filter: `round_id=eq.${roundId}` },
         () => fetchVotes(roundId)
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'round_lineups', filter: `round_id=eq.${roundId}` },
+        () => fetchLineups(roundId)
       )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-}, [game?.active_round_id, fetchRound, fetchVotes])
+  }, [fetchLineups, fetchRound, fetchVotes, game?.active_round_id])
+
+  const getChallengeForSequence = useCallback(
+    (sequence: number) => {
+      if (sortedChallenges.length === 0) return null
+      return sortedChallenges[Math.max(sequence, 0) % sortedChallenges.length]
+    },
+    [sortedChallenges]
+  )
 
   const createAndActivateRound = async (sequence: number) => {
+    const challenge = getChallengeForSequence(sequence)
+    if (!challenge) {
+      alert('Add at least one challenge before starting.')
+      return null
+    }
     const { data, error } = await supabase
       .from('game_rounds')
-      .insert({ game_id: gameId, sequence })
+      .insert({ game_id: gameId, sequence, challenge_id: challenge.id })
       .select()
       .single()
     if (error) {
@@ -196,13 +283,33 @@ export default function Home({
     return data
   }
 
-  const handleStartRound = async () => {
+  const handleOpenTeamSetup = async () => {
+    await supabase.from('games').update({ phase: 'team_setup' }).eq('id', gameId)
+  }
+
+  const handleStartChallenge = async () => {
     if (!game) return
     if (game.active_round_id) {
       await supabase.from('games').update({ phase: 'leader_selection' }).eq('id', gameId)
       return
     }
     await createAndActivateRound(game.current_round_sequence ?? 0)
+  }
+
+  const assignParticipant = async (participantId: string, teamId: string | null) => {
+    const { error } = await supabase
+      .from('participants')
+      .update({ game_team_id: teamId })
+      .eq('id', participantId)
+    if (error) alert(error.message)
+  }
+
+  const setTeamLeader = async (teamId: string, participantId: string | null) => {
+    const { error } = await supabase
+      .from('game_teams')
+      .update({ leader_participant_id: participantId })
+      .eq('id', teamId)
+    if (error) alert(error.message)
   }
 
   const openVoting = async (notes: string) => {
@@ -253,30 +360,57 @@ export default function Home({
     await supabase.from('games').update({ phase: 'results' }).eq('id', gameId)
   }
 
+  const toggleLineupParticipant = async (teamId: string, participantId: string, shouldAdd: boolean) => {
+    if (!game?.active_round_id) return
+    if (shouldAdd) {
+      const { error } = await supabase
+        .from('round_lineups')
+        .insert({ round_id: game.active_round_id, team_id: teamId, participant_id: participantId })
+      if (error && error.code !== '23505') {
+        alert(error.message)
+      }
+      return
+    }
+    const { error } = await supabase
+      .from('round_lineups')
+      .delete()
+      .match({ round_id: game.active_round_id, team_id: teamId, participant_id: participantId })
+    if (error) alert(error.message)
+  }
+
   const phase: HostPhase = (game?.phase as HostPhase) ?? 'lobby'
 
   return (
     <main className="bg-slate-900 min-h-screen text-white">
       {phase === 'lobby' && (
-        <Lobby
+        <Lobby participants={participants} onStart={handleOpenTeamSetup} gameId={gameId} />
+      )}
+
+      {phase === 'team_setup' && (
+        <TeamBuilder
+          teams={sortedTeams}
           participants={participants}
-          onStart={handleStartRound}
-          gameId={gameId}
+          onAssign={assignParticipant}
+          onSetLeader={setTeamLeader}
+          onBegin={handleStartChallenge}
         />
       )}
 
-      {phase !== 'lobby' && phase !== 'results' && (
+      {phase !== 'lobby' && phase !== 'team_setup' && phase !== 'results' && (
         <RoundController
           phase={phase}
           round={activeRound}
+          challenge={activeChallenge}
           participants={participants}
-          teams={teams}
+          teams={sortedTeams}
           votes={votes}
+          lineups={lineups}
           onOpenVoting={openVoting}
           onLockVoting={lockVoting}
           onMarkLosingTeam={markLosingTeam}
           onNextRound={nextRound}
           onEndGame={endGame}
+          onToggleLineup={toggleLineupParticipant}
         />
       )}
 
@@ -284,10 +418,3 @@ export default function Home({
     </main>
   )
 }
-
-const orderTeams = (teamList: Team[]) =>
-  [...teamList].sort(
-    (a, b) =>
-      (TEAM_ORDER_LOOKUP[a.slug] ?? Number.MAX_SAFE_INTEGER) -
-      (TEAM_ORDER_LOOKUP[b.slug] ?? Number.MAX_SAFE_INTEGER)
-  )
