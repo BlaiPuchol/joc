@@ -7,6 +7,13 @@ import { Game, GameChallenge, GameTeam, supabase } from '@/types/types'
 
 const TEAM_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#f97316']
 const STATUSES: Game['status'][] = ['draft', 'ready', 'live', 'completed', 'archived']
+const STATUS_LABELS: Record<Game['status'], string> = {
+  draft: 'Esborrany',
+  ready: 'Preparat',
+  live: 'En directe',
+  completed: 'Completat',
+  archived: 'Arxivat',
+}
 
 export default function GameEditor({ params: { id } }: { params: { id: string } }) {
   const router = useRouter()
@@ -51,7 +58,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
             .order('position', { ascending: true }),
         ])
 
-      if (gameError || !gameData) throw gameError ?? new Error('Game not found')
+      if (gameError || !gameData) throw gameError ?? new Error('Joc no trobat')
 
       setGame(gameData)
       setChallenges(challengeData ?? [])
@@ -65,7 +72,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
       })
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Failed to load editor')
+      setError(err instanceof Error ? err.message : "No s'ha pogut carregar l'editor")
     } finally {
       setLoading(false)
     }
@@ -80,7 +87,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
     try {
       setSavingSettings(true)
       const payload = {
-        title: form.title.trim() || 'Untitled Game',
+        title: form.title.trim() || 'Joc sense títol',
         description: form.description,
         status: form.status,
         max_players_per_team: form.maxPlayersPerTeam === 'all' ? null : Number(form.maxPlayersPerTeam),
@@ -92,10 +99,10 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
         .eq('id', game.id)
         .select()
         .single()
-      if (error || !data) throw error ?? new Error('Unable to save settings')
+      if (error || !data) throw error ?? new Error("No s'ha pogut guardar la configuració")
       setGame(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to save settings')
+      setError(err instanceof Error ? err.message : "No s'ha pogut guardar la configuració")
     } finally {
       setSavingSettings(false)
     }
@@ -110,15 +117,15 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
         .insert({
           game_id: game.id,
           position: nextPosition,
-          title: `Challenge ${nextPosition + 1}`,
-          description: 'Describe the challenge goal and props.',
+          title: `Repte ${nextPosition + 1}`,
+          description: 'Descriu l\'objectiu del repte i els materials.',
         })
         .select()
         .single()
-      if (error || !data) throw error ?? new Error('Unable to add challenge')
+      if (error || !data) throw error ?? new Error("No s'ha pogut afegir el repte")
       setChallenges((prev) => [...prev, data].sort((a, b) => a.position - b.position))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to add challenge')
+      setError(err instanceof Error ? err.message : "No s'ha pogut afegir el repte")
     }
   }
 
@@ -130,21 +137,21 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
         .eq('id', challengeId)
         .select()
         .single()
-      if (error || !data) throw error ?? new Error('Unable to save challenge')
+      if (error || !data) throw error ?? new Error("No s'ha pogut guardar el repte")
       setChallenges((prev) => prev.map((item) => (item.id === challengeId ? data : item)))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to save challenge')
+      setError(err instanceof Error ? err.message : "No s'ha pogut guardar el repte")
     }
   }
 
   const deleteChallenge = async (challengeId: string) => {
-    if (!window.confirm('Remove this challenge?')) return
+    if (!window.confirm('Vols eliminar este repte?')) return
     try {
       const { error } = await supabase.from('game_challenges').delete().eq('id', challengeId)
       if (error) throw error
       setChallenges((prev) => prev.filter((item) => item.id !== challengeId))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to delete challenge')
+      setError(err instanceof Error ? err.message : "No s'ha pogut eliminar el repte")
     }
   }
 
@@ -174,7 +181,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
           .sort((a, b) => a.position - b.position)
       )
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to reorder challenge')
+      setError(err instanceof Error ? err.message : "No s'ha pogut reordenar el repte")
     }
   }
 
@@ -182,7 +189,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
     if (!game) return
     const maxAllowed = Number(form.maxTeams) || game.max_teams || 8
     if (teams.length >= maxAllowed) {
-      setError('You reached the maximum number of teams for this game.')
+      setError('Has arribat al nombre màxim d\'equips per a este joc.')
       return
     }
     const nextPosition = teams.length === 0 ? 0 : Math.max(...teams.map((t) => t.position)) + 1
@@ -192,17 +199,17 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
         .from('game_teams')
         .insert({
           game_id: game.id,
-          name: `Team ${nextPosition + 1}`,
+          name: `Equip ${nextPosition + 1}`,
           color_hex: color,
           position: nextPosition,
           slug: `team-${nextPosition + 1}`,
         })
         .select()
         .single()
-      if (error || !data) throw error ?? new Error('Unable to add team')
+      if (error || !data) throw error ?? new Error("No s'ha pogut afegir l'equip")
       setTeams((prev) => [...prev, data].sort((a, b) => a.position - b.position))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to add team')
+      setError(err instanceof Error ? err.message : "No s'ha pogut afegir l'equip")
     }
   }
 
@@ -214,25 +221,25 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
         .eq('id', teamId)
         .select()
         .single()
-      if (error || !data) throw error ?? new Error('Unable to update team')
+      if (error || !data) throw error ?? new Error("No s'ha pogut actualitzar l'equip")
       setTeams((prev) => prev.map((team) => (team.id === teamId ? data : team)))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to update team')
+      setError(err instanceof Error ? err.message : "No s'ha pogut actualitzar l'equip")
     }
   }
 
   const deleteTeam = async (teamId: string) => {
     if (teams.length <= 2) {
-      setError('Keep at least two teams for the show.')
+      setError('Mantín almenys dos equips per a l\'espectacle.')
       return
     }
-    if (!window.confirm('Remove this team?')) return
+    if (!window.confirm('Vols eliminar este equip?')) return
     try {
       const { error } = await supabase.from('game_teams').delete().eq('id', teamId)
       if (error) throw error
       setTeams((prev) => prev.filter((team) => team.id !== teamId))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to delete team')
+      setError(err instanceof Error ? err.message : "No s'ha pogut eliminar l'equip")
     }
   }
 
@@ -262,7 +269,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
           .sort((a, b) => a.position - b.position)
       )
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to reorder team')
+      setError(err instanceof Error ? err.message : "No s'ha pogut reordenar l'equip")
     }
   }
 
@@ -273,7 +280,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
   if (loading) {
     return (
       <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
-        <p className="text-white/60 text-lg">Loading editor…</p>
+        <p className="text-white/60 text-lg">Carregant l&apos;editor…</p>
       </main>
     )
   }
@@ -281,7 +288,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
   if (!game) {
     return (
       <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
-        <p className="text-red-400">{error ?? 'Game not found'}</p>
+        <p className="text-red-400">{error ?? 'Joc no trobat'}</p>
       </main>
     )
   }
@@ -292,16 +299,16 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
         <header className="flex flex-col gap-4">
           <div className="flex items-center gap-3 text-sm text-white/60">
             <button onClick={() => router.back()} className="text-emerald-300 hover:text-emerald-200">
-              ← Back to dashboard
+              ← Tornar al tauler
             </button>
             <span>•</span>
-            <span>Game ID: {game.id.slice(0, 8)}</span>
+            <span>ID del joc: {game.id.slice(0, 8)}</span>
           </div>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="uppercase text-xs tracking-[0.4em] text-white/40">Game deck</p>
+              <p className="uppercase text-xs tracking-[0.4em] text-white/40">Baralla del joc</p>
               <h1 className="text-4xl font-semibold mt-2">{game.title}</h1>
-              <p className="text-white/70">Created {new Date(game.created_at).toLocaleString()}</p>
+              <p className="text-white/70">Creat el {new Date(game.created_at).toLocaleString()}</p>
             </div>
             <div className="text-right">
               <span
@@ -309,7 +316,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                   readyForShow ? 'bg-emerald-400/20 text-emerald-300 border border-emerald-400/30' : 'bg-white/10 text-white/70 border border-white/15'
                 }`}
               >
-                {readyForShow ? 'Ready for showtime' : 'Add more content'}
+                {readyForShow ? 'A punt per a l\'espectacle' : 'Afig més contingut'}
               </span>
             </div>
           </div>
@@ -320,14 +327,14 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
           <section className="bg-black/40 border border-white/10 rounded-3xl p-6 space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-semibold">Challenges</h2>
-                <p className="text-white/60 text-sm">Add titles, descriptions and roster sizes for each challenge.</p>
+                <h2 className="text-2xl font-semibold">Reptes</h2>
+                <p className="text-white/60 text-sm">Afig títols, descripcions i grandària d\'equip per a cada repte.</p>
               </div>
               <button
                 onClick={addChallenge}
                 className="bg-emerald-400 text-black font-semibold rounded-2xl px-5 py-2 hover:bg-emerald-300"
               >
-                Add challenge
+                Afegir repte
               </button>
             </div>
             <div className="space-y-4">
@@ -377,7 +384,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                     onBlur={(event) => updateChallenge(challenge.id, { description: event.target.value })}
                   />
                   <div className="flex flex-wrap items-center gap-3 text-sm">
-                    <label className="uppercase tracking-[0.3em] text-white/50">Players / team</label>
+                    <label className="uppercase tracking-[0.3em] text-white/50">Jugadors / equip</label>
                     <select
                       className="bg-black/30 border border-white/10 rounded-xl px-3 py-2"
                       value={challenge.participants_per_team ? String(challenge.participants_per_team) : 'all'}
@@ -387,7 +394,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                         })
                       }
                     >
-                      <option value="all">All teammates</option>
+                      <option value="all">Tota la plantilla</option>
                       {[1, 2, 3, 4, 5, 6].map((value) => (
                         <option key={value} value={value}>
                           {value}
@@ -395,14 +402,14 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                       ))}
                     </select>
                     <button className="text-red-400 ml-auto" onClick={() => deleteChallenge(challenge.id)}>
-                      Remove
+                      Llevar
                     </button>
                   </div>
                 </article>
               ))}
               {challenges.length === 0 && (
                 <div className="border border-dashed border-white/20 rounded-3xl p-8 text-center text-white/60">
-                  No challenges yet. Add one to outline your show.
+                  Encara no hi ha reptes. Afig-ne un per a planificar l\'espectacle.
                 </div>
               )}
             </div>
@@ -410,9 +417,9 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
 
           <aside className="space-y-6">
             <section className="bg-white/5 border border-white/10 rounded-3xl p-5 space-y-4">
-              <h2 className="text-xl font-semibold">Game settings</h2>
+              <h2 className="text-xl font-semibold">Configuració del joc</h2>
               <div className="space-y-3">
-                <label className="text-sm uppercase tracking-[0.3em] text-white/50">Title</label>
+                <label className="text-sm uppercase tracking-[0.3em] text-white/50">Títol</label>
                 <input
                   className="w-full rounded-2xl bg-black/30 border border-white/10 px-4 py-2"
                   value={form.title}
@@ -420,7 +427,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                 />
               </div>
               <div className="space-y-3">
-                <label className="text-sm uppercase tracking-[0.3em] text-white/50">Description</label>
+                <label className="text-sm uppercase tracking-[0.3em] text-white/50">Descripció</label>
                 <textarea
                   rows={3}
                   className="w-full rounded-2xl bg-black/30 border border-white/10 px-4 py-2"
@@ -430,22 +437,22 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                 <div className="space-y-2">
-                  <label className="uppercase tracking-[0.3em] text-white/50">Roster size</label>
+                  <label className="uppercase tracking-[0.3em] text-white/50">Grandària per equip</label>
                   <select
                     className="w-full rounded-2xl bg-black/30 border border-white/10 px-3 py-2"
                     value={form.maxPlayersPerTeam}
                     onChange={(event) => setForm((prev) => ({ ...prev, maxPlayersPerTeam: event.target.value }))}
                   >
-                    <option value="all">All teammates</option>
+                    <option value="all">Tota la plantilla</option>
                     {[2, 3, 4, 5, 6].map((value) => (
                       <option key={value} value={value}>
-                        {value} players
+                        {value} jugadors
                       </option>
                     ))}
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="uppercase tracking-[0.3em] text-white/50">Status</label>
+                  <label className="uppercase tracking-[0.3em] text-white/50">Estat</label>
                   <select
                     className="w-full rounded-2xl bg-black/30 border border-white/10 px-3 py-2"
                     value={form.status}
@@ -453,13 +460,13 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                   >
                     {STATUSES.map((status) => (
                       <option key={status} value={status}>
-                        {status}
+                        {STATUS_LABELS[status] ?? status}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="uppercase tracking-[0.3em] text-white/50">Max teams</label>
+                  <label className="uppercase tracking-[0.3em] text-white/50">Màxim d&apos;equips</label>
                   <input
                     type="number"
                     min={2}
@@ -475,21 +482,21 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                 disabled={savingSettings}
                 className="w-full rounded-2xl bg-emerald-400 text-black font-semibold py-3 disabled:opacity-60"
               >
-                {savingSettings ? 'Saving…' : 'Save settings'}
+                {savingSettings ? 'Guardant…' : 'Guardar configuració'}
               </button>
             </section>
 
             <section className="bg-white/5 border border-white/10 rounded-3xl p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold">Teams</h2>
-                  <p className="text-white/60 text-sm">Customize team names, colors, and active status.</p>
+                  <h2 className="text-xl font-semibold">Equips</h2>
+                  <p className="text-white/60 text-sm">Personalitza noms, colors i estat actiu de cada equip.</p>
                 </div>
                 <button
                   onClick={addTeam}
                   className="bg-emerald-400/80 text-black font-semibold rounded-xl px-3 py-1"
                 >
-                  Add team
+                  Afegir equip
                 </button>
               </div>
               <div className="space-y-3">
@@ -520,7 +527,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                           checked={team.is_active}
                           onChange={(event) => updateTeam(team.id, { is_active: event.target.checked })}
                         />
-                        Active
+                        Actiu
                       </label>
                       <div className="ml-auto flex gap-2">
                         <button
@@ -538,7 +545,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                           ↓
                         </button>
                         <button className="text-red-400" onClick={() => deleteTeam(team.id)}>
-                          Remove
+                          Llevar
                         </button>
                       </div>
                     </div>
@@ -546,23 +553,23 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                 ))}
                 {teams.length === 0 && (
                   <div className="border border-dashed border-white/20 rounded-2xl p-6 text-center text-white/60">
-                    No teams configured yet.
+                    Encara no hi ha equips configurats.
                   </div>
                 )}
               </div>
             </section>
 
             <section className="bg-black/40 border border-white/10 rounded-3xl p-5 space-y-3">
-              <h3 className="text-lg font-semibold">Need to test with players?</h3>
+              <h3 className="text-lg font-semibold">Necessites provar amb jugadors?</h3>
               <p className="text-white/60 text-sm">
-                Launch the lobby anytime from the dashboard. Players can join via QR, and you can keep editing this
-                deck while they register.
+                Obri el lobby quan vulgues des del tauler. Els jugadors poden unir-se amb el QR i tu pots continuar
+                editant esta baralla mentre es registren.
               </p>
               <Link
                 href={`/host/game/${game.id}`}
                 className="inline-flex justify-center w-full bg-white/90 text-black font-semibold rounded-2xl py-3"
               >
-                Open host screen
+                Obrir pantalla d&apos;amfitrió
               </Link>
             </section>
           </aside>

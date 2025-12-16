@@ -36,12 +36,12 @@ export default function Challenge({
   }, [teams, votes])
 
   const statusCopy: Record<Phase, string> = {
-    lobby: 'Waiting for the host to begin the first challenge.',
-    leader_selection: 'Waiting for leaders to choose who competes...',
-    voting: 'Place your bet on the team you think will lose!',
-    action: 'Challenge in progress... Good luck!',
-    resolution: 'Results are in!',
-    results: 'Game finished.',
+    lobby: "Esperant que l'amfitrió inicie el primer repte.",
+    leader_selection: 'Esperant que els líders trien qui competix...',
+    voting: "Aposta per l'equip que cregues que perdrà!",
+    action: 'Repte en marxa... Bona sort!',
+    resolution: 'Ja tenim resultats!',
+    results: 'La partida ha acabat.',
   }
 
   const renderVotingGrid = () => (
@@ -64,7 +64,7 @@ export default function Challenge({
             <span>{team.name}</span>
             {playerVoteTeamId === team.id && (
               <span className="text-sm font-normal uppercase tracking-wide">
-                Your bet
+                La teua aposta
               </span>
             )}
           </div>
@@ -76,12 +76,12 @@ export default function Challenge({
   return (
     <div className="min-h-screen flex flex-col text-white">
       <div className="text-center pt-12 pb-6 px-4">
-        <p className="text-sm uppercase tracking-[0.3em] text-white/60">Live Challenge</p>
-        <h1 className="text-3xl font-bold mt-2">Hey {participant.nickname}!</h1>
+        <p className="text-sm uppercase tracking-[0.3em] text-white/60">Repte en directe</p>
+        <h1 className="text-3xl font-bold mt-2">Ei, {participant.nickname}!</h1>
         <p className="mt-4 text-lg text-white/80">{statusCopy[phase]}</p>
         {round?.leader_notes && (
           <div className="mt-6 inline-block bg-white/10 border border-white/15 rounded-xl px-6 py-3 text-lg">
-            Participants: <span className="font-semibold">{round.leader_notes}</span>
+            Participants en joc: <span className="font-semibold">{round.leader_notes}</span>
           </div>
         )}
       </div>
@@ -89,15 +89,15 @@ export default function Challenge({
       {phase === 'voting' && renderVotingGrid()}
 
       {phase === 'leader_selection' && (
-        <MessageBlock text="Waiting for leaders to choose players..." />
+        <MessageBlock text="Esperant que els líders trien participants..." />
       )}
 
       {phase === 'lobby' && (
-        <MessageBlock text="Sit tight while the host sets things up." />
+        <MessageBlock text="Mantín-te a l'espera mentre l'amfitrió ho prepara tot." />
       )}
 
       {phase === 'action' && (
-        <MessageBlock text="Challenge in progress... bets are locked!" />
+        <MessageBlock text="Repte en marxa... les apostes estan bloquejades!" />
       )}
 
       {phase === 'resolution' && (
@@ -105,17 +105,17 @@ export default function Challenge({
           <div className="text-center mb-8">
             {losingTeamId && playerVoteTeamId === losingTeamId && (
               <p className="text-2xl font-semibold text-green-400">
-                You guessed correctly! 🎉
+                Has encertat! 🎉
               </p>
             )}
             {losingTeamId && playerVoteTeamId && playerVoteTeamId !== losingTeamId && (
               <p className="text-2xl font-semibold text-red-400">
-                Not this time — better luck in the next round!
+                Esta vegada no — més sort en la pròxima ronda!
               </p>
             )}
             {!losingTeamId && (
               <p className="text-xl text-white/70">
-                Waiting for the host to announce the losing team.
+                Esperant que l'amfitrió anuncie l'equip perdedor.
               </p>
             )}
           </div>
@@ -153,18 +153,18 @@ function TransparencyPanel({
                   {team.name}
                 </p>
                 <p className="text-3xl font-bold" style={{ color: team.color_hex }}>
-                  {voters.length} vote{voters.length === 1 ? '' : 's'}
+                  {voters.length} {voters.length === 1 ? 'vot' : 'vots'}
                 </p>
               </div>
               {losingTeamId === team.id && (
                 <span className="px-3 py-1 rounded-full text-sm bg-white/20 font-semibold">
-                  Losing team
+                  Equip perdedor
                 </span>
               )}
             </div>
             <div className="mt-4 space-y-2 max-h-48 overflow-y-auto pr-2">
               {sortedVoters.length === 0 && (
-                <p className="text-white/50 text-sm">No bets</p>
+                <p className="text-white/50 text-sm">Sense apostes</p>
               )}
               {sortedVoters.map((vote) => (
                 <div

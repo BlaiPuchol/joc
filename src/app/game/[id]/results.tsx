@@ -34,10 +34,10 @@ export default function Results({
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <div className="text-center pt-12 pb-6 px-4">
-        <p className="text-sm uppercase tracking-[0.4em] text-white/50">Final Standings</p>
-        <h1 className="text-4xl font-bold mt-3">Thanks for betting, {participant.nickname}!</h1>
+        <p className="text-sm uppercase tracking-[0.4em] text-white/50">Classificació final</p>
+        <h1 className="text-4xl font-bold mt-3">Gràcies per apostar, {participant.nickname}!</h1>
         <p className="mt-3 text-white/70">
-          Here are the total points based on every correct losing-team prediction.
+          Aci tens els punts totals segons cada predicció correcta de l&apos;equip perdedor.
         </p>
       </div>
       <div className="flex justify-center">
@@ -59,12 +59,12 @@ export default function Results({
                   {gameResult.nickname}
                 </p>
                 {participant.id === gameResult.participant_id && (
-                  <p className="text-sm text-green-300 mt-1">Eres tu!</p>
+                  <p className="text-sm text-green-300 mt-1">Ets tu!</p>
                 )}
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold">{gameResult.total_score}</p>
-                <p className="text-xs uppercase tracking-widest text-white/60">points</p>
+                <p className="text-xs uppercase tracking-widest text-white/60">punts</p>
               </div>
             </div>
           ))}

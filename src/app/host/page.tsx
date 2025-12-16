@@ -3,7 +3,7 @@
 export default function Home() {
   return (
     <>
-      <h1>Admin</h1>
+      <h1>Administració</h1>
     </>
   )
 }

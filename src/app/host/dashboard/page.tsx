@@ -11,6 +11,14 @@ type GameWithCounts = Game & {
   participantCount: number
 }
 
+const STATUS_LABELS: Record<Game['status'], string> = {
+  draft: 'Esborrany',
+  ready: 'Preparat',
+  live: 'En directe',
+  completed: 'Completat',
+  archived: 'Arxivat',
+}
+
 export default function HostDashboard() {
   const [games, setGames] = useState<GameWithCounts[]>([])
   const [loading, setLoading] = useState(true)
@@ -26,7 +34,7 @@ export default function HostDashboard() {
     const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously()
     if (anonError) throw anonError
     if (!anonData.session) {
-      throw new Error('Unable to establish a host session')
+      throw new Error('No s\'ha pogut establir una sessió d\'amfitrió')
     }
     return anonData.session
   }, [])
@@ -58,7 +66,7 @@ export default function HostDashboard() {
       setGames(normalized)
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Unable to load games')
+      setError(err instanceof Error ? err.message : 'No s\'han pogut carregar els jocs')
     } finally {
       setLoading(false)
     }
@@ -88,8 +96,8 @@ export default function HostDashboard() {
     const { error } = await supabase.from('game_challenges').insert({
       game_id: gameId,
       position: 0,
-      title: 'Warm-up Challenge',
-      description: 'Describe the physical challenge to kick off the experience.',
+      title: "Repte d'escalfament",
+      description: "Descriu el repte físic per a iniciar l'experiència.",
     })
     if (error) throw error
   }, [])
@@ -105,19 +113,19 @@ export default function HostDashboard() {
       const session = await ensureHostSession()
       const hostUserId = session.user?.id
       if (!hostUserId) {
-        throw new Error('Unable to resolve the host user')
+        throw new Error("No s'ha pogut identificar l'usuari amfitrió")
       }
       const { data, error } = await supabase
         .from('games')
         .insert({
-          title: newGameTitle.trim() || 'Untitled Game',
+          title: newGameTitle.trim() || 'Joc sense títol',
           status: 'draft',
           phase: 'lobby',
           host_user_id: hostUserId,
         })
         .select()
         .single()
-      if (error || !data) throw error ?? new Error('Unable to create game')
+      if (error || !data) throw error ?? new Error("No s'ha pogut crear el joc")
 
       await Promise.all([seedDefaultTeams(data.id), seedDefaultChallenge(data.id)])
     }
@@ -137,28 +145,28 @@ export default function HostDashboard() {
         } catch (retryErr) {
           console.error(retryErr)
           setError(
-            retryErr instanceof Error ? retryErr.message : 'Unable to create game'
+            retryErr instanceof Error ? retryErr.message : "No s'ha pogut crear el joc"
           )
           return
         }
       }
 
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Unable to create game')
+      setError(err instanceof Error ? err.message : "No s'ha pogut crear el joc")
     } finally {
       setCreating(false)
     }
   }
 
   const deleteGame = async (gameId: string) => {
-    if (!window.confirm('Delete this game and all its data?')) return
+    if (!window.confirm('Vols eliminar este joc i totes les seues dades?')) return
     try {
       await ensureHostSession()
       const { error } = await supabase.from('games').delete().eq('id', gameId)
       if (error) throw error
       await fetchGames()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to delete game')
+      setError(err instanceof Error ? err.message : "No s'ha pogut eliminar el joc")
     }
   }
 
@@ -168,7 +176,7 @@ export default function HostDashboard() {
       await supabase.from('games').update({ status: 'live', phase: 'lobby' }).eq('id', gameId)
       window.open(`/host/game/${gameId}`, '_blank', 'noopener,noreferrer')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to launch game')
+      setError(err instanceof Error ? err.message : "No s'ha pogut iniciar el joc")
     }
   }
 
@@ -183,21 +191,21 @@ export default function HostDashboard() {
     <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
       <div className="max-w-6xl mx-auto px-6 py-12 space-y-10">
         <header className="space-y-4">
-          <p className="text-sm uppercase tracking-[0.4em] text-emerald-300/70">Host control deck</p>
-          <h1 className="text-4xl sm:text-5xl font-semibold">Build, edit & project your shows</h1>
+          <p className="text-sm uppercase tracking-[0.4em] text-emerald-300/70">Tauler de control d&apos;amfitrió</p>
+          <h1 className="text-4xl sm:text-5xl font-semibold">Crea, edita i projecta els teus espectacles</h1>
           <p className="text-white/70 max-w-3xl">
-            Manage every challenge set just like a Kahoot playlist. Prep multiple games, tune the
-            team structures, and start the show with one tap.
+            Gestiona cada conjunt de reptes com si fora una llista de Kahoot. Prepara diversos jocs,
+            ajusta l&apos;estructura dels equips i inicia l&apos;espectacle amb un sol toc.
           </p>
         </header>
 
         <section className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur">
           <div className="flex flex-col lg:flex-row gap-4 lg:items-end">
             <div className="flex-1">
-              <label className="text-sm uppercase tracking-[0.3em] text-white/40">Game title</label>
+              <label className="text-sm uppercase tracking-[0.3em] text-white/40">Títol del joc</label>
               <input
                 className="mt-2 w-full rounded-2xl bg-black/40 border border-white/10 px-5 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                placeholder="Summer Offsite Showdown"
+                placeholder="Enfrontament d'estiu a l'empresa"
                 value={newGameTitle}
                 onChange={(event) => setNewGameTitle(event.target.value)}
               />
@@ -207,30 +215,30 @@ export default function HostDashboard() {
               disabled={creating}
               className="bg-emerald-400 hover:bg-emerald-300 text-black font-semibold rounded-2xl px-8 py-3 text-lg transition disabled:opacity-60"
             >
-              {creating ? 'Creating…' : 'Create new game'}
+              {creating ? 'Creant…' : 'Crear joc nou'}
             </button>
           </div>
           {error && <p className="text-red-400 text-sm mt-3">{error}</p>}
         </section>
 
         {loading && (
-          <p className="text-white/60 text-lg">Loading your games…</p>
+          <p className="text-white/60 text-lg">Carregant els teus jocs…</p>
         )}
 
         {!loading && games.length === 0 && (
           <div className="text-center py-16 border border-dashed border-white/20 rounded-3xl">
-            <p className="text-xl text-white/70">No games yet. Create one to get started.</p>
+            <p className="text-xl text-white/70">Encara no hi ha cap joc. Crea&apos;n un per a començar.</p>
           </div>
         )}
 
         {!loading && games.length > 0 && (
           <div className="space-y-10">
             {activeGames.length > 0 && (
-              <GameShelf title="Live shows" games={activeGames} onLaunch={launchGame} onDelete={deleteGame} />
+              <GameShelf title="Espectacles en directe" games={activeGames} onLaunch={launchGame} onDelete={deleteGame} />
             )}
-            <GameShelf title="Drafts" games={draftGames} onLaunch={launchGame} onDelete={deleteGame} />
+            <GameShelf title="Esborranys" games={draftGames} onLaunch={launchGame} onDelete={deleteGame} />
             {completedGames.length > 0 && (
-              <GameShelf title="Completed" games={completedGames} onLaunch={launchGame} onDelete={deleteGame} />
+              <GameShelf title="Complets" games={completedGames} onLaunch={launchGame} onDelete={deleteGame} />
             )}
           </div>
         )}
@@ -256,7 +264,7 @@ function GameShelf({
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">{title}</h2>
-        <span className="text-white/50 text-sm tracking-[0.2em]">{games.length} games</span>
+        <span className="text-white/50 text-sm tracking-[0.2em]">{games.length} jocs</span>
       </div>
       <div className="grid gap-6 md:grid-cols-2">
         {games.map((game) => (
@@ -265,15 +273,15 @@ function GameShelf({
             className="bg-black/40 border border-white/10 rounded-3xl p-6 flex flex-col justify-between hover:border-emerald-400/60 transition"
           >
             <div className="space-y-3">
-              <p className="text-sm uppercase tracking-[0.3em] text-white/40">{game.status}</p>
+              <p className="text-sm uppercase tracking-[0.3em] text-white/40">{STATUS_LABELS[game.status] ?? game.status}</p>
               <h3 className="text-2xl font-semibold">{game.title}</h3>
               <p className="text-white/70 text-sm min-h-[3.5rem] overflow-hidden">
-                {game.description || 'No description yet.'}
+                {game.description || 'Sense descripció de moment.'}
               </p>
               <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                <Stat label="Challenges" value={game.challengeCount} />
-                <Stat label="Teams" value={game.teamCount} />
-                <Stat label="Players" value={game.participantCount} />
+                <Stat label="Reptes" value={game.challengeCount} />
+                <Stat label="Equips" value={game.teamCount} />
+                <Stat label="Jugadors" value={game.participantCount} />
               </div>
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
@@ -281,19 +289,19 @@ function GameShelf({
                 className="flex-1 bg-emerald-400 text-black font-semibold rounded-2xl py-2"
                 onClick={() => onLaunch(game.id)}
               >
-                Start show
+                Començar espectacle
               </button>
               <Link
                 href={`/host/dashboard/game/${game.id}`}
                 className="flex-1 text-center border border-white/20 rounded-2xl py-2 hover:border-white/50"
               >
-                Edit deck
+                Editar baralla
               </Link>
               <button
                 className="flex-none text-sm text-red-300 hover:text-red-200"
                 onClick={() => onDelete(game.id)}
               >
-                Remove
+                Eliminar
               </button>
             </div>
           </article>

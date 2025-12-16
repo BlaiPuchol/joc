@@ -253,7 +253,7 @@ export default function HostGame({
   const createAndActivateRound = async (sequence: number) => {
     const challenge = getChallengeForSequence(sequence)
     if (!challenge) {
-      alert('Add at least one challenge before starting.')
+      alert('Afig almenys un repte abans de començar.')
       return null
     }
     const { data, error } = await supabase

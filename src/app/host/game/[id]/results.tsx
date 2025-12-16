@@ -26,10 +26,10 @@ export default function Results({ gameId }: { gameId: string }) {
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <div className="text-center pt-12 pb-6 px-4">
-        <p className="text-sm uppercase tracking-[0.4em] text-white/50">Final Standings</p>
-        <h1 className="text-4xl font-bold mt-3">Leaderboard</h1>
+        <p className="text-sm uppercase tracking-[0.4em] text-white/50">Classificació final</p>
+        <h1 className="text-4xl font-bold mt-3">Taula de lideratge</h1>
         <p className="mt-3 text-white/70">
-          Every audience member earned a point for each correct losing-team prediction.
+          Cada persona del públic ha guanyat un punt per cada predicció encertada de l&apos;equip perdedor.
         </p>
       </div>
       <div className="flex justify-center">
@@ -51,7 +51,7 @@ export default function Results({ gameId }: { gameId: string }) {
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold">{gameResult.total_score}</p>
-                <p className="text-xs uppercase tracking-widest text-white/60">points</p>
+                <p className="text-xs uppercase tracking-widest text-white/60">punts</p>
               </div>
             </div>
           ))}

@@ -44,6 +44,13 @@ export default function RoundController({
   onToggleLineup,
 }: Props) {
   const [headline, setHeadline] = useState('')
+  const phaseLabels: Record<Phase | 'lobby', string> = {
+    leader_selection: 'Selecció de líders',
+    voting: 'Apostes obertes',
+    action: 'Repte en marxa',
+    resolution: 'Resolució',
+    lobby: 'Sala d\'espera',
+  }
 
   useEffect(() => {
     setHeadline(round?.leader_notes ?? '')
@@ -107,26 +114,26 @@ export default function RoundController({
   if (!round) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-white/70 text-xl">Create a round to begin the show.</p>
+        <p className="text-white/70 text-xl">Crea una ronda per a iniciar l\'espectacle.</p>
       </div>
     )
-  }
+                <p className="text-white/70 text-sm">{members.length} jugadors</p>
 
   return (
     <div className="min-h-screen px-4 py-8 space-y-8">
       <header className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-white/50">Challenge {round.sequence + 1}</p>
-          <h1 className="text-4xl font-bold mt-2">{phase.replace(/_/g, ' ').toUpperCase()}</h1>
+          <p className="text-sm uppercase tracking-[0.3em] text-white/50">Repte {round.sequence + 1}</p>
+          <h1 className="text-4xl font-bold mt-2">{phaseLabels[phase] ?? phase}</h1>
           <p className="text-white/70 mt-2">
-            {votes.length} / {totalPlayers} votes
+            {votes.length} / {totalPlayers} vots
             {pendingVotes > 0 && phase === 'voting' && (
-              <span className="ml-2 text-white/50">({pendingVotes} pending)</span>
+              <span className="ml-2 text-white/50">({pendingVotes} pendents)</span>
             )}
           </p>
           {headline && (
             <p className="text-white mt-1">
-              Headline: <span className="font-semibold">{headline}</span>
+              Titular: <span className="font-semibold">{headline}</span>
             </p>
           )}
         </div>
@@ -137,7 +144,7 @@ export default function RoundController({
               disabled={!headline.trim() || !lineupReady}
               className="bg-emerald-400 text-black font-semibold px-8 py-3 rounded-2xl disabled:opacity-50"
             >
-              Launch voting
+              Obrir apostes
             </button>
           )}
           {phase === 'voting' && (
@@ -145,7 +152,7 @@ export default function RoundController({
               onClick={onLockVoting}
               className="bg-yellow-300 text-black font-semibold px-8 py-3 rounded-2xl"
             >
-              Lock bets
+              Tancar apostes
             </button>
           )}
         </div>
@@ -153,11 +160,11 @@ export default function RoundController({
 
       {challenge && (
         <section className="bg-black/30 border border-white/10 rounded-3xl p-5 space-y-2">
-          <p className="text-sm uppercase tracking-[0.3em] text-white/50">Current challenge</p>
+          <p className="text-sm uppercase tracking-[0.3em] text-white/50">Repte actual</p>
           <h2 className="text-3xl font-semibold">{challenge.title}</h2>
           {challenge.description && <p className="text-white/70 text-sm">{challenge.description}</p>}
           {requiredCount && (
-            <p className="text-white/50 text-sm">{requiredCount} player(s) per team compete.</p>
+            <p className="text-white/50 text-sm">{requiredCount} jugador(s) per equip competixen.</p>
           )}
         </section>
       )}
@@ -165,16 +172,16 @@ export default function RoundController({
       {phase === 'leader_selection' && (
         <section className="space-y-4">
           <div className="bg-white/5 border border-white/10 rounded-3xl p-6">
-            <label className="text-sm uppercase tracking-[0.3em] text-white/50">Headline shown to players</label>
+            <label className="text-sm uppercase tracking-[0.3em] text-white/50">Titular que veuran els jugadors</label>
             <textarea
               className="mt-3 w-full rounded-2xl bg-black/30 border border-white/10 p-4 text-lg"
-              placeholder="Blue vs Green"
+              placeholder="Blau vs Verd"
               value={headline}
               onChange={(event) => setHeadline(event.target.value)}
             ></textarea>
             {!lineupReady && (
               <p className="text-amber-300 text-sm mt-2">
-                Select the lineup for every active team to continue.
+                Selecciona la alineació de cada equip actiu per a continuar.
               </p>
             )}
           </div>
@@ -192,7 +199,7 @@ export default function RoundController({
 
       {phase === 'action' && (
         <section className="bg-white/5 border border-white/10 rounded-3xl p-6 text-center">
-          <p className="text-white/70 text-lg">Challenge running. Select the team that lost once you know.</p>
+          <p className="text-white/70 text-lg">Repte en curs. Marca l&apos;equip que ha perdut quan ho sàpies.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
             {teams.map((team) => (
               <button
@@ -201,7 +208,7 @@ export default function RoundController({
                 className="rounded-2xl text-white text-2xl font-semibold py-6 px-4 hover:opacity-90"
                 onClick={() => onMarkLosingTeam(team.id)}
               >
-                Mark {team.name}
+                Marca {team.name}
               </button>
             ))}
           </div>
@@ -217,13 +224,13 @@ export default function RoundController({
               onClick={onNextRound}
               className="flex-1 bg-blue-500 rounded-2xl py-4 text-xl font-semibold hover:bg-blue-400"
             >
-              Next challenge
+              Següent repte
             </button>
             <button
               onClick={onEndGame}
               className="flex-1 bg-white/10 border border-white/20 rounded-2xl py-4 text-xl font-semibold"
             >
-              Show final results
+              Mostrar resultats finals
             </button>
           </div>
         </section>
@@ -257,14 +264,14 @@ function LineupGrid({
             <header className="flex items-center justify-between">
               <div>
                 <p className="text-sm uppercase tracking-[0.3em] text-white/50">{team.name}</p>
-                <p className="text-white/70 text-sm">{members.length} players</p>
+                <p className="text-white/70 text-sm">{members.length} jugadors</p>
               </div>
               <span className="text-white/60 text-sm">
-                {selected.size}/{limit || '∞'} selected
+                {selected.size}/{limit || '∞'} seleccionats
               </span>
             </header>
             <div className="space-y-2 mt-4 max-h-72 overflow-y-auto pr-2">
-              {members.length === 0 && <p className="text-white/50 text-sm">Assign players to this team.</p>}
+              {members.length === 0 && <p className="text-white/50 text-sm">Assigna jugadors a este equip.</p>}
               {members.map((player) => {
                 const isPlaying = selected.has(player.id)
                 const disableAdd = !isPlaying && limit !== 0 && selected.size >= limit
@@ -281,7 +288,7 @@ function LineupGrid({
                   >
                     <span>{player.nickname}</span>
                     <span className="text-xs uppercase tracking-[0.3em]">
-                      {isPlaying ? 'Playing' : 'Bench'}
+                      {isPlaying ? 'Jugant' : 'Banqueta'}
                     </span>
                   </button>
                 )
@@ -316,17 +323,17 @@ function VotesPanel({
             </div>
             {losingTeamId && losingTeamId === team.id && (
               <span className="px-3 py-1 rounded-full bg-white/20 text-xs uppercase tracking-[0.3em]">
-                Loser
+                Perdedor
               </span>
             )}
           </header>
           <div className="bg-black/30 rounded-full h-3 overflow-hidden">
             <div className="h-full" style={{ width: `${percentage}%`, backgroundColor: team.color_hex }}></div>
           </div>
-          <p className="text-white/60 text-sm">{count} vote(s)</p>
+          <p className="text-white/60 text-sm">{count} {count === 1 ? 'vot' : 'vots'}</p>
           {revealNames && (
             <div className="space-y-1 max-h-32 overflow-y-auto pr-2 text-sm">
-              {voters.length === 0 && <p className="text-white/50">No one voted here.</p>}
+              {voters.length === 0 && <p className="text-white/50">Ningú ha votat ací.</p>}
               {voters.map((vote) => (
                 <div key={vote.id} className="bg-black/40 border border-white/5 rounded-xl px-3 py-1">
                   {vote.participant.nickname}
@@ -359,7 +366,7 @@ function Scoreboard({
             </span>
           </header>
           <p className="text-white/60 text-sm mt-2">
-            {correct} correct • {incorrect} incorrect
+            {correct} encerts • {incorrect} errors
           </p>
         </article>
       ))}

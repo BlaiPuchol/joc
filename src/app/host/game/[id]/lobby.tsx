@@ -31,7 +31,7 @@ export default function Lobby({
         <div className="flex flex-col md:flex-row gap-8">
           <div className="flex-1">
             <p className="text-sm uppercase tracking-[0.4em] text-white/40">
-              Registered Players
+              Participants registrats
             </p>
             <div className="flex flex-wrap mt-4">
               {participants.map((participant) => (
@@ -43,16 +43,16 @@ export default function Lobby({
                 </div>
               ))}
               {participants.length === 0 && (
-                <p className="text-white/60">Waiting for players to join...</p>
+                <p className="text-white/60">Esperant que s&apos;unixen jugadors...</p>
               )}
             </div>
           </div>
           <div className="w-full md:w-72 flex flex-col justify-between">
             <div>
-              <h2 className="text-3xl font-bold mb-2">Live Betting Game</h2>
+              <h2 className="text-3xl font-bold mb-2">Joc d&apos;apostes en directe</h2>
               <p className="text-white/70 text-sm">
-                Share the QR code or link so the audience can open the betting app on
-                their phones.
+                Compartix el codi QR o l&apos;enllaç perquè el públic puga obrir
+                l&apos;app d&apos;apostes als seus mòbils.
               </p>
               <div className="mt-4">
                 {joinUrl ? (
@@ -64,7 +64,7 @@ export default function Lobby({
                     <p className="mt-2 text-xs text-white/60 break-all">{joinUrl}</p>
                   </>
                 ) : (
-                  <p className="text-white/50 text-sm">Generating join link…</p>
+                  <p className="text-white/50 text-sm">Generant enllaç per a unir-se…</p>
                 )}
               </div>
             </div>
@@ -72,7 +72,7 @@ export default function Lobby({
               onClick={onStart}
               className="mt-6 bg-green-500 text-black font-bold py-3 px-6 rounded-2xl hover:bg-green-400 transition"
             >
-              Organize teams
+              Organitza els equips
             </button>
           </div>
         </div>
