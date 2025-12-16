@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Game,
   GameRound,
+  GameTeam,
   Participant,
   RoundVote,
-  Team,
   supabase,
 } from '@/types/types'
 import { TEAM_ORDER_LOOKUP } from '@/constants'
@@ -29,14 +29,14 @@ export default function Home({
 }) {
   const [participant, setParticipant] = useState<Participant | null>(null)
   const [game, setGame] = useState<Game | null>(null)
-  const [teams, setTeams] = useState<Team[]>([])
+  const [teams, setTeams] = useState<GameTeam[]>([])
   const [activeRound, setActiveRound] = useState<GameRound | null>(null)
   const [roundVotes, setRoundVotes] = useState<RoundVote[]>([])
 
   const fetchVotes = useCallback(async (roundId: string) => {
     const { data, error } = await supabase
       .from('round_votes')
-      .select('*, participant:participants(*), team:teams(*)')
+      .select('*, participant:participants(*), game_team:game_teams(*)')
       .eq('round_id', roundId)
       .order('created_at', { ascending: true })
 
@@ -70,7 +70,11 @@ export default function Home({
   useEffect(() => {
     const fetchInitialData = async () => {
       const [{ data: teamData }, { data: gameData }] = await Promise.all([
-        supabase.from('teams').select('*').order('slug'),
+        supabase
+          .from('game_teams')
+          .select('*')
+          .eq('game_id', gameId)
+          .order('position', { ascending: true }),
         supabase.from('games').select('*').eq('id', gameId).single(),
       ])
 
@@ -169,7 +173,7 @@ export default function Home({
         {
           round_id: activeRound.id,
           participant_id: participant.id,
-          team_id: teamId,
+          game_team_id: teamId,
         },
         { onConflict: 'round_id,participant_id' }
       )
@@ -186,7 +190,7 @@ export default function Home({
   const playerVoteTeamId = useMemo(() => {
     if (!participant) return null
     return (
-      roundVotes.find((vote) => vote.participant_id === participant.id)?.team_id ??
+      roundVotes.find((vote) => vote.participant_id === participant.id)?.game_team_id ??
       null
     )
   }, [participant, roundVotes])
@@ -221,9 +225,13 @@ export default function Home({
   )
 }
 
-const orderTeams = (teamList: Team[]) =>
-  [...teamList].sort(
-    (a, b) =>
-      (TEAM_ORDER_LOOKUP[a.slug] ?? Number.MAX_SAFE_INTEGER) -
-      (TEAM_ORDER_LOOKUP[b.slug] ?? Number.MAX_SAFE_INTEGER)
-  )
+const orderTeams = (teamList: GameTeam[]) =>
+  [...teamList].sort((a, b) => {
+    const positionDelta = (a.position ?? Number.MAX_SAFE_INTEGER) - (b.position ?? Number.MAX_SAFE_INTEGER)
+    if (positionDelta !== 0) {
+      return positionDelta
+    }
+
+    const slugScore = (slug: string | null) => TEAM_ORDER_LOOKUP[slug ?? ''] ?? Number.MAX_SAFE_INTEGER
+    return slugScore(a.slug) - slugScore(b.slug)
+  })

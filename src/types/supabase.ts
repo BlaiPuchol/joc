@@ -36,17 +36,24 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "answers_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "participants"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "answers_choice_id_fkey"
             columns: ["choice_id"]
             isOneToOne: false
             referencedRelation: "choices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answers_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "game_results"
+            referencedColumns: ["participant_id"]
+          },
+          {
+            foreignKeyName: "answers_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
             referencedColumns: ["id"]
           },
           {
@@ -55,6 +62,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "questions"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      choices: {
+        Row: {
+          body: string
+          created_at: string
           id: string
           is_correct: boolean
           question_id: string
@@ -83,103 +97,33 @@ export type Database = {
           },
         ]
       }
-      games: {
-        Row: {
-          description: string
-          title: string
-          status: string
-          lobby_code: string
-          max_teams: number
-          max_players_per_team: number | null
-          created_at: string
-          current_round_sequence: number
-          active_round_id: string | null
-          host_user_id: string | null
-          id: string
-          phase: string
-          quiz_set_id: string | null
-        }
-        Insert: {
-          description?: string
-          title?: string
-          status?: string
-          lobby_code?: string
-          max_teams?: number
-          max_players_per_team?: number | null
-          created_at?: string
-          current_round_sequence?: number
-          active_round_id?: string | null
-          host_user_id?: string | null
-          id?: string
-          phase?: string
-          quiz_set_id?: string | null
-        }
-        Update: {
-          description?: string
-          title?: string
-          status?: string
-          lobby_code?: string
-          max_teams?: number
-          max_players_per_team?: number | null
-          created_at?: string
-          current_round_sequence?: number
-          active_round_id?: string | null
-          host_user_id?: string | null
-          id?: string
-          phase?: string
-          quiz_set_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "games_active_round_id_fkey"
-            columns: ["active_round_id"]
-            isOneToOne: false
-            referencedRelation: "game_rounds"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "games_host_user_id_fkey"
-            columns: ["host_user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "games_quiz_set_id_fkey"
-            columns: ["quiz_set_id"]
-            isOneToOne: false
-            referencedRelation: "quiz_sets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       game_challenges: {
         Row: {
-          id: string
           created_at: string
+          description: string | null
           game_id: string
+          id: string
+          participants_per_team: number | null
           position: number
           title: string
-          description: string | null
-          participants_per_team: number | null
         }
         Insert: {
-          id?: string
           created_at?: string
+          description?: string | null
           game_id: string
+          id?: string
+          participants_per_team?: number | null
           position: number
           title: string
-          description?: string | null
-          participants_per_team?: number | null
         }
         Update: {
-          id?: string
           created_at?: string
+          description?: string | null
           game_id?: string
+          id?: string
+          participants_per_team?: number | null
           position?: number
           title?: string
-          description?: string | null
-          participants_per_team?: number | null
         }
         Relationships: [
           {
@@ -238,50 +182,71 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "game_rounds_losing_game_team_id_fkey"
+            columns: ["losing_team_id"]
+            isOneToOne: false
+            referencedRelation: "game_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_rounds_losing_game_team_id_fkey"
+            columns: ["losing_team_id"]
+            isOneToOne: false
+            referencedRelation: "team_scores"
+            referencedColumns: ["team_id"]
+          },
+          {
             foreignKeyName: "game_rounds_losing_team_id_fkey"
             columns: ["losing_team_id"]
             isOneToOne: false
             referencedRelation: "game_teams"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "game_rounds_losing_team_id_fkey"
+            columns: ["losing_team_id"]
+            isOneToOne: false
+            referencedRelation: "team_scores"
+            referencedColumns: ["team_id"]
+          },
         ]
       }
       game_teams: {
         Row: {
-          id: string
+          color_hex: string
           created_at: string
           game_id: string
-          template_team_id: string | null
-          slug: string | null
-          name: string
-          color_hex: string
-          position: number
+          id: string
           is_active: boolean
           leader_participant_id: string | null
+          name: string
+          position: number
+          slug: string | null
+          template_team_id: string | null
         }
         Insert: {
-          id?: string
+          color_hex: string
           created_at?: string
           game_id: string
-          template_team_id?: string | null
-          slug?: string | null
-          name: string
-          color_hex: string
-          position: number
+          id?: string
           is_active?: boolean
           leader_participant_id?: string | null
+          name: string
+          position: number
+          slug?: string | null
+          template_team_id?: string | null
         }
         Update: {
-          id?: string
+          color_hex?: string
           created_at?: string
           game_id?: string
-          template_team_id?: string | null
-          slug?: string | null
-          name?: string
-          color_hex?: string
-          position?: number
+          id?: string
           is_active?: boolean
           leader_participant_id?: string | null
+          name?: string
+          position?: number
+          slug?: string | null
+          template_team_id?: string | null
         }
         Relationships: [
           {
@@ -295,6 +260,13 @@ export type Database = {
             foreignKeyName: "game_teams_leader_participant_id_fkey"
             columns: ["leader_participant_id"]
             isOneToOne: false
+            referencedRelation: "game_results"
+            referencedColumns: ["participant_id"]
+          },
+          {
+            foreignKeyName: "game_teams_leader_participant_id_fkey"
+            columns: ["leader_participant_id"]
+            isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
@@ -303,6 +275,69 @@ export type Database = {
             columns: ["template_team_id"]
             isOneToOne: false
             referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      games: {
+        Row: {
+          active_round_id: string | null
+          created_at: string
+          current_round_sequence: number
+          description: string
+          host_user_id: string | null
+          id: string
+          lobby_code: string
+          max_players_per_team: number | null
+          max_teams: number
+          phase: string
+          quiz_set_id: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          active_round_id?: string | null
+          created_at?: string
+          current_round_sequence?: number
+          description?: string
+          host_user_id?: string | null
+          id?: string
+          lobby_code?: string
+          max_players_per_team?: number | null
+          max_teams?: number
+          phase?: string
+          quiz_set_id?: string | null
+          status?: string
+          title?: string
+        }
+        Update: {
+          active_round_id?: string | null
+          created_at?: string
+          current_round_sequence?: number
+          description?: string
+          host_user_id?: string | null
+          id?: string
+          lobby_code?: string
+          max_players_per_team?: number | null
+          max_teams?: number
+          phase?: string
+          quiz_set_id?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "games_active_round_id_fkey"
+            columns: ["active_round_id"]
+            isOneToOne: false
+            referencedRelation: "game_rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "games_quiz_set_id_fkey"
+            columns: ["quiz_set_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_sets"
             referencedColumns: ["id"]
           },
         ]
@@ -348,11 +383,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "participants_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "participants_game_team_id_fkey"
+            columns: ["game_team_id"]
             isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            referencedRelation: "team_scores"
+            referencedColumns: ["team_id"]
           },
         ]
       }
@@ -412,75 +447,36 @@ export type Database = {
         }
         Relationships: []
       }
-      round_votes: {
-        Row: {
-          created_at: string
-          id: string
-          participant_id: string
-          round_id: string
-          game_team_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          participant_id: string
-          round_id: string
-          game_team_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          participant_id?: string
-          round_id?: string
-          game_team_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "round_votes_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "participants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "round_votes_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "game_rounds"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "round_votes_game_team_id_fkey"
-            columns: ["game_team_id"]
-            isOneToOne: false
-            referencedRelation: "game_teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       round_lineups: {
         Row: {
-          id: string
           created_at: string
+          id: string
+          participant_id: string
           round_id: string
           team_id: string
-          participant_id: string
         }
         Insert: {
-          id?: string
           created_at?: string
+          id?: string
+          participant_id: string
           round_id: string
           team_id: string
-          participant_id: string
         }
         Update: {
-          id?: string
           created_at?: string
+          id?: string
+          participant_id?: string
           round_id?: string
           team_id?: string
-          participant_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "round_lineups_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "game_results"
+            referencedColumns: ["participant_id"]
+          },
           {
             foreignKeyName: "round_lineups_participant_id_fkey"
             columns: ["participant_id"]
@@ -500,6 +496,73 @@ export type Database = {
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "game_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_lineups_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team_scores"
+            referencedColumns: ["team_id"]
+          },
+        ]
+      }
+      round_votes: {
+        Row: {
+          created_at: string
+          game_team_id: string
+          id: string
+          participant_id: string
+          round_id: string
+        }
+        Insert: {
+          created_at?: string
+          game_team_id: string
+          id?: string
+          participant_id: string
+          round_id: string
+        }
+        Update: {
+          created_at?: string
+          game_team_id?: string
+          id?: string
+          participant_id?: string
+          round_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_votes_game_team_id_fkey"
+            columns: ["game_team_id"]
+            isOneToOne: false
+            referencedRelation: "game_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_votes_game_team_id_fkey"
+            columns: ["game_team_id"]
+            isOneToOne: false
+            referencedRelation: "team_scores"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "round_votes_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "game_results"
+            referencedColumns: ["participant_id"]
+          },
+          {
+            foreignKeyName: "round_votes_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_votes_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "game_rounds"
             referencedColumns: ["id"]
           },
         ]
@@ -530,24 +593,49 @@ export type Database = {
       }
     }
     Views: {
-      team_scores: {
+      game_results: {
         Row: {
           game_id: string | null
-          team_id: string | null
-          name: string | null
-          color_hex: string | null
+          nickname: string | null
+          participant_id: string | null
           total_score: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "participants_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_scores: {
+        Row: {
+          color_hex: string | null
+          game_id: string | null
+          name: string | null
+          team_id: string | null
+          total_score: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_teams_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
       add_question: {
         Args: {
-          quiz_set_id: string
           body: string
-          order: number
           choices: Json[]
+          order: number
+          quiz_set_id: string
         }
         Returns: undefined
       }
@@ -561,82 +649,58 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-    ? (PublicSchema["Tables"] &
-        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
-      choices: {
-        Row: {
-          body: string
-          created_at: string
-          id: string
-          is_correct: boolean
-          question_id: string
-        }
-        Insert: {
-          body: string
-          created_at?: string
-          id?: string
-          is_correct?: boolean
-          question_id: string
-        }
-        Update: {
-          body?: string
-          created_at?: string
-          id?: string
-          is_correct?: boolean
-          question_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "choices_question_id_fkey"
-            columns: ["question_id"]
-            isOneToOne: false
-            referencedRelation: "questions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-    }
-  }
       : never
     : never
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -644,20 +708,24 @@ export type TablesInsert<
     : never
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -665,14 +733,42 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
-    | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
+

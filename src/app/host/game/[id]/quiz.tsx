@@ -48,18 +48,9 @@ export default function RoundController({
   useEffect(() => {
     setHeadline(round?.leader_notes ?? '')
   }, [round?.leader_notes])
-
-  if (!round) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-white/70 text-xl">Create a round to begin the show.</p>
-      </div>
-    )
-  }
-
   const totalPlayers = participants.length
   const pendingVotes = Math.max(totalPlayers - votes.length, 0)
-  const losingTeamId = round.losing_team_id
+  const losingTeamId = round?.losing_team_id ?? null
 
   const lineupByTeam = useMemo(() => {
     return teams.reduce<Record<string, Participant[]>>((acc, team) => {
@@ -112,6 +103,14 @@ export default function RoundController({
       return { team, correct, incorrect, delta: correct - incorrect }
     })
   }, [losingTeamId, teams, votes])
+
+  if (!round) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-white/70 text-xl">Create a round to begin the show.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen px-4 py-8 space-y-8">

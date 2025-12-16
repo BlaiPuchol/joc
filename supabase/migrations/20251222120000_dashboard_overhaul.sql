@@ -12,7 +12,8 @@ alter table public.games
 
 create unique index if not exists games_lobby_code_key on public.games (lobby_code);
 
-drop constraint if exists games_status_check;
+alter table public.games
+  drop constraint if exists games_status_check;
 alter table public.games
   add constraint games_status_check
   check (status in ('draft', 'ready', 'live', 'completed', 'archived'));
@@ -67,18 +68,30 @@ create index if not exists round_lineups_round_id_idx on public.round_lineups (r
 alter table public.round_votes
   add column if not exists game_team_id uuid references public.game_teams(id) on delete cascade;
 
+with vote_team_mapping as (
+  select
+    rv.id as round_vote_id,
+    gt.id as game_team_id
+  from public.round_votes rv
+  join public.game_rounds gr on gr.id = rv.round_id
+  join public.games g on g.id = gr.game_id
+  join public.game_teams gt on gt.game_id = g.id
+  join public.teams t on t.id = rv.team_id
+  where gt.template_team_id = t.id
+)
 update public.round_votes rv
-set game_team_id = gt.id
-from public.game_rounds gr
-join public.games g on g.id = gr.game_id
-join public.game_teams gt on gt.game_id = g.id
-join public.teams t on t.id = rv.team_id
-where rv.round_id = gr.id
-  and gt.template_team_id = t.id
+set game_team_id = vtm.game_team_id
+from vote_team_mapping vtm
+where rv.id = vtm.round_vote_id
   and rv.game_team_id is null;
+
+drop view if exists public.game_results;
+drop view if exists public.team_scores;
 
 alter table public.round_votes drop constraint if exists round_votes_team_id_fkey;
 alter table public.round_votes drop column if exists team_id;
+
+alter table public.round_votes drop constraint if exists round_votes_game_team_id_fkey;
 
 alter table public.round_votes
   add constraint round_votes_game_team_id_fkey
@@ -92,21 +105,36 @@ alter table public.game_rounds
 alter table public.game_rounds
   add column if not exists challenge_id uuid references public.game_challenges(id) on delete set null;
 
+with losing_team_mapping as (
+  select
+    gr.id as round_id,
+    gt.id as new_losing_team_id
+  from public.game_rounds gr
+  join public.games g on g.id = gr.game_id
+  join public.game_teams gt on gt.game_id = g.id
+  join public.teams t on t.id = gr.losing_team_id
+  where gt.template_team_id = t.id
+    and gr.losing_team_id is not null
+)
 update public.game_rounds gr
-set losing_game_team_id = gt.id
-from public.games g
-join public.game_teams gt on gt.game_id = g.id
-join public.teams t on t.id = gr.losing_team_id
-where gr.game_id = g.id
-  and gt.template_team_id = t.id
-  and gr.losing_team_id is not null
+set losing_game_team_id = ltm.new_losing_team_id
+from losing_team_mapping ltm
+where gr.id = ltm.round_id
   and gr.losing_game_team_id is null;
 
+with challenge_mapping as (
+  select
+    gr.id as round_id,
+    gc.id as mapped_challenge_id
+  from public.game_rounds gr
+  join public.game_challenges gc
+    on gc.game_id = gr.game_id
+   and gc.position = gr.sequence
+)
 update public.game_rounds gr
-set challenge_id = gc.id
-from public.game_challenges gc
-where gc.game_id = gr.game_id
-  and gc.position = gr.sequence
+set challenge_id = cm.mapped_challenge_id
+from challenge_mapping cm
+where gr.id = cm.round_id
   and gr.challenge_id is null;
 
 alter table public.game_rounds drop constraint if exists game_round_state_check;
@@ -128,8 +156,6 @@ alter table public.game_rounds
   foreign key (losing_team_id) references public.game_teams(id) on delete set null;
 
 -- 8) Scoreboard for teams ---------------------------------------------------
-drop view if exists public.game_results;
-drop view if exists public.team_scores;
 create view public.team_scores as
 with round_totals as (
   select
@@ -157,6 +183,23 @@ from public.game_teams gt
 left join round_totals rt on rt.game_id = gt.game_id and rt.origin_team_id = gt.id
 where gt.is_active is true
 group by gt.game_id, gt.id, gt.name, gt.color_hex;
+
+create view public.game_results as
+select
+  p.id as participant_id,
+  p.nickname,
+  p.game_id,
+  coalesce(sum(
+    case
+      when gr.losing_team_id is null then 0
+      when rv.game_team_id = gr.losing_team_id then 1
+      else 0
+    end
+  ), 0) as total_score
+from public.participants p
+left join public.game_rounds gr on gr.game_id = p.game_id
+left join public.round_votes rv on rv.round_id = gr.id and rv.participant_id = p.id
+group by p.id, p.nickname, p.game_id;
 
 -- 9) Row level security for new data surfaces ------------------------------
 alter table public.game_challenges enable row level security;

@@ -1,4 +1,4 @@
-import { GameRound, Participant, RoundVote, Team } from '@/types/types'
+import { GameRound, GameTeam, Participant, RoundVote } from '@/types/types'
 import { useMemo } from 'react'
 
 type Phase =
@@ -21,7 +21,7 @@ export default function Challenge({
   phase: Phase
   participant: Participant
   round: GameRound | null
-  teams: Team[]
+  teams: GameTeam[]
   votes: RoundVote[]
   playerVoteTeamId: string | null
   onVote: (teamId: string) => void
@@ -31,7 +31,7 @@ export default function Challenge({
   const groupedVotes = useMemo(() => {
     return teams.map((team) => ({
       team,
-      voters: votes.filter((vote) => vote.team_id === team.id),
+      voters: votes.filter((vote) => vote.game_team_id === team.id),
     }))
   }, [teams, votes])
 
@@ -133,7 +133,7 @@ function TransparencyPanel({
   groupedVotes,
   losingTeamId,
 }: {
-  groupedVotes: { team: Team; voters: RoundVote[] }[]
+  groupedVotes: { team: GameTeam; voters: RoundVote[] }[]
   losingTeamId: string | null
 }) {
   return (

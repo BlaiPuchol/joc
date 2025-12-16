@@ -9,6 +9,7 @@ export const supabase = createClient<Database>(
 export type Participant = Database['public']['Tables']['participants']['Row']
 
 export type BaseTeam = Database['public']['Tables']['teams']['Row']
+export type Team = BaseTeam
 
 export type GameTeam = Database['public']['Tables']['game_teams']['Row']
 
@@ -26,3 +27,5 @@ export type GameChallenge = Database['public']['Tables']['game_challenges']['Row
 export type RoundLineup = Database['public']['Tables']['round_lineups']['Row']
 
 export type TeamScore = Database['public']['Views']['team_scores']['Row']
+
+export type GameResult = Database['public']['Views']['game_results']['Row']
