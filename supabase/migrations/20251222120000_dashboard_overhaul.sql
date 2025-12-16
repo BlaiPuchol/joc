@@ -1,14 +1,19 @@
 -- Host dashboard + team experience overhaul
 begin;
 
+create extension if not exists pgcrypto with schema public;
+
 -- 1) Games now behave like reusable decks -----------------------------------
 alter table public.games
   add column if not exists title text not null default 'Untitled Game',
   add column if not exists description text not null default '',
   add column if not exists status text not null default 'draft',
-  add column if not exists lobby_code text not null default upper(substr(encode(gen_random_bytes(4), 'hex'), 1, 6)),
+  add column if not exists lobby_code text not null default upper(substr(md5((clock_timestamp()::text || random()::text)), 1, 6)),
   add column if not exists max_teams integer not null default 4,
   add column if not exists max_players_per_team integer;
+
+alter table public.games
+  alter column lobby_code set default upper(substr(md5((clock_timestamp()::text || random()::text)), 1, 6));
 
 create unique index if not exists games_lobby_code_key on public.games (lobby_code);
 
