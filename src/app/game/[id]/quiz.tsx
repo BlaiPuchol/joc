@@ -36,9 +36,9 @@ export default function Challenge({
   }, [teams, votes])
 
   const statusCopy: Record<Phase, string> = {
-    lobby: "Esperant que l'amfitrió inicie el primer repte.",
+    lobby: "Esperant que l&apos;amfitrió inicie el primer repte.",
     leader_selection: 'Esperant que els líders trien qui competix...',
-    voting: "Aposta per l'equip que cregues que perdrà!",
+    voting: "Aposta per l&apos;equip que cregues que perdrà!",
     action: 'Repte en marxa... Bona sort!',
     resolution: 'Ja tenim resultats!',
     results: 'La partida ha acabat.',
@@ -93,7 +93,7 @@ export default function Challenge({
       )}
 
       {phase === 'lobby' && (
-        <MessageBlock text="Mantín-te a l'espera mentre l'amfitrió ho prepara tot." />
+        <MessageBlock text="Mantín-te a l&apos;espera mentre l&apos;amfitrió ho prepara tot." />
       )}
 
       {phase === 'action' && (
@@ -115,7 +115,7 @@ export default function Challenge({
             )}
             {!losingTeamId && (
               <p className="text-xl text-white/70">
-                Esperant que l'amfitrió anuncie l'equip perdedor.
+                Esperant que l&apos;amfitrió anuncie l&apos;equip perdedor.
               </p>
             )}
           </div>

@@ -114,10 +114,10 @@ export default function RoundController({
   if (!round) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-white/70 text-xl">Crea una ronda per a iniciar l\'espectacle.</p>
+        <p className="text-white/70 text-xl">Crea una ronda per a iniciar l&apos;espectacle.</p>
       </div>
     )
-                <p className="text-white/70 text-sm">{members.length} jugadors</p>
+  }
 
   return (
     <div className="min-h-screen px-4 py-8 space-y-8">

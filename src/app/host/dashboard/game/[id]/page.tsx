@@ -328,7 +328,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-semibold">Reptes</h2>
-                <p className="text-white/60 text-sm">Afig títols, descripcions i grandària d\'equip per a cada repte.</p>
+                <p className="text-white/60 text-sm">Afig títols, descripcions i grandària d&apos;equip per a cada repte.</p>
               </div>
               <button
                 onClick={addChallenge}
@@ -409,7 +409,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
               ))}
               {challenges.length === 0 && (
                 <div className="border border-dashed border-white/20 rounded-3xl p-8 text-center text-white/60">
-                  Encara no hi ha reptes. Afig-ne un per a planificar l\'espectacle.
+                  Encara no hi ha reptes. Afig-ne un per a planificar l&apos;espectacle.
                 </div>
               )}
             </div>
