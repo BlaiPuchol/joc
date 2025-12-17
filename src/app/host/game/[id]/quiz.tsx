@@ -122,6 +122,7 @@ export default function RoundController({
   const activeTeams = teams.filter((team) => team.is_active)
   const readyTeams = activeTeams.filter((team) => (membersByTeam[team.id]?.length ?? 0) > 0 && isTeamReady(team))
   const lineupReady = activeTeams.every((team) => (membersByTeam[team.id]?.length ?? 0) > 0 && isTeamReady(team))
+  const showSelectionProgress = phase === 'leader_selection'
 
   const lineupSummary = useMemo(() => {
     return teams
@@ -175,64 +176,77 @@ export default function RoundController({
     <div className="min-h-screen" style={{ background: screenBackground }}>
       <div className="screen-frame py-10 space-y-10 text-white">
         <section
-          className="glow-panel relative overflow-hidden p-8 md:p-12 space-y-8"
+          className="glow-panel relative overflow-hidden p-8 md:p-12"
           style={{ background: heroBackground }}
         >
-          <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.5em] text-white/70">
-            <span className="px-4 py-2 rounded-full bg-white/15">Repte {round.sequence + 1}</span>
-            <span className="px-4 py-2 rounded-full bg-white/10">{phaseLabels[phase] ?? phase}</span>
-            <span className="px-4 py-2 rounded-full bg-white/5">
-              {votes.length} / {totalPlayers} vots
-            </span>
-          </div>
-          <div className="space-y-4">
-            <h1 className="text-4xl md:text-6xl font-black leading-tight">
-              {challenge?.title ?? 'Repte en directe'}
-            </h1>
-            {challenge?.description && (
-              <p className="text-lg md:text-2xl text-white/90 max-w-4xl">{challenge.description}</p>
-            )}
-          </div>
-          <dl className="grid gap-6 sm:grid-cols-3 text-lg">
-            <div>
-              <dt className="text-xs uppercase tracking-[0.5em] text-white/60">Vots registrats</dt>
-              <dd className="text-3xl font-bold">{votes.length}</dd>
-              {pendingVotes > 0 && phase === 'voting' && (
-                <p className="text-sm text-white/70">{pendingVotes} pendents</p>
-              )}
+          <div
+            className={`relative z-10 ${showSelectionProgress ? 'grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]' : ''}`}
+          >
+            <div className="space-y-8">
+              <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.5em] text-white/70">
+                <span className="px-4 py-2 rounded-full bg-white/15">Repte {round.sequence + 1}</span>
+                <span className="px-4 py-2 rounded-full bg-white/10">{phaseLabels[phase] ?? phase}</span>
+                <span className="px-4 py-2 rounded-full bg-white/5">
+                  {votes.length} / {totalPlayers} vots
+                </span>
+              </div>
+              <div className="space-y-4">
+                <h1 className="text-4xl md:text-6xl font-black leading-tight">
+                  {challenge?.title ?? 'Repte en directe'}
+                </h1>
+                {challenge?.description && (
+                  <p className="text-lg md:text-2xl text-white/90 max-w-4xl">{challenge.description}</p>
+                )}
+              </div>
+              <dl className="grid gap-6 sm:grid-cols-3 text-lg">
+                <div>
+                  <dt className="text-xs uppercase tracking-[0.5em] text-white/60">Vots registrats</dt>
+                  <dd className="text-3xl font-bold">{votes.length}</dd>
+                  {pendingVotes > 0 && phase === 'voting' && (
+                    <p className="text-sm text-white/70">{pendingVotes} pendents</p>
+                  )}
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-[0.5em] text-white/60">Equips llestos</dt>
+                  <dd className="text-3xl font-bold">{readyTeams.length} / {activeTeams.length}</dd>
+                  {!lineupReady && (
+                    <p className="text-sm text-amber-200">Encara confirmant alineacions</p>
+                  )}
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-[0.5em] text-white/60">Jugadors actius</dt>
+                  <dd className="text-3xl font-bold">{totalPlayers}</dd>
+                  {requiredCount && (
+                    <p className="text-sm text-white/70">{requiredCount} per equip</p>
+                  )}
+                </div>
+              </dl>
+              <div className="flex flex-col md:flex-row gap-4">
+                {phase === 'leader_selection' && (
+                  <button
+                    onClick={() => onOpenVoting(lineupSummary)}
+                    disabled={!lineupReady}
+                    className="tactile-button flex-1 bg-emerald-400 text-black text-xl py-5 disabled:opacity-50"
+                  >
+                    Obrir apostes
+                  </button>
+                )}
+                {phase === 'voting' && (
+                  <button
+                    onClick={onLockVoting}
+                    className="tactile-button flex-1 bg-yellow-300 text-black text-xl py-5"
+                  >
+                    Tancar apostes
+                  </button>
+                )}
+              </div>
             </div>
-            <div>
-              <dt className="text-xs uppercase tracking-[0.5em] text-white/60">Equips llestos</dt>
-              <dd className="text-3xl font-bold">{readyTeams.length} / {activeTeams.length}</dd>
-              {!lineupReady && (
-                <p className="text-sm text-amber-200">Encara confirmant alineacions</p>
-              )}
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-[0.5em] text-white/60">Jugadors actius</dt>
-              <dd className="text-3xl font-bold">{totalPlayers}</dd>
-              {requiredCount && (
-                <p className="text-sm text-white/70">{requiredCount} per equip</p>
-              )}
-            </div>
-          </dl>
-          <div className="flex flex-col md:flex-row gap-4">
-            {phase === 'leader_selection' && (
-              <button
-                onClick={() => onOpenVoting(lineupSummary)}
-                disabled={!lineupReady}
-                className="tactile-button flex-1 bg-emerald-400 text-black text-xl py-5 disabled:opacity-50"
-              >
-                Obrir apostes
-              </button>
-            )}
-            {phase === 'voting' && (
-              <button
-                onClick={onLockVoting}
-                className="tactile-button flex-1 bg-yellow-300 text-black text-xl py-5"
-              >
-                Tancar apostes
-              </button>
+            {showSelectionProgress && (
+              <SelectionProgressCard
+                readyTeams={readyTeams.length}
+                totalTeams={activeTeams.length}
+                lineupReady={lineupReady}
+              />
             )}
           </div>
           <div className="absolute inset-0 opacity-30 pointer-events-none" style={{
@@ -242,17 +256,6 @@ export default function RoundController({
 
         {phase === 'leader_selection' && (
           <section className="space-y-6">
-            <div className="glow-panel p-6 md:p-8 flex flex-col gap-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.5em] text-white/60">Progrés de selecció</p>
-                <p className="text-4xl font-semibold">{readyTeams.length} / {activeTeams.length}</p>
-              </div>
-              <p className="text-white/80 text-lg">
-                {lineupReady
-                  ? 'Tots els equips estan llestos. Obrir apostes quan vulgues.'
-                  : 'Esperant confirmació de totes les alineacions.'}
-              </p>
-            </div>
             <LineupGrid
               teams={teams}
               membersByTeam={membersByTeam}
@@ -373,6 +376,30 @@ function VotingLineupSummary({
   )
 }
 
+function SelectionProgressCard({
+  readyTeams,
+  totalTeams,
+  lineupReady,
+}: {
+  readyTeams: number
+  totalTeams: number
+  lineupReady: boolean
+}) {
+  return (
+    <aside className="rounded-3xl border border-white/20 bg-white/5 p-6 md:p-8 flex flex-col gap-4 h-full">
+      <div>
+        <p className="text-xs uppercase tracking-[0.5em] text-white/60">Progrés de selecció</p>
+        <p className="text-4xl font-semibold">{readyTeams} / {totalTeams}</p>
+      </div>
+      <p className="text-white/80 text-lg">
+        {lineupReady
+          ? 'Tots els equips estan llestos. Obrir apostes quan vulgues.'
+          : 'Esperant confirmació de totes les alineacions.'}
+      </p>
+    </aside>
+  )
+}
+
 function LineupGrid({
   teams,
   membersByTeam,
@@ -385,7 +412,7 @@ function LineupGrid({
   requiredCount: number | null
 }) {
   return (
-    <div className="game-grid grid-cols-1 md:grid-cols-2">
+    <div className="game-grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
       {teams.map((team) => {
         const members = membersByTeam[team.id] ?? []
         const selected = new Set((lineupByTeam[team.id] ?? []).map((player) => player.id))

@@ -66,13 +66,6 @@ export default function Challenge({
 
   const playerTeam = teams.find((team) => team.id === participant.game_team_id) ?? null
   const isLeader = playerTeam ? playerTeam.leader_participant_id === participant.id : false
-  const requiredCount = challenge?.participants_per_team ?? null
-
-  const isTeamReady = (team: GameTeam) => {
-    const selection = lineupByTeam[team.id] ?? []
-    if (!requiredCount) {
-      return selection.length > 0
-    }
   const [leaderNotificationVisible, setLeaderNotificationVisible] = useState(false)
   const previousLeaderState = useRef(isLeader)
 
@@ -91,6 +84,14 @@ export default function Challenge({
     const timeout = setTimeout(() => setLeaderNotificationVisible(false), 5000)
     return () => clearTimeout(timeout)
   }, [leaderNotificationVisible])
+
+  const requiredCount = challenge?.participants_per_team ?? null
+
+  const isTeamReady = (team: GameTeam) => {
+    const selection = lineupByTeam[team.id] ?? []
+    if (!requiredCount) {
+      return selection.length > 0
+    }
     return selection.length === requiredCount
   }
 
@@ -133,7 +134,7 @@ export default function Challenge({
     <section className="space-y-6">
       <header className="text-center space-y-3">
         <p className="text-xs uppercase tracking-[0.5em] text-white/60">Aposta ràpida</p>
-        <h2 className="text-3xl md:text-5xl font-black tracking-tight">Quin equip caurà?</h2>
+        <h2 className="text-3xl md:text-5xl font-black tracking-tight">Quin equip quedarà últim?</h2>
         <p className="text-base md:text-xl text-white/70 max-w-3xl mx-auto">
           Toca una targeta per a bloquejar la teua aposta.
         </p>
@@ -237,23 +238,21 @@ export default function Challenge({
         )}
 
         {phase === 'leader_selection' && (
-          <section className="glow-panel p-6 md:p-10 space-y-6">
-            {isLeader && playerTeam ? (
-              <LeaderLineupSelector
-                team={playerTeam}
-                members={playerTeamMembers}
-                selected={new Set(playerSelection.map((player) => player.id))}
-                requiredCount={requiredCount}
-                onToggle={(playerId, shouldAdd) => onToggleLineup(playerTeam.id, playerId, shouldAdd)}
-              />
-            ) : (
-              <div className="text-center text-xl md:text-2xl font-semibold text-white/80">
-                {playerTeam
-                  ? 'La teua persona líder està ultimant qui competirà. Guarda el mòbil a mà!'
-                  : 'Encara no se t\'ha assignat equip; espera instruccions de l\'amfitrió.'}
-              </div>
-            )}
-          </section>
+          isLeader && playerTeam ? (
+            <LeaderLineupSelector
+              team={playerTeam}
+              members={playerTeamMembers}
+              selected={new Set(playerSelection.map((player) => player.id))}
+              requiredCount={requiredCount}
+              onToggle={(playerId, shouldAdd) => onToggleLineup(playerTeam.id, playerId, shouldAdd)}
+            />
+          ) : (
+            <div className="glow-panel p-6 md:p-10 text-center text-xl md:text-2xl font-semibold text-white/80">
+              {playerTeam
+                ? 'La teua persona líder està ultimant qui competirà. Guarda el mòbil a mà!'
+                : 'Encara no se t\'ha assignat equip; espera instruccions de l\'amfitrió.'}
+            </div>
+          )
         )}
 
         {phase === 'voting' && renderVotingGrid()}
