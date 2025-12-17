@@ -201,6 +201,40 @@ export default function Home({
   }, [gameId])
 
   useEffect(() => {
+    if (!participant?.id) return
+
+    const channel = supabase
+      .channel(`player_participant_${participant.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'participants',
+          filter: `id=eq.${participant.id}`,
+        },
+        (payload) => {
+          const updatedParticipant = payload.new as Participant
+          setParticipant((current) => (current?.id === updatedParticipant.id ? updatedParticipant : current))
+          setRoster((current) => {
+            const hasMember = current.some((member) => member.id === updatedParticipant.id)
+            if (!hasMember) {
+              return current
+            }
+            return current.map((member) =>
+              member.id === updatedParticipant.id ? updatedParticipant : member
+            )
+          })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [participant?.id])
+
+  useEffect(() => {
     const roundId = game?.active_round_id
 
     if (!roundId) {

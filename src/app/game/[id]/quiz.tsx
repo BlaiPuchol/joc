@@ -107,6 +107,9 @@ export default function Challenge({
   const accentColor = playerTeam?.color_hex ?? '#38bdf8'
   const screenBackground = `radial-gradient(circle at 20% 20%, ${hexToRgba(accentColor, 0.35)}, transparent 45%), #020617`
   const heroBackground = `linear-gradient(135deg, ${hexToRgba(accentColor, 0.5)}, rgba(2, 6, 23, 0.9))`
+  const shouldRevealChallenge = ['voting', 'action', 'resolution'].includes(phase) && !!challenge
+  const heroTitle = shouldRevealChallenge ? challenge?.title ?? `Ei, ${participant.nickname}!` : `Ei, ${participant.nickname}!`
+  const heroDescription = shouldRevealChallenge ? challenge?.description ?? null : null
 
   const renderVotingGrid = () => (
     <section className="space-y-6">
@@ -114,7 +117,7 @@ export default function Challenge({
         <p className="text-xs uppercase tracking-[0.5em] text-white/60">Aposta ràpida</p>
         <h2 className="text-3xl md:text-5xl font-black tracking-tight">Quin equip caurà?</h2>
         <p className="text-base md:text-xl text-white/70 max-w-3xl mx-auto">
-          Toca una targeta per a bloquejar la teua aposta. Les targetes s&apos;omplin amb els colors oficials dels equips.
+          Toca una targeta per a bloquejar la teua aposta.
         </p>
       </header>
       <div className="game-grid grid-cols-1 md:grid-cols-2">
@@ -180,11 +183,11 @@ export default function Challenge({
             </div>
             <div className="space-y-4">
               <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-tight">
-                {challenge?.title ?? `Ei, ${participant.nickname}!`}
+                {heroTitle}
               </h1>
-              {challenge?.description && (
+              {heroDescription && (
                 <p className="text-lg md:text-2xl text-white/90 max-w-4xl">
-                  {challenge.description}
+                  {heroDescription}
                 </p>
               )}
               <p className="text-base md:text-xl text-white/80 font-medium">

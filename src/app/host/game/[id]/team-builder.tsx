@@ -1,4 +1,6 @@
 import { GameTeam, Participant } from '@/types/types'
+import type { DragEvent } from 'react'
+import { useState } from 'react'
 
 export default function TeamBuilder({
   teams,
@@ -23,6 +25,38 @@ export default function TeamBuilder({
     activeTeams.length >= 2 &&
     activeTeams.every((team) => assignedCountByTeam(team.id).length > 0 && team.leader_participant_id)
 
+  const UNASSIGNED_ZONE = 'unassigned'
+  const [dragParticipantId, setDragParticipantId] = useState<string | null>(null)
+  const [activeDropZone, setActiveDropZone] = useState<string | null>(null)
+
+  const handleDragStart = (participantId: string) => (event: DragEvent<HTMLDivElement>) => {
+    setDragParticipantId(participantId)
+    event.dataTransfer.setData('text/plain', participantId)
+    event.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragEnd = () => {
+    setDragParticipantId(null)
+    setActiveDropZone(null)
+  }
+
+  const handleDragOverZone = (zoneId: string) => (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    if (activeDropZone !== zoneId) {
+      setActiveDropZone(zoneId)
+    }
+    event.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDropOnZone = (teamId: string | null) => (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    const participantId = dragParticipantId ?? event.dataTransfer.getData('text/plain')
+    if (!participantId) return
+    onAssign(participantId, teamId)
+    setDragParticipantId(null)
+    setActiveDropZone(null)
+  }
+
   return (
     <section className="min-h-screen bg-slate-900 text-white px-6 py-10">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -35,31 +69,25 @@ export default function TeamBuilder({
           </p>
         </header>
 
-        <div className="bg-black/40 border border-white/10 rounded-3xl p-5">
-          <h2 className="text-xl font-semibold mb-3">Jugadors en espera ({unassigned.length})</h2>
-          <div className="flex flex-wrap gap-2">
+        <div
+          className={`bg-black/40 border rounded-3xl p-5 transition ${
+            activeDropZone === UNASSIGNED_ZONE ? 'border-emerald-400/50 bg-emerald-400/10' : 'border-white/10'
+          }`}
+          onDragOver={handleDragOverZone(UNASSIGNED_ZONE)}
+          onDrop={handleDropOnZone(null)}
+        >
+          <h2 className="text-xl font-semibold mb-1">Jugadors en espera ({unassigned.length})</h2>
+          <p className="text-sm text-white/60 mb-3">Arrossega&apos;ls fins a un equip per a assignar-los.</p>
+          <div className="flex flex-wrap gap-2 min-h-[64px]">
             {unassigned.map((participant) => (
               <div
                 key={participant.id}
-                className="flex items-center gap-2 bg-white/10 border border-white/10 rounded-full px-4 py-2"
+                draggable
+                onDragStart={handleDragStart(participant.id)}
+                onDragEnd={handleDragEnd}
+                className="cursor-grab active:cursor-grabbing bg-white/10 border border-white/15 rounded-full px-4 py-2 text-sm font-medium"
               >
-                <span>{participant.nickname}</span>
-                <select
-                  className="bg-black/40 border border-white/10 rounded-full px-2 py-1 text-sm"
-                  defaultValue=""
-                  onChange={(event) => {
-                    if (!event.target.value) return
-                    onAssign(participant.id, event.target.value)
-                    event.target.value = ''
-                  }}
-                >
-                  <option value="">Assignar…</option>
-                  {activeTeams.map((team) => (
-                    <option key={team.id} value={team.id}>
-                      {team.name}
-                    </option>
-                  ))}
-                </select>
+                {participant.nickname}
               </div>
             ))}
             {unassigned.length === 0 && (
@@ -71,11 +99,16 @@ export default function TeamBuilder({
         <div className="grid gap-4 md:grid-cols-2">
           {activeTeams.map((team) => {
             const members = assignedCountByTeam(team.id)
+            const dropIsActive = activeDropZone === team.id
             return (
               <article
                 key={team.id}
-                className="bg-black/40 border border-white/10 rounded-3xl p-5 space-y-4"
+                className={`bg-black/40 border rounded-3xl p-5 space-y-4 transition ${
+                  dropIsActive ? 'border-emerald-400/50 bg-emerald-400/10' : 'border-white/10'
+                }`}
                 style={{ boxShadow: `0 0 30px ${team.color_hex}22` }}
+                onDragOver={handleDragOverZone(team.id)}
+                onDrop={handleDropOnZone(team.id)}
               >
                 <header className="flex items-center justify-between">
                   <div>
@@ -92,7 +125,10 @@ export default function TeamBuilder({
                     return (
                       <div
                         key={member.id}
-                        className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-2"
+                        className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-2 cursor-grab active:cursor-grabbing"
+                        draggable
+                        onDragStart={handleDragStart(member.id)}
+                        onDragEnd={handleDragEnd}
                       >
                         <span className="font-medium">{member.nickname}</span>
                         {isLeader && (
