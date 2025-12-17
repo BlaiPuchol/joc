@@ -32,40 +32,40 @@ export default function Lobby({
 
   return (
     <div className="min-h-screen" style={{ background: screenBackground }}>
-      <div className="min-h-screen px-6 py-10 text-white">
+      <div className="min-h-screen px-6 py-10 text-white flex">
         <section
-          className="glow-panel relative overflow-hidden p-8 md:p-12 w-full max-w-none"
+          className="glow-panel relative overflow-hidden p-8 md:p-12 w-full max-w-none flex flex-col gap-10"
           style={{ background: heroBackground }}
         >
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] items-stretch min-h-[70vh]">
-            <div className="flex flex-col items-center lg:items-start gap-8">
-              <div className="w-full max-w-[520px] space-y-2 text-center lg:text-left">
-                <p className="text-xs uppercase tracking-[0.5em] text-white/60">Sala d&apos;espera</p>
-                <h1 className="text-4xl md:text-6xl font-black leading-tight">Escaneu per jugar</h1>
-              </div>
-              <div className="w-full max-w-[520px] flex-1 flex flex-col gap-6 items-center">
-                <div className="rounded-3xl border border-white/20 bg-white/5 p-4 sm:p-6 aspect-square w-full flex items-center justify-center">
-                  {joinUrl ? (
-                    <div className="flex flex-col items-center gap-4 w-full">
-                      <div className="bg-white p-4 sm:p-8 rounded-3xl shadow-2xl">
-                        <Canvas text={joinUrl} options={{ width: 420, margin: 0, scale: 12 }} />
-                      </div>
-                      <p className="text-base text-white/75 text-center break-all">{joinUrl}</p>
+          <div className="space-y-4 text-center lg:text-left">
+            <p className="text-xs uppercase tracking-[0.5em] text-white/60">Sala d&apos;espera</p>
+            <h1 className="text-4xl md:text-6xl font-black leading-tight">Escaneu per jugar</h1>
+          </div>
+          <div className="flex flex-col xl:flex-row gap-8 items-stretch flex-1">
+            <div
+              className="flex flex-col items-center gap-6 w-full xl:w-auto"
+              style={{ flexBasis: '30%', maxWidth: '520px' }}
+            >
+              <div className="rounded-3xl border border-white/20 bg-white/5 p-4 sm:p-6 aspect-square w-full flex items-center justify-center">
+                {joinUrl ? (
+                  <div className="flex flex-col items-center gap-4 w-full">
+                    <div className="bg-white p-4 sm:p-8 rounded-3xl shadow-2xl">
+                      <Canvas text={joinUrl} options={{ width: 420, margin: 0, scale: 12 }} />
                     </div>
-                  ) : (
-                    <p className="text-white/60 text-base">Generant enllaç per a unir-se…</p>
-                  )}
-                </div>
-                <button
-                  onClick={onStart}
-                  className="tactile-button w-full bg-emerald-400 text-black text-xl py-4"
-                  style={{ maxWidth: '520px' }}
-                >
-                  Organitza els equips
-                </button>
+                    <p className="text-base text-white/75 text-center break-all">{joinUrl}</p>
+                  </div>
+                ) : (
+                  <p className="text-white/60 text-base">Generant enllaç per a unir-se…</p>
+                )}
               </div>
+              <button
+                onClick={onStart}
+                className="tactile-button w-full bg-emerald-400 text-black text-xl py-4"
+              >
+                Organitza els equips
+              </button>
             </div>
-            <div className="rounded-3xl border border-white/15 bg-white/5 p-6 md:p-8 flex flex-col gap-6 h-full">
+            <div className="rounded-3xl border border-white/15 bg-white/5 p-6 md:p-8 flex flex-col gap-6 flex-1 min-h-[320px]">
               <header className="space-y-2">
                 <p className="text-xs uppercase tracking-[0.5em] text-white/60">Participants</p>
                 <h2 className="text-4xl font-semibold tracking-tight">
