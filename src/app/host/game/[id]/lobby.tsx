@@ -31,17 +31,17 @@ export default function Lobby({
   const totalParticipants = participants.length
 
   return (
-    <div className="min-h-screen h-screen w-full" style={{ background: screenBackground }}>
-      <div className="h-full w-full px-6 py-10 text-white flex">
+    <div className="min-h-screen" style={{ background: screenBackground }}>
+      <div className="min-h-screen px-6 py-10 text-white flex">
         <section
-          className="glow-panel relative overflow-hidden p-8 md:p-12 w-full max-w-none flex flex-col gap-10 flex-1"
+          className="glow-panel relative overflow-hidden p-8 md:p-12 w-full max-w-none flex flex-col gap-10"
           style={{ background: heroBackground }}
         >
           <div className="space-y-4 text-center lg:text-left">
             <p className="text-xs uppercase tracking-[0.5em] text-white/60">Sala d&apos;espera</p>
             <h1 className="text-4xl md:text-6xl font-black leading-tight">Escaneu per jugar</h1>
           </div>
-          <div className="flex flex-col xl:flex-row gap-8 items-stretch flex-1 overflow-hidden">
+          <div className="flex flex-col xl:flex-row gap-8 items-stretch flex-1">
             <div
               className="flex flex-col items-center gap-6 w-full xl:w-auto"
               style={{ flexBasis: '30%', maxWidth: '520px' }}
@@ -65,7 +65,7 @@ export default function Lobby({
                 Organitza els equips
               </button>
             </div>
-            <div className="rounded-3xl border border-white/15 bg-white/5 p-6 md:p-8 flex flex-col gap-6 flex-1 min-h-[320px] overflow-hidden">
+            <div className="rounded-3xl border border-white/15 bg-white/5 p-6 md:p-8 flex flex-col gap-6 flex-1 min-h-[320px]">
               <header className="space-y-2">
                 <p className="text-xs uppercase tracking-[0.5em] text-white/60">Participants</p>
                 <h2 className="text-4xl font-semibold tracking-tight">

@@ -13,7 +13,7 @@ export default function Results({ gameId }: { gameId: string }) {
   }, [gameId, reload])
 
   return (
-    <div className="min-h-screen h-screen bg-slate-950 text-white flex flex-col">
+    <div className="min-h-screen bg-slate-950 text-white">
       <div className="text-center pt-12 pb-6 px-4">
         <p className="text-sm uppercase tracking-[0.4em] text-white/50">Classificació final</p>
         <h1 className="text-4xl font-bold mt-3">Taula de lideratge</h1>
@@ -21,7 +21,7 @@ export default function Results({ gameId }: { gameId: string }) {
           Cada aposta encertada suma 3 punts al total del seu equip i pots afegir punts extres segons el resultat del repte.
         </p>
       </div>
-      <div className="flex justify-center px-4 pb-16 flex-1 overflow-y-auto">
+      <div className="flex justify-center px-4 pb-16">
         <div className="w-full max-w-3xl">
           {loading ? (
             <p className="text-center text-white/70 py-10">Actualitzant classificació…</p>
