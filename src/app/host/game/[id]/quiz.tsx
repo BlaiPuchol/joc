@@ -13,6 +13,16 @@ import {
 } from '@/types/types'
 import { useEffect, useMemo, useState } from 'react'
 
+const hexToRgba = (hex?: string | null, alpha = 1) => {
+  if (!hex) return `rgba(15, 23, 42, ${alpha})`
+  const clean = hex.replace('#', '')
+  if (clean.length !== 6) return `rgba(15, 23, 42, ${alpha})`
+  const r = parseInt(clean.slice(0, 2), 16)
+  const g = parseInt(clean.slice(2, 4), 16)
+  const b = parseInt(clean.slice(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
 type Phase = 'leader_selection' | 'voting' | 'action' | 'resolution'
 
 type LineupEntry = RoundLineup & { participant: Participant }
@@ -147,136 +157,157 @@ export default function RoundController({
     })
   }, [challengePointsByTeam, losingTeamIds, teams, votes])
 
+  const accentColor = (teams.find((team) => team.is_active)?.color_hex) ?? '#7c3aed'
+  const screenBackground = `radial-gradient(circle at 15% 15%, ${hexToRgba(accentColor, 0.3)}, transparent 40%), #020617`
+  const heroBackground = `linear-gradient(135deg, ${hexToRgba(accentColor, 0.45)}, rgba(2, 6, 23, 0.95))`
+
   if (!round) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-white/70 text-xl">Crea una ronda per a iniciar l&apos;espectacle.</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: screenBackground }}>
+        <div className="glow-panel px-8 py-10 text-center text-2xl text-white/80">
+          Crea una ronda per a iniciar l&apos;espectacle.
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen px-4 py-8 space-y-8">
-      <header className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-        <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-white/50">Repte {round.sequence + 1}</p>
-          <h1 className="text-4xl font-bold mt-2">{phaseLabels[phase] ?? phase}</h1>
-          <p className="text-white/70 mt-2">
-            {votes.length} / {totalPlayers} vots
-            {pendingVotes > 0 && phase === 'voting' && (
-              <span className="ml-2 text-white/50">({pendingVotes} pendents)</span>
+    <div className="min-h-screen" style={{ background: screenBackground }}>
+      <div className="screen-frame py-10 space-y-10 text-white">
+        <section
+          className="glow-panel relative overflow-hidden p-8 md:p-12 space-y-8"
+          style={{ background: heroBackground }}
+        >
+          <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.5em] text-white/70">
+            <span className="px-4 py-2 rounded-full bg-white/15">Repte {round.sequence + 1}</span>
+            <span className="px-4 py-2 rounded-full bg-white/10">{phaseLabels[phase] ?? phase}</span>
+            <span className="px-4 py-2 rounded-full bg-white/5">
+              {votes.length} / {totalPlayers} vots
+            </span>
+          </div>
+          <div className="space-y-4">
+            <h1 className="text-4xl md:text-6xl font-black leading-tight">
+              {challenge?.title ?? 'Repte en directe'}
+            </h1>
+            {challenge?.description && (
+              <p className="text-lg md:text-2xl text-white/90 max-w-4xl">{challenge.description}</p>
             )}
-          </p>
-          {activeTeams.length > 0 && (
-            <p className="text-white mt-1">
-              Alineacions: <span className="font-semibold">{readyTeams.length} / {activeTeams.length}</span> equips preparats
-            </p>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-3">
-          {phase === 'leader_selection' && (
-            <button
-              onClick={() => onOpenVoting(lineupSummary)}
-              disabled={!lineupReady}
-              className="bg-emerald-400 text-black font-semibold px-8 py-3 rounded-2xl disabled:opacity-50"
-            >
-              Obrir apostes
-            </button>
-          )}
-          {phase === 'voting' && (
-            <button
-              onClick={onLockVoting}
-              className="bg-yellow-300 text-black font-semibold px-8 py-3 rounded-2xl"
-            >
-              Tancar apostes
-            </button>
-          )}
-        </div>
-      </header>
-
-      {challenge && (
-        <section className="bg-black/30 border border-white/10 rounded-3xl p-5 space-y-2">
-          <p className="text-sm uppercase tracking-[0.3em] text-white/50">Repte actual</p>
-          <h2 className="text-3xl font-semibold">{challenge.title}</h2>
-          {challenge.description && <p className="text-white/70 text-sm">{challenge.description}</p>}
-          {requiredCount && (
-            <p className="text-white/50 text-sm">{requiredCount} jugador(s) per equip competixen.</p>
-          )}
-        </section>
-      )}
-
-      {phase === 'leader_selection' && (
-        <section className="space-y-4">
-          <div className="bg-white/5 border border-white/10 rounded-3xl p-6">
-            <p className="text-sm uppercase tracking-[0.3em] text-white/50">Progrés de selecció</p>
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mt-3">
-              <div>
-                <p className="text-4xl font-semibold">{readyTeams.length} / {activeTeams.length}</p>
-                <p className="text-white/70">Equips amb alineació confirmada</p>
-              </div>
-              {!lineupReady ? (
-                <p className="text-amber-300 text-sm">
-                  Esperant que les persones líders confirmen les seues alineacions.
-                </p>
-              ) : (
-                <p className="text-emerald-300 text-sm">Tots els equips estan llestos! Pots obrir les apostes.</p>
+          </div>
+          <dl className="grid gap-6 sm:grid-cols-3 text-lg">
+            <div>
+              <dt className="text-xs uppercase tracking-[0.5em] text-white/60">Vots registrats</dt>
+              <dd className="text-3xl font-bold">{votes.length}</dd>
+              {pendingVotes > 0 && phase === 'voting' && (
+                <p className="text-sm text-white/70">{pendingVotes} pendents</p>
               )}
             </div>
+            <div>
+              <dt className="text-xs uppercase tracking-[0.5em] text-white/60">Equips llestos</dt>
+              <dd className="text-3xl font-bold">{readyTeams.length} / {activeTeams.length}</dd>
+              {!lineupReady && (
+                <p className="text-sm text-amber-200">Encara confirmant alineacions</p>
+              )}
+            </div>
+            <div>
+              <dt className="text-xs uppercase tracking-[0.5em] text-white/60">Jugadors actius</dt>
+              <dd className="text-3xl font-bold">{totalPlayers}</dd>
+              {requiredCount && (
+                <p className="text-sm text-white/70">{requiredCount} per equip</p>
+              )}
+            </div>
+          </dl>
+          <div className="flex flex-col md:flex-row gap-4">
+            {phase === 'leader_selection' && (
+              <button
+                onClick={() => onOpenVoting(lineupSummary)}
+                disabled={!lineupReady}
+                className="tactile-button flex-1 bg-emerald-400 text-black text-xl py-5 disabled:opacity-50"
+              >
+                Obrir apostes
+              </button>
+            )}
+            {phase === 'voting' && (
+              <button
+                onClick={onLockVoting}
+                className="tactile-button flex-1 bg-yellow-300 text-black text-xl py-5"
+              >
+                Tancar apostes
+              </button>
+            )}
           </div>
-          <LineupGrid
-            teams={teams}
-            membersByTeam={membersByTeam}
-            lineupByTeam={lineupByTeam}
-            requiredCount={requiredCount}
+          <div className="absolute inset-0 opacity-30 pointer-events-none" style={{
+            background: 'radial-gradient(circle at top right, rgba(255,255,255,0.5), transparent 55%)',
+          }}></div>
+        </section>
+
+        {phase === 'leader_selection' && (
+          <section className="space-y-6">
+            <div className="glow-panel p-6 md:p-8 flex flex-col gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.5em] text-white/60">Progrés de selecció</p>
+                <p className="text-4xl font-semibold">{readyTeams.length} / {activeTeams.length}</p>
+              </div>
+              <p className="text-white/80 text-lg">
+                {lineupReady
+                  ? 'Tots els equips estan llestos. Obrir apostes quan vulgues.'
+                  : 'Esperant confirmació de totes les alineacions.'}
+              </p>
+            </div>
+            <LineupGrid
+              teams={teams}
+              membersByTeam={membersByTeam}
+              lineupByTeam={lineupByTeam}
+              requiredCount={requiredCount}
+            />
+          </section>
+        )}
+
+        {phase === 'voting' && <VotesPanel voteTotals={voteTotals} losingTeamIds={losingTeamIds} />}
+
+        {phase === 'action' && (
+          <OutcomeConfigurator
+            teams={activeTeams}
+            outcomes={outcomes}
+            onUpdateOutcome={onUpdateOutcome}
+            onFinalizeResults={onFinalizeResults}
           />
-        </section>
-      )}
+        )}
 
-      {phase === 'voting' && <VotesPanel voteTotals={voteTotals} losingTeamIds={losingTeamIds} />}
+        {phase === 'resolution' && (
+          <section className="space-y-8">
+            <VotesPanel voteTotals={voteTotals} revealNames losingTeamIds={losingTeamIds} />
+            <Scoreboard perTeamScores={perTeamScores} />
+            <div className="flex flex-col md:flex-row gap-4 flex-wrap">
+              <button
+                onClick={onNextRound}
+                className="tactile-button flex-1 bg-blue-500 py-5 text-xl"
+              >
+                Següent repte
+              </button>
+              <button
+                onClick={() => setShowRanking(true)}
+                className="tactile-button flex-1 bg-white/15 border border-white/30 py-5 text-xl"
+              >
+                Veure classificació
+              </button>
+              <button
+                onClick={onEndGame}
+                className="tactile-button flex-1 bg-rose-500/30 border border-rose-200/60 py-5 text-xl text-rose-50"
+              >
+                Finalitzar partida
+              </button>
+            </div>
+          </section>
+        )}
 
-      {phase === 'action' && (
-        <OutcomeConfigurator
-          teams={activeTeams}
-          outcomes={outcomes}
-          onUpdateOutcome={onUpdateOutcome}
-          onFinalizeResults={onFinalizeResults}
-        />
-      )}
-
-      {phase === 'resolution' && (
-        <section className="space-y-6">
-          <VotesPanel voteTotals={voteTotals} revealNames losingTeamIds={losingTeamIds} />
-          <Scoreboard perTeamScores={perTeamScores} />
-          <div className="flex flex-col md:flex-row gap-4 flex-wrap">
-            <button
-              onClick={onNextRound}
-              className="flex-1 bg-blue-500 rounded-2xl py-4 text-xl font-semibold hover:bg-blue-400"
-            >
-              Següent repte
-            </button>
-            <button
-              onClick={() => setShowRanking(true)}
-              className="flex-1 bg-white/15 border border-white/30 rounded-2xl py-4 text-xl font-semibold hover:bg-white/20"
-            >
-              Veure classificació
-            </button>
-            <button
-              onClick={onEndGame}
-              className="flex-1 bg-rose-500/20 border border-rose-300/40 rounded-2xl py-4 text-xl font-semibold text-rose-100"
-            >
-              Finalitzar partida
-            </button>
-          </div>
-        </section>
-      )}
-
-      {showRanking && (
-        <RankingModal
-          scores={teamScores}
-          loading={rankingLoading}
-          onClose={() => setShowRanking(false)}
-        />
-      )}
+        {showRanking && (
+          <RankingModal
+            scores={teamScores}
+            loading={rankingLoading}
+            onClose={() => setShowRanking(false)}
+          />
+        )}
+      </div>
     </div>
   )
 }
@@ -293,38 +324,47 @@ function LineupGrid({
   requiredCount: number | null
 }) {
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="game-grid grid-cols-1 md:grid-cols-2">
       {teams.map((team) => {
         const members = membersByTeam[team.id] ?? []
         const selected = new Set((lineupByTeam[team.id] ?? []).map((player) => player.id))
         const limit = requiredCount ?? members.length
 
         return (
-          <article key={team.id} className="bg-black/30 border border-white/10 rounded-3xl p-5">
+          <article
+            key={team.id}
+            className="glow-panel p-5 md:p-6 space-y-4"
+            style={{
+              borderColor: hexToRgba(team.color_hex, 0.3),
+              boxShadow: `0 20px 60px ${hexToRgba(team.color_hex, 0.25)}`,
+            }}
+          >
             <header className="flex items-center justify-between">
               <div>
-                <p className="text-sm uppercase tracking-[0.3em] text-white/50">{team.name}</p>
-                <p className="text-white/70 text-sm">{members.length} jugadors</p>
+                <p className="text-xs uppercase tracking-[0.5em] text-white/60">Equip</p>
+                <h3 className="text-2xl font-semibold" style={{ color: team.color_hex }}>
+                  {team.name}
+                </h3>
               </div>
-              <span className="text-white/60 text-sm">
-                {selected.size}/{limit || '∞'} seleccionats
+              <span className="text-white text-lg font-semibold">
+                {selected.size}/{limit || '∞'}
               </span>
             </header>
-            <div className="space-y-2 mt-4 max-h-72 overflow-y-auto pr-2">
-              {members.length === 0 && <p className="text-white/50 text-sm">Assigna jugadors a este equip.</p>}
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-2">
+              {members.length === 0 && <p className="text-white/70 text-base">Assigna jugadors a este equip.</p>}
               {members.map((player) => {
                 const isPlaying = selected.has(player.id)
                 return (
                   <div
                     key={player.id}
-                    className={`w-full flex items-center justify-between rounded-2xl border px-4 py-2 text-left transition ${
+                    className={`flex items-center justify-between rounded-2xl px-4 py-3 text-lg border-2 ${
                       isPlaying
-                        ? 'border-emerald-400 bg-emerald-400/10 text-emerald-200'
-                        : 'border-white/10 bg-white/5 text-white/80'
+                        ? 'border-emerald-400 bg-emerald-400/15 text-emerald-100'
+                        : 'border-white/15 bg-white/5 text-white'
                     }`}
                   >
                     <span>{player.nickname}</span>
-                    <span className="text-xs uppercase tracking-[0.3em]">
+                    <span className="text-xs uppercase tracking-[0.4em]">
                       {isPlaying ? 'En joc' : 'Banqueta'}
                     </span>
                   </div>
@@ -348,31 +388,38 @@ function VotesPanel({
   losingTeamIds?: Set<string>
 }) {
   return (
-    <section className="grid gap-4 md:grid-cols-2">
+    <section className="game-grid grid-cols-1 md:grid-cols-2">
       {voteTotals.map(({ team, count, percentage, voters }) => (
-        <article key={team.id} className="bg-white/5 border border-white/10 rounded-3xl p-5 space-y-3">
+        <article
+          key={team.id}
+          className="glow-panel p-6 md:p-7 space-y-4"
+          style={{
+            borderColor: hexToRgba(team.color_hex, 0.35),
+            background: `linear-gradient(145deg, ${hexToRgba(team.color_hex, 0.35)}, rgba(2, 6, 23, 0.95))`,
+          }}
+        >
           <header className="flex items-center justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.3em] text-white/50">{team.name}</p>
-              <p className="text-3xl font-bold" style={{ color: team.color_hex }}>
-                {percentage}%
-              </p>
+              <p className="text-xs uppercase tracking-[0.4em] text-white/70">{team.name}</p>
+              <p className="text-4xl font-black">{percentage}%</p>
             </div>
             {losingTeamIds.has(team.id) && (
-              <span className="px-3 py-1 rounded-full bg-white/20 text-xs uppercase tracking-[0.3em]">
+              <span className="px-4 py-2 rounded-full bg-white/20 text-xs uppercase tracking-[0.4em]">
                 Perdedor
               </span>
             )}
           </header>
-          <div className="bg-black/30 rounded-full h-3 overflow-hidden">
-            <div className="h-full" style={{ width: `${percentage}%`, backgroundColor: team.color_hex }}></div>
+          <div className="bg-white/25 rounded-full h-4 overflow-hidden">
+            <div className="h-full rounded-full" style={{ width: `${percentage}%`, backgroundColor: '#fff' }}></div>
           </div>
-          <p className="text-white/60 text-sm">{count} {count === 1 ? 'vot' : 'vots'}</p>
+          <p className="text-white/80 text-lg">
+            {count} {count === 1 ? 'vot registrat' : 'vots registrats'}
+          </p>
           {revealNames && (
-            <div className="space-y-1 max-h-32 overflow-y-auto pr-2 text-sm">
-              {voters.length === 0 && <p className="text-white/50">Ningú ha votat ací.</p>}
+            <div className="space-y-2 max-h-40 overflow-y-auto pr-2 text-sm">
+              {voters.length === 0 && <p className="text-white/70">Sense apostes en este equip.</p>}
               {voters.map((vote) => (
-                <div key={vote.id} className="bg-black/40 border border-white/5 rounded-xl px-3 py-1">
+                <div key={vote.id} className="bg-white/15 rounded-2xl px-3 py-2">
                   {vote.participant.nickname}
                 </div>
               ))}
@@ -396,27 +443,32 @@ function Scoreboard({
   }[]
 }) {
   return (
-    <div className="grid md:grid-cols-2 gap-4">
+    <div className="game-grid md:grid-cols-2">
       {perTeamScores.map(({ team, correctVotes, votePoints, challengePoints, total }) => (
-        <article key={team.id} className="bg-black/30 border border-white/10 rounded-3xl p-5">
+        <article
+          key={team.id}
+          className="glow-panel p-6 space-y-4"
+          style={{
+            borderColor: hexToRgba(team.color_hex, 0.35),
+            background: `linear-gradient(140deg, ${hexToRgba(team.color_hex, 0.35)}, rgba(2,6,23,0.95))`,
+          }}
+        >
           <header className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold" style={{ color: team.color_hex }}>
+            <h3 className="text-2xl font-bold" style={{ color: team.color_hex }}>
               {team.name}
             </h3>
-            <span className="text-3xl font-bold text-emerald-300">
-              +{total}
-            </span>
+            <span className="text-4xl font-black text-emerald-200">+{total}</span>
           </header>
-          <dl className="text-white/70 text-sm mt-3 space-y-2">
+          <dl className="space-y-3 text-lg">
             <div className="flex items-center justify-between">
-              <dt className="uppercase tracking-[0.3em] text-xs">Apostes encertades</dt>
-              <dd className="font-semibold text-white">
-                +{votePoints} pts <span className="text-white/50">({correctVotes})</span>
+              <dt className="text-white/70">Apostes encertades</dt>
+              <dd className="font-semibold">
+                +{votePoints} pts <span className="text-white/60">({correctVotes})</span>
               </dd>
             </div>
             <div className="flex items-center justify-between">
-              <dt className="uppercase tracking-[0.3em] text-xs">Punts del repte</dt>
-              <dd className="font-semibold text-white">+{challengePoints} pts</dd>
+              <dt className="text-white/70">Punts del repte</dt>
+              <dd className="font-semibold">+{challengePoints} pts</dd>
             </div>
           </dl>
         </article>
@@ -450,13 +502,13 @@ function OutcomeConfigurator({
   const readyToReveal = losingTeamIds.size > 0
 
   return (
-    <section className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-6">
-      <header className="space-y-2 text-center md:text-left">
-        <p className="text-sm uppercase tracking-[0.3em] text-white/50">Repte en marxa</p>
-        <h2 className="text-3xl font-semibold">Marca els equips perdedors i reparteix punts</h2>
-        <p className="text-white/70 text-sm">
-          Pots seleccionar els equips que han perdut i, si cal, sumar punts addicionals del repte a qualsevol equip.
-          Les apostes correctes sumen {VOTE_REWARD_PER_CORRECT} punts per jugadora del seu equip.
+    <section className="glow-panel p-6 md:p-10 space-y-6">
+      <header className="space-y-3 text-center md:text-left">
+        <p className="text-xs uppercase tracking-[0.5em] text-white/60">Repte en marxa</p>
+        <h2 className="text-4xl font-semibold">Marca els perdedors i reparteix punts extra</h2>
+        <p className="text-white/80 text-lg">
+          Cada aposta encertada suma {VOTE_REWARD_PER_CORRECT} punts. Utilitza estes targetes per a afegir punts del repte
+          o marcar qui ha perdut.
         </p>
       </header>
       <div className="space-y-4">
@@ -465,32 +517,39 @@ function OutcomeConfigurator({
           const isLoser = entry?.is_loser ?? false
           const challengePoints = entry?.challenge_points ?? 0
           return (
-            <article key={team.id} className="border border-white/10 rounded-2xl p-4 bg-black/20 space-y-3">
+            <article
+              key={team.id}
+              className="rounded-3xl p-5 md:p-6 flex flex-col gap-4"
+              style={{
+                border: `2px solid ${hexToRgba(team.color_hex, 0.35)}`,
+                background: `linear-gradient(140deg, ${hexToRgba(team.color_hex, 0.35)}, rgba(2,6,23,0.9))`,
+              }}
+            >
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-white/40">{team.name}</p>
-                  <p className="text-white/70 text-sm">
-                    {isLoser ? 'Marcat com a perdedor/a' : 'Encara sense resultat'}
+                  <p className="text-xs uppercase tracking-[0.5em] text-white/70">{team.name}</p>
+                  <p className="text-xl font-semibold">
+                    {isLoser ? 'Marcat com a perdedor' : 'Encara sense resultat'}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-3 items-center">
                   <button
                     onClick={() => onUpdateOutcome(team.id, { isLoser: !isLoser })}
-                    className={`px-4 py-2 rounded-2xl border text-sm font-semibold transition ${
+                    className={`tactile-button px-5 py-3 text-sm uppercase tracking-[0.3em] ${
                       isLoser
-                        ? 'border-rose-300/60 bg-rose-400/20 text-rose-100'
-                        : 'border-white/20 bg-white/10 text-white/80'
+                        ? 'bg-rose-400 text-black'
+                        : 'bg-white/15 text-white'
                     }`}
                   >
-                    {isLoser ? 'Perdedor seleccionat' : 'Marcar com perdedor'}
+                    {isLoser ? 'Perdedor' : 'Marcar perdedor'}
                   </button>
-                  <label className="flex items-center gap-2 text-sm text-white/70">
-                    <span>Punts del repte</span>
+                  <label className="flex items-center gap-3 text-lg">
+                    <span className="text-white/70">Punts repte</span>
                     <input
                       type="number"
                       min={0}
                       step={1}
-                      className="w-20 rounded-xl bg-black/40 border border-white/20 px-2 py-1 text-right text-white"
+                      className="w-28 rounded-2xl bg-slate-900/70 border border-white/30 px-3 py-2 text-right text-white text-xl"
                       value={challengePoints}
                       onChange={(event) =>
                         onUpdateOutcome(team.id, {
@@ -505,21 +564,21 @@ function OutcomeConfigurator({
           )
         })}
         {teams.length === 0 && (
-          <p className="text-white/60 text-center py-6">Encara no hi ha equips actius per a este repte.</p>
+          <p className="text-white/70 text-center py-6 text-lg">Encara no hi ha equips actius per a este repte.</p>
         )}
       </div>
       <div className="flex flex-col md:flex-row gap-4 md:items-center">
         <button
           onClick={onFinalizeResults}
           disabled={!readyToReveal}
-          className="flex-1 bg-emerald-400 text-black font-semibold px-6 py-3 rounded-2xl disabled:opacity-40 disabled:cursor-not-allowed"
+          className="tactile-button flex-1 bg-emerald-400 text-black text-xl py-5 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Revelar resultats
         </button>
-        <p className="text-white/60 text-sm md:flex-1">
+        <p className="text-white/70 text-base md:flex-1">
           {readyToReveal
             ? 'Ja pots passar a la resolució i mostrar els resultats.'
-            : 'Selecciona almenys un equip perdedor per a poder tancar el repte.'}
+            : 'Selecciona almenys un equip perdedor per a tancar el repte.'}
         </p>
       </div>
     </section>
