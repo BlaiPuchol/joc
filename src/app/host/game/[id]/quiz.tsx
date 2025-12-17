@@ -164,7 +164,7 @@ export default function RoundController({
 
   if (!round) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: screenBackground }}>
+      <div className="min-h-screen h-screen flex items-center justify-center" style={{ background: screenBackground }}>
         <div className="glow-panel px-8 py-10 text-center text-2xl text-white/80">
           Crea una ronda per a iniciar l&apos;espectacle.
         </div>
@@ -173,8 +173,8 @@ export default function RoundController({
   }
 
   return (
-    <div className="min-h-screen" style={{ background: screenBackground }}>
-      <div className="screen-frame py-10 space-y-10 text-white">
+    <div className="min-h-screen h-screen flex flex-col" style={{ background: screenBackground }}>
+      <div className="screen-frame py-10 space-y-10 text-white flex-1 flex flex-col overflow-y-auto">
         <section
           className="glow-panel relative overflow-hidden p-8 md:p-12"
           style={{ background: heroBackground }}

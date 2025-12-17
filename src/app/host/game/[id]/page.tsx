@@ -492,7 +492,7 @@ export default function HostGame({
   const phase: HostPhase = (game?.phase as HostPhase) ?? 'lobby'
 
   return (
-    <main className="bg-slate-900 min-h-screen text-white">
+    <main className="bg-slate-900 min-h-screen h-screen text-white flex flex-col">
       {phase === 'lobby' && (
         <Lobby participants={participants} onStart={handleOpenTeamSetup} gameId={gameId} />
       )}

@@ -58,14 +58,14 @@ export default function TeamBuilder({
   }
 
   return (
-    <section className="min-h-screen bg-slate-900 text-white px-6 py-10">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <section className="min-h-screen h-screen bg-slate-900 text-white px-6 py-10 flex flex-col">
+      <div className="max-w-6xl mx-auto space-y-6 flex-1 flex flex-col overflow-y-auto pb-6">
         <header className="space-y-2">
           <p className="text-sm uppercase tracking-[0.3em] text-white/40">Organitzador d&apos;equips</p>
           <h1 className="text-4xl font-semibold">Distribuïx els jugadors als seus equips</h1>
           <p className="text-white/70 max-w-2xl">
             Assigna tothom a un equip i tria un líder per a cada grup. Les persones líders decidiran qui competix en
-            cada repte físic, així que assegura&apos;t que coneixen les regles.
+            cada repte físic.
           </p>
         </header>
 
