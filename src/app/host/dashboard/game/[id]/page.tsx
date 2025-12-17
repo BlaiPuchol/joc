@@ -130,6 +130,12 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
       const { error: roundsError } = await supabase.from('game_rounds').delete().eq('game_id', game.id)
       if (roundsError) throw roundsError
 
+      const { error: teamResetError } = await supabase
+        .from('game_teams')
+        .update({ is_active: true, leader_participant_id: null })
+        .eq('game_id', game.id)
+      if (teamResetError) throw teamResetError
+
       const { error: resetGameError } = await supabase
         .from('games')
         .update({

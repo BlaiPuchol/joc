@@ -1,5 +1,5 @@
 import { GameChallenge, GameRound, GameTeam, Participant, RoundLineup, RoundOutcome, RoundVote } from '@/types/types'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 const hexToRgba = (hex?: string | null, alpha = 1) => {
   if (!hex) return `rgba(15, 23, 42, ${alpha})`
@@ -73,6 +73,24 @@ export default function Challenge({
     if (!requiredCount) {
       return selection.length > 0
     }
+  const [leaderNotificationVisible, setLeaderNotificationVisible] = useState(false)
+  const previousLeaderState = useRef(isLeader)
+
+  useEffect(() => {
+    if (isLeader && !previousLeaderState.current) {
+      setLeaderNotificationVisible(true)
+    }
+    if (!isLeader) {
+      setLeaderNotificationVisible(false)
+    }
+    previousLeaderState.current = isLeader
+  }, [isLeader])
+
+  useEffect(() => {
+    if (!leaderNotificationVisible) return
+    const timeout = setTimeout(() => setLeaderNotificationVisible(false), 5000)
+    return () => clearTimeout(timeout)
+  }, [leaderNotificationVisible])
     return selection.length === requiredCount
   }
 
@@ -169,7 +187,7 @@ export default function Challenge({
               </span>
               {round && (
                 <span className="px-4 py-2 rounded-full bg-white/10">
-                  Ronda {round.sequence + 1}
+                  {round.sequence} Rondes 
                 </span>
               )}
               {playerTeam && (
@@ -199,6 +217,14 @@ export default function Challenge({
             background: `radial-gradient(circle at center, rgba(255,255,255,0.6), transparent 60%)`,
           }}></div>
         </section>
+
+        {playerTeam && leaderNotificationVisible && (
+          <div className="glow-panel border border-emerald-400/40 bg-emerald-500/10 text-center text-lg md:text-xl font-semibold text-emerald-100 px-6 py-5">
+            {playerTeam.leader_participant_id === participant.id
+              ? `Has sigut nomenat/da líder de ${playerTeam.name}. Tria qui jugarà aquesta ronda!`
+              : `${playerTeam.name} ja té lideratge assignat.`}
+          </div>
+        )}
 
         {phase !== 'lobby' && playerTeam && (
           <PlayerLineupPanel

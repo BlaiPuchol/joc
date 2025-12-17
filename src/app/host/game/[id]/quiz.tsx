@@ -262,7 +262,12 @@ export default function RoundController({
           </section>
         )}
 
-        {phase === 'voting' && <VotesPanel voteTotals={voteTotals} losingTeamIds={losingTeamIds} />}
+        {phase === 'voting' && (
+          <div className="space-y-8">
+            <VotingLineupSummary teams={activeTeams} lineupByTeam={lineupByTeam} />
+            <VotesPanel voteTotals={voteTotals} losingTeamIds={losingTeamIds} />
+          </div>
+        )}
 
         {phase === 'action' && (
           <OutcomeConfigurator
@@ -309,6 +314,62 @@ export default function RoundController({
         )}
       </div>
     </div>
+  )
+}
+
+function VotingLineupSummary({
+  teams,
+  lineupByTeam,
+}: {
+  teams: GameTeam[]
+  lineupByTeam: Record<string, Participant[]>
+}) {
+  if (teams.length === 0) return null
+  return (
+    <section className="space-y-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.5em] text-white/60">Participants confirmats</p>
+          <p className="text-2xl font-semibold">Qui jugarà este repte</p>
+        </div>
+        <p className="text-white/70 text-sm">Visible durant el període d&apos;apostes.</p>
+      </div>
+      <div className="game-grid grid-cols-1 md:grid-cols-2">
+        {teams.map((team) => {
+          const lineup = lineupByTeam[team.id] ?? []
+          return (
+            <article
+              key={team.id}
+              className="glow-panel p-5 space-y-3"
+              style={{
+                borderColor: hexToRgba(team.color_hex, 0.35),
+                boxShadow: `0 20px 60px ${hexToRgba(team.color_hex, 0.2)}`,
+              }}
+            >
+              <header className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold" style={{ color: team.color_hex }}>
+                  {team.name}
+                </h3>
+                <span className="text-white/80 text-sm">{lineup.length} jugadors</span>
+              </header>
+              <div className="space-y-2">
+                {lineup.length === 0 && (
+                  <p className="text-white/60 text-sm">Encara no han confirmat jugadors.</p>
+                )}
+                {lineup.map((player) => (
+                  <div
+                    key={player.id}
+                    className="bg-white/10 border border-white/10 rounded-2xl px-4 py-2 text-white"
+                  >
+                    {player.nickname}
+                  </div>
+                ))}
+              </div>
+            </article>
+          )
+        })}
+      </div>
+    </section>
   )
 }
 
