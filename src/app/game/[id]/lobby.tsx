@@ -1,5 +1,4 @@
 import { Participant, supabase } from '@/types/types'
-import { on } from 'events'
 import { FormEvent, useEffect, useState } from 'react'
 
 export default function Lobby({
@@ -50,29 +49,41 @@ export default function Lobby({
     fetchParticipant()
   }, [gameId, onRegisterCompleted])
 
-  return (
-    <div className="bg-green-500 flex justify-center items-center min-h-screen">
-      <div className="bg-black p-12">
-        {!participant && (
-          <Register
-            gameId={gameId}
-            onRegisterCompleted={(participant) => {
-              onRegisterCompleted(participant)
-              setParticipant(participant)
-            }}
-          />
-        )}
+  const accentColor = '#38bdf8'
+  const screenBackground = `radial-gradient(circle at 18% 20%, rgba(56,189,248,0.3), transparent 45%), #020617`
+  const heroBackground = `linear-gradient(135deg, rgba(56,189,248,0.45), rgba(2,6,23,0.92))`
 
-        {participant && (
-          <div className="text-white max-w-md">
-            <h1 className="text-xl pb-4">Benvingut/da, {participant.nickname}!</h1>
-            <p>
-              Ja estàs registrat i el teu sobrenom hauria d&apos;aparéixer en la
-              pantalla d&apos;administració. Seu tranquil·lament i espera fins que la
-              persona que dirigeix el joc inicie la partida.
+  return (
+    <div className="min-h-screen" style={{ background: screenBackground }}>
+      <div className="screen-frame min-h-screen flex items-center justify-center py-10 px-6 text-white">
+        <div className="glow-panel w-full max-w-2xl p-8 md:p-12 space-y-10" style={{ background: heroBackground }}>
+          <div className="text-center space-y-3">
+            <p className="text-xs uppercase tracking-[0.5em] text-white/60">Sala d&apos;espera</p>
+            <p className="text-5xl md:text-6xl font-black leading-tight">Hola!</p>
+            <h2 className="text-3xl font-semibold text-white/85">Qui eres?</h2>
+            <p className="text-base md:text-lg text-white/80">
+              Escriu el teu nom.
             </p>
           </div>
-        )}
+          {!participant && (
+            <Register
+              gameId={gameId}
+              onRegisterCompleted={(participant) => {
+                onRegisterCompleted(participant)
+                setParticipant(participant)
+              }}
+            />
+          )}
+
+          {participant && (
+            <div className="text-center space-y-4">
+              <h1 className="text-3xl font-semibold">Benvingut/da, {participant.nickname}!</h1>
+              <p className="text-white/80 text-lg">
+                Ja estàs dins. Mira la pantalla principal i prepara el mòbil per a rebre el primer repte.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -89,12 +100,14 @@ function Register({
     e.preventDefault()
     setSending(true)
 
-    if (!nickname) {
+    const trimmed = nickname.trim()
+    if (!trimmed) {
+      setSending(false)
       return
     }
     const { data: participant, error } = await supabase
       .from('participants')
-      .insert({ nickname, game_id: gameId })
+      .insert({ nickname: trimmed, game_id: gameId })
       .select()
       .single()
 
@@ -104,6 +117,7 @@ function Register({
       return alert(error.message)
     }
 
+    setSending(false)
     onRegisterCompleted(participant)
   }
 
@@ -111,17 +125,29 @@ function Register({
   const [sending, setSending] = useState(false)
 
   return (
-    <form onSubmit={(e) => onFormSubmit(e)}>
-      <input
-        className="p-2 w-full border border-black text-black"
-        type="text"
-        onChange={(val) => setNickname(val.currentTarget.value)}
-        placeholder="Nom"
-        maxLength={20}
-      />
-      <button disabled={sending} className="w-full py-2 bg-green-500 mt-4">
-        Unir-me
+    <form onSubmit={(e) => onFormSubmit(e)} className="space-y-6 text-left">
+      <label className="space-y-2 block">
+        <span className="text-sm uppercase tracking-[0.4em] text-white/60">Sobrenom</span>
+        <input
+          className="w-full rounded-3xl border border-white/30 bg-white/10 px-5 py-4 text-lg md:text-xl text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-sky-300"
+          type="text"
+          onChange={(val) => setNickname(val.currentTarget.value)}
+          value={nickname}
+          placeholder="Nom"
+          maxLength={20}
+          autoComplete="off"
+          autoFocus
+        />
+      </label>
+      <button
+        disabled={sending}
+        className="tactile-button w-full bg-sky-400 text-black text-xl py-4 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {sending ? 'Enviant…' : 'Unir-me a la sala'}
       </button>
+      <p className="text-sm text-white/70 text-center">
+        El teu sobrenom es mostrarà a la pantalla gran. Pots canviar-lo abans que comence el joc.
+      </p>
     </form>
   )
 }
