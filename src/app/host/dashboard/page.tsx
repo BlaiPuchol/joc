@@ -192,10 +192,10 @@ export default function HostDashboard() {
       <div className="max-w-6xl mx-auto px-6 py-12 space-y-10">
         <header className="space-y-4">
           <p className="text-sm uppercase tracking-[0.4em] text-emerald-300/70">Tauler de control d&apos;amfitrió</p>
-          <h1 className="text-4xl sm:text-5xl font-semibold">Crea, edita i projecta els teus espectacles</h1>
+          <h1 className="text-4xl sm:text-5xl font-semibold">Crea, edita i projecta els teus jocs</h1>
           <p className="text-white/70 max-w-3xl">
             Gestiona cada conjunt de reptes com si fora una llista de Kahoot. Prepara diversos jocs,
-            ajusta l&apos;estructura dels equips i inicia l&apos;espectacle amb un sol toc.
+            ajusta l&apos;estructura dels equips i inicia l&apos;espectacle.
           </p>
         </header>
 
@@ -205,7 +205,7 @@ export default function HostDashboard() {
               <label className="text-sm uppercase tracking-[0.3em] text-white/40">Títol del joc</label>
               <input
                 className="mt-2 w-full rounded-2xl bg-black/40 border border-white/10 px-5 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                placeholder="Enfrontament d'estiu a l'empresa"
+                placeholder="Nit de jocs"
                 value={newGameTitle}
                 onChange={(event) => setNewGameTitle(event.target.value)}
               />
@@ -295,7 +295,7 @@ function GameShelf({
                 href={`/host/dashboard/game/${game.id}`}
                 className="flex-1 text-center border border-white/20 rounded-2xl py-2 hover:border-white/50"
               >
-                Editar baralla
+                Editar joc
               </Link>
               <button
                 className="flex-none text-sm text-red-300 hover:text-red-200"

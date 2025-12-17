@@ -14,6 +14,13 @@ const STATUS_LABELS: Record<Game['status'], string> = {
   completed: 'Completat',
   archived: 'Arxivat',
 }
+const STATUS_COLORS: Record<Game['status'], string> = {
+  draft: '#fbbf24',
+  ready: '#34d399',
+  live: '#22d3ee',
+  completed: '#a78bfa',
+  archived: '#94a3b8',
+}
 
 export default function GameEditor({ params: { id } }: { params: { id: string } }) {
   const router = useRouter()
@@ -22,6 +29,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
   const [teams, setTeams] = useState<GameTeam[]>([])
   const [loading, setLoading] = useState(true)
   const [savingSettings, setSavingSettings] = useState(false)
+  const [resettingLobby, setResettingLobby] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState({
     title: '',
@@ -105,6 +113,40 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
       setError(err instanceof Error ? err.message : "No s'ha pogut guardar la configuració")
     } finally {
       setSavingSettings(false)
+    }
+  }
+
+  const resetLobby = async () => {
+    if (!game) return
+    if (!window.confirm('Això eliminarà tots els jugadors i rondes guardades. Vols continuar?')) return
+    try {
+      setResettingLobby(true)
+      setError(null)
+      await ensureHostSession()
+
+      const { error: participantsError } = await supabase.from('participants').delete().eq('game_id', game.id)
+      if (participantsError) throw participantsError
+
+      const { error: roundsError } = await supabase.from('game_rounds').delete().eq('game_id', game.id)
+      if (roundsError) throw roundsError
+
+      const { error: resetGameError } = await supabase
+        .from('games')
+        .update({
+          phase: 'lobby',
+          status: 'ready',
+          active_round_id: null,
+          current_round_sequence: 0,
+        })
+        .eq('id', game.id)
+      if (resetGameError) throw resetGameError
+
+      await loadGame()
+    } catch (err) {
+      console.error(err)
+      setError(err instanceof Error ? err.message : "No s'ha pogut reiniciar el joc")
+    } finally {
+      setResettingLobby(false)
     }
   }
 
@@ -306,7 +348,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
           </div>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="uppercase text-xs tracking-[0.4em] text-white/40">Baralla del joc</p>
+              <p className="uppercase text-xs tracking-[0.4em] text-white/40">Reptes del joc</p>
               <h1 className="text-4xl font-semibold mt-2">{game.title}</h1>
               <p className="text-white/70">Creat el {new Date(game.created_at).toLocaleString()}</p>
             </div>
@@ -395,7 +437,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                       }
                     >
                       <option value="all">Tota la plantilla</option>
-                      {[1, 2, 3, 4, 5, 6].map((value) => (
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
                         <option key={value} value={value}>
                           {value}
                         </option>
@@ -435,16 +477,16 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                   onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
                 />
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+              <div className="space-y-3 text-sm">
                 <div className="space-y-2">
-                  <label className="uppercase tracking-[0.3em] text-white/50">Grandària per equip</label>
+                  <label className="uppercase tracking-[0.3em] text-white/50">Jugadors per equip</label>
                   <select
                     className="w-full rounded-2xl bg-black/30 border border-white/10 px-3 py-2"
                     value={form.maxPlayersPerTeam}
                     onChange={(event) => setForm((prev) => ({ ...prev, maxPlayersPerTeam: event.target.value }))}
                   >
                     <option value="all">Tota la plantilla</option>
-                    {[2, 3, 4, 5, 6].map((value) => (
+                    {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
                       <option key={value} value={value}>
                         {value} jugadors
                       </option>
@@ -459,7 +501,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                     onChange={(event) => setForm((prev) => ({ ...prev, status: event.target.value as Game['status'] }))}
                   >
                     {STATUSES.map((status) => (
-                      <option key={status} value={status}>
+                      <option key={status} value={status} style={{ color: STATUS_COLORS[status] }}>
                         {STATUS_LABELS[status] ?? status}
                       </option>
                     ))}
@@ -483,6 +525,21 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                 className="w-full rounded-2xl bg-emerald-400 text-black font-semibold py-3 disabled:opacity-60"
               >
                 {savingSettings ? 'Guardant…' : 'Guardar configuració'}
+              </button>
+            </section>
+
+            <section className="bg-black/40 border border-white/10 rounded-3xl p-5 space-y-3">
+              <h2 className="text-xl font-semibold text-red-200">Restablir lobby</h2>
+              <p className="text-white/60 text-sm">
+                Elimina tots els jugadors registrats i les rondes guardades per a tornar a començar des de zero. Esta acció
+                no es pot desfer.
+              </p>
+              <button
+                onClick={resetLobby}
+                disabled={resettingLobby}
+                className="w-full rounded-2xl border border-red-400/60 text-red-200 font-semibold py-3 hover:bg-red-400/10 disabled:opacity-60"
+              >
+                {resettingLobby ? 'Restablint…' : 'Buidar jugadors i rondes'}
               </button>
             </section>
 

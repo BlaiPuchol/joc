@@ -116,7 +116,7 @@ function Register({
         className="p-2 w-full border border-black text-black"
         type="text"
         onChange={(val) => setNickname(val.currentTarget.value)}
-        placeholder="Sobrenom"
+        placeholder="Nom"
         maxLength={20}
       />
       <button disabled={sending} className="w-full py-2 bg-green-500 mt-4">
