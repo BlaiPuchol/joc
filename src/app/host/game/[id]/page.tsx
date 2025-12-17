@@ -27,6 +27,8 @@ type HostPhase =
 
 type LineupEntry = RoundLineup & { participant: Participant }
 
+const REFRESH_INTERVAL_MS = 500
+
 export default function HostGame({
   params: { id: gameId },
 }: {
@@ -97,42 +99,64 @@ export default function HostGame({
     [fetchLineups, fetchVotes]
   )
 
-  useEffect(() => {
-    const fetchInitial = async () => {
-      const [gameRes, participantRes, teamRes, challengeRes] = await Promise.all([
-        supabase.from('games').select('*').eq('id', gameId).single(),
-        supabase.from('participants').select('*').eq('game_id', gameId).order('created_at'),
-        supabase
-          .from('game_teams')
-          .select('*')
-          .eq('game_id', gameId)
-          .order('position', { ascending: true }),
-        supabase
-          .from('game_challenges')
-          .select('*')
-          .eq('game_id', gameId)
-          .order('position', { ascending: true }),
-      ])
+  const refreshGameState = useCallback(async () => {
+    const [gameRes, participantRes, teamRes, challengeRes] = await Promise.all([
+      supabase.from('games').select('*').eq('id', gameId).single(),
+      supabase.from('participants').select('*').eq('game_id', gameId).order('created_at'),
+      supabase
+        .from('game_teams')
+        .select('*')
+        .eq('game_id', gameId)
+        .order('position', { ascending: true }),
+      supabase
+        .from('game_challenges')
+        .select('*')
+        .eq('game_id', gameId)
+        .order('position', { ascending: true }),
+    ])
 
-      if (gameRes.data) {
-        setGame(gameRes.data)
-        if (gameRes.data.active_round_id) {
-          fetchRound(gameRes.data.active_round_id)
-        }
-      }
-      if (participantRes.data) {
-        setParticipants(participantRes.data)
-      }
-      if (teamRes.data) {
-        setTeams(teamRes.data)
-      }
-      if (challengeRes.data) {
-        setChallenges(challengeRes.data)
+    if (gameRes.error) {
+      console.error(gameRes.error.message)
+    } else if (gameRes.data) {
+      setGame(gameRes.data)
+      if (gameRes.data.active_round_id) {
+        await fetchRound(gameRes.data.active_round_id)
+      } else {
+        setActiveRound(null)
+        setVotes([])
+        setLineups([])
       }
     }
 
-    fetchInitial()
+    if (participantRes.error) {
+      console.error(participantRes.error.message)
+    } else if (participantRes.data) {
+      setParticipants(participantRes.data)
+    }
+
+    if (teamRes.error) {
+      console.error(teamRes.error.message)
+    } else if (teamRes.data) {
+      setTeams(teamRes.data)
+    }
+
+    if (challengeRes.error) {
+      console.error(challengeRes.error.message)
+    } else if (challengeRes.data) {
+      setChallenges(challengeRes.data)
+    }
   }, [fetchRound, gameId])
+
+  useEffect(() => {
+    refreshGameState()
+  }, [refreshGameState])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshGameState()
+    }, REFRESH_INTERVAL_MS)
+    return () => clearInterval(interval)
+  }, [refreshGameState])
 
   useEffect(() => {
     const channel = supabase
@@ -280,17 +304,28 @@ export default function HostGame({
       return null
     }
 
+    await refreshGameState()
     return data
   }
 
   const handleOpenTeamSetup = async () => {
-    await supabase.from('games').update({ phase: 'team_setup' }).eq('id', gameId)
+    const { error } = await supabase.from('games').update({ phase: 'team_setup' }).eq('id', gameId)
+    if (error) {
+      alert(error.message)
+      return
+    }
+    await refreshGameState()
   }
 
   const handleStartChallenge = async () => {
     if (!game) return
     if (game.active_round_id) {
-      await supabase.from('games').update({ phase: 'leader_selection' }).eq('id', gameId)
+      const { error } = await supabase.from('games').update({ phase: 'leader_selection' }).eq('id', gameId)
+      if (error) {
+        alert(error.message)
+        return
+      }
+      await refreshGameState()
       return
     }
     await createAndActivateRound(game.current_round_sequence ?? 0)
@@ -301,7 +336,11 @@ export default function HostGame({
       .from('participants')
       .update({ game_team_id: teamId })
       .eq('id', participantId)
-    if (error) alert(error.message)
+    if (error) {
+      alert(error.message)
+      return
+    }
+    await refreshGameState()
   }
 
   const setTeamLeader = async (teamId: string, participantId: string | null) => {
@@ -309,7 +348,11 @@ export default function HostGame({
       .from('game_teams')
       .update({ leader_participant_id: participantId })
       .eq('id', teamId)
-    if (error) alert(error.message)
+    if (error) {
+      alert(error.message)
+      return
+    }
+    await refreshGameState()
   }
 
   const openVoting = async (notes: string) => {
@@ -322,7 +365,12 @@ export default function HostGame({
       alert(error.message)
       return
     }
-    await supabase.from('games').update({ phase: 'voting' }).eq('id', gameId)
+    const { error: phaseError } = await supabase.from('games').update({ phase: 'voting' }).eq('id', gameId)
+    if (phaseError) {
+      alert(phaseError.message)
+      return
+    }
+    await refreshGameState()
   }
 
   const lockVoting = async () => {
@@ -335,7 +383,12 @@ export default function HostGame({
       alert(error.message)
       return
     }
-    await supabase.from('games').update({ phase: 'action' }).eq('id', gameId)
+    const { error: phaseError } = await supabase.from('games').update({ phase: 'action' }).eq('id', gameId)
+    if (phaseError) {
+      alert(phaseError.message)
+      return
+    }
+    await refreshGameState()
   }
 
   const markLosingTeam = async (teamId: string) => {
@@ -348,7 +401,12 @@ export default function HostGame({
       alert(error.message)
       return
     }
-    await supabase.from('games').update({ phase: 'resolution' }).eq('id', gameId)
+    const { error: phaseError } = await supabase.from('games').update({ phase: 'resolution' }).eq('id', gameId)
+    if (phaseError) {
+      alert(phaseError.message)
+      return
+    }
+    await refreshGameState()
   }
 
   const nextRound = async () => {
@@ -357,7 +415,12 @@ export default function HostGame({
   }
 
   const endGame = async () => {
-    await supabase.from('games').update({ phase: 'results' }).eq('id', gameId)
+    const { error } = await supabase.from('games').update({ phase: 'results' }).eq('id', gameId)
+    if (error) {
+      alert(error.message)
+      return
+    }
+    await refreshGameState()
   }
 
   const toggleLineupParticipant = async (teamId: string, participantId: string, shouldAdd: boolean) => {
@@ -369,13 +432,20 @@ export default function HostGame({
       if (error && error.code !== '23505') {
         alert(error.message)
       }
+      if (!error) {
+        await fetchRound(game.active_round_id)
+      }
       return
     }
     const { error } = await supabase
       .from('round_lineups')
       .delete()
       .match({ round_id: game.active_round_id, team_id: teamId, participant_id: participantId })
-    if (error) alert(error.message)
+    if (error) {
+      alert(error.message)
+      return
+    }
+    await fetchRound(game.active_round_id)
   }
 
   const phase: HostPhase = (game?.phase as HostPhase) ?? 'lobby'

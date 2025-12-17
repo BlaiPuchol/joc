@@ -22,6 +22,8 @@ type GamePhase =
   | 'resolution'
   | 'results'
 
+const REFRESH_INTERVAL_MS = 4000
+
 export default function Home({
   params: { id: gameId },
 }: {
@@ -67,31 +69,45 @@ export default function Home({
     [fetchVotes]
   )
 
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      const [{ data: teamData }, { data: gameData }] = await Promise.all([
-        supabase
-          .from('game_teams')
-          .select('*')
-          .eq('game_id', gameId)
-          .order('position', { ascending: true }),
-        supabase.from('games').select('*').eq('id', gameId).single(),
-      ])
+  const refreshGameData = useCallback(async () => {
+    const [{ data: teamData, error: teamError }, { data: gameData, error: gameError }] = await Promise.all([
+      supabase
+        .from('game_teams')
+        .select('*')
+        .eq('game_id', gameId)
+        .order('position', { ascending: true }),
+      supabase.from('games').select('*').eq('id', gameId).single(),
+    ])
 
-      if (teamData) {
-        setTeams(orderTeams(teamData))
-      }
-
-      if (gameData) {
-        setGame(gameData)
-        if (gameData.active_round_id) {
-          fetchRound(gameData.active_round_id)
-        }
-      }
+    if (teamError) {
+      console.error(teamError.message)
+    } else if (teamData) {
+      setTeams(orderTeams(teamData))
     }
 
-    fetchInitialData()
-  }, [gameId, fetchRound])
+    if (gameError) {
+      console.error(gameError.message)
+    } else if (gameData) {
+      setGame(gameData)
+      if (gameData.active_round_id) {
+        await fetchRound(gameData.active_round_id)
+      } else {
+        setActiveRound(null)
+        setRoundVotes([])
+      }
+    }
+  }, [fetchRound, gameId])
+
+  useEffect(() => {
+    refreshGameData()
+  }, [refreshGameData])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshGameData()
+    }, REFRESH_INTERVAL_MS)
+    return () => clearInterval(interval)
+  }, [refreshGameData])
 
   useEffect(() => {
     const channel = supabase
