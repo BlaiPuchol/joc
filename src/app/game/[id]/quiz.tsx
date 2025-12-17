@@ -125,15 +125,14 @@ export default function Challenge({
         <p className="mt-4 text-lg text-white/80">{statusCopy[phase]}</p>
       </div>
 
-      {phase !== 'lobby' && (
+      {phase !== 'lobby' && playerTeam && (
         <section className="px-4 pb-6">
-          <LineupBoard
-            teams={teams}
-            lineupByTeam={lineupByTeam}
-            membersByTeam={membersByTeam}
+          <PlayerLineupPanel
+            team={playerTeam}
+            lineup={playerSelection}
+            totalMembers={playerTeamMembers.length}
             requiredCount={requiredCount}
-            highlightTeamId={playerTeam?.id ?? null}
-            lineupReady={lineupReady}
+            ready={isTeamReady(playerTeam)}
           />
         </section>
       )}
@@ -250,79 +249,52 @@ function TransparencyPanel({
   )
 }
 
-function LineupBoard({
-  teams,
-  lineupByTeam,
-  membersByTeam,
+function PlayerLineupPanel({
+  team,
+  lineup,
+  totalMembers,
   requiredCount,
-  highlightTeamId,
-  lineupReady,
+  ready,
 }: {
-  teams: GameTeam[]
-  lineupByTeam: Record<string, Participant[]>
-  membersByTeam: Record<string, Participant[]>
+  team: GameTeam
+  lineup: Participant[]
+  totalMembers: number
   requiredCount: number | null
-  highlightTeamId: string | null
-  lineupReady: boolean
+  ready: boolean
 }) {
-  if (teams.length === 0) return null
+  const limit = requiredCount ?? totalMembers
   return (
-    <div className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-4">
-      <header className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+    <article className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-4">
+      <header className="flex items-center justify-between">
         <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-white/60">Participants en joc</p>
-          <p className="text-white/80 text-base">
-            {lineupReady ? 'Totes les alineacions estan llestes.' : 'Alguns equips encara estan confirmant la seua alineació.'}
+          <p className="text-sm uppercase tracking-[0.3em] text-white/60">El teu equip</p>
+          <h2 className="text-2xl font-semibold" style={{ color: team.color_hex }}>
+            {team.name}
+          </h2>
+          <p className="text-xs text-white/50 mt-1">
+            {lineup.length} / {limit || '∞'} jugadors confirmats
           </p>
         </div>
+        <span
+          className={`text-xs px-3 py-1 rounded-full uppercase tracking-[0.3em] ${
+            ready ? 'bg-emerald-400/20 text-emerald-200' : 'bg-white/10 text-white/60'
+          }`}
+        >
+          {ready ? 'Llest' : 'Pendent'}
+        </span>
       </header>
-      <div className="grid gap-4 md:grid-cols-2">
-        {teams.map((team) => {
-          const selection = lineupByTeam[team.id] ?? []
-          const rosterSize = membersByTeam[team.id]?.length ?? 0
-          const limit = requiredCount ?? rosterSize
-          const ready = rosterSize > 0 && (requiredCount ? selection.length === requiredCount : selection.length > 0)
-          return (
-            <article
-              key={team.id}
-              className={`rounded-2xl border px-4 py-4 bg-black/30 space-y-3 ${
-                highlightTeamId === team.id ? 'border-white/40' : 'border-white/10'
-              }`}
-            >
-              <header className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-white/50">{team.name}</p>
-                  <p className="text-xs text-white/50">
-                    {selection.length} / {limit || '∞'} jugadors confirmats
-                  </p>
-                </div>
-                <span
-                  className={`text-xs px-3 py-1 rounded-full uppercase tracking-[0.3em] ${
-                    ready ? 'bg-emerald-400/20 text-emerald-200' : 'bg-white/10 text-white/60'
-                  }`}
-                >
-                  {ready ? 'Llest' : 'Pendent'}
-                </span>
-              </header>
-              <div className="space-y-2">
-                {selection.length === 0 && (
-                  <p className="text-white/60 text-sm">Encara no hi ha jugadors assignats.</p>
-                )}
-                {selection.map((player) => (
-                  <div
-                    key={player.id}
-                    className="bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-sm flex items-center gap-2"
-                  >
-                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: team.color_hex }}></span>
-                    <span>{player.nickname}</span>
-                  </div>
-                ))}
-              </div>
-            </article>
-          )
-        })}
+      <div className="space-y-2">
+        {lineup.length === 0 && (
+          <p className="text-white/60 text-sm">Encara no hi ha jugadors confirmats per a este repte.</p>
+        )}
+        {lineup.map((player) => (
+          <div key={player.id} className="bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-sm flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: team.color_hex }}></span>
+            <span>{player.nickname}</span>
+          </div>
+        ))}
       </div>
-    </div>
+    </article>
   )
 }
 
