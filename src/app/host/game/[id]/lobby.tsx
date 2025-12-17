@@ -32,55 +32,50 @@ export default function Lobby({
 
   return (
     <div className="min-h-screen" style={{ background: screenBackground }}>
-      <div className="screen-frame py-10 text-white">
+      <div className="min-h-screen px-6 py-10 text-white">
         <section
-          className="glow-panel relative overflow-hidden p-8 md:p-12"
+          className="glow-panel relative overflow-hidden p-8 md:p-12 w-full max-w-none"
           style={{ background: heroBackground }}
         >
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.9fr)] items-start">
-            <div className="space-y-6 flex flex-col">
-              <div className="space-y-3">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)] xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] items-stretch min-h-[65vh]">
+            <div className="space-y-8 flex flex-col">
+              <div className="space-y-2">
                 <p className="text-xs uppercase tracking-[0.5em] text-white/60">Sala d&apos;espera</p>
-                <h1 className="text-4xl md:text-6xl font-black leading-tight">
-                  Compartix el QR gegant
-                </h1>
-                <p className="text-lg md:text-2xl text-white/85 max-w-3xl">
-                  Projecta esta pantalla perquè el públic escanege i entre al joc. Quan
-                  tingues prou gent, passa a organitzar els equips.
-                </p>
+                <h1 className="text-4xl md:text-6xl font-black leading-tight">Escaneu per jugar</h1>
               </div>
-              <div className="rounded-3xl border border-white/20 bg-white/5 p-6 md:p-8 w-full max-w-xl">
+              <div className="rounded-3xl border border-white/20 bg-white/5 p-6 md:p-8 grow flex items-center justify-center">
                 {joinUrl ? (
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="bg-white p-5 rounded-3xl shadow-2xl">
-                      <Canvas text={joinUrl} options={{ width: 340, margin: 0, scale: 10 }} />
+                  <div className="flex flex-col items-center gap-4 w-full">
+                    <div className="w-full flex justify-center">
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-2xl">
+                        <Canvas text={joinUrl} options={{ width: 420, margin: 0, scale: 12 }} />
+                      </div>
                     </div>
-                    <p className="text-sm text-white/70 text-center break-all">{joinUrl}</p>
+                    <p className="text-base text-white/75 text-center break-all">{joinUrl}</p>
                   </div>
                 ) : (
                   <p className="text-white/60 text-base">Generant enllaç per a unir-se…</p>
                 )}
               </div>
-              <button
-                onClick={onStart}
-                className="tactile-button max-w-sm bg-emerald-400 text-black text-xl py-4"
-              >
-                Organitza els equips
-              </button>
+              <div className="flex flex-wrap gap-4">
+                <button
+                  onClick={onStart}
+                  className="tactile-button bg-emerald-400 text-black text-xl py-4 px-8"
+                >
+                  Organitza els equips
+                </button>
+              </div>
             </div>
-            <div className="rounded-3xl border border-white/15 bg-white/5 p-6 md:p-8 flex flex-col gap-6 h-full max-h-[640px]">
+            <div className="rounded-3xl border border-white/15 bg-white/5 p-6 md:p-8 flex flex-col gap-6 h-full">
               <header className="space-y-2">
-                <p className="text-xs uppercase tracking-[0.5em] text-white/60">Participants registrats</p>
-                <h2 className="text-3xl font-semibold">
-                  {totalParticipants} {totalParticipants === 1 ? 'persona' : 'persones'} a punt
+                <p className="text-xs uppercase tracking-[0.5em] text-white/60">Participants</p>
+                <h2 className="text-4xl font-semibold tracking-tight">
+                  {totalParticipants} {totalParticipants === 1 ? 'persona' : 'persones'}
                 </h2>
-                <p className="text-white/70 text-base">
-                  Els sobrenoms apareixeran ací a mesura que la gent es registre.
-                </p>
               </header>
               <div className="grow overflow-y-auto pr-2">
                 {participants.length === 0 ? (
-                  <p className="text-white/70 text-lg">Encara no s&apos;ha unit ningú. Dona temps al públic.</p>
+                  <p className="text-white/70 text-lg">Encara no s&apos;ha unit ningú.</p>
                 ) : (
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
                     {participants.map((participant) => (

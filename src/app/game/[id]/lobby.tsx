@@ -127,7 +127,7 @@ function Register({
   return (
     <form onSubmit={(e) => onFormSubmit(e)} className="space-y-6 text-left">
       <label className="space-y-2 block">
-        <span className="text-sm uppercase tracking-[0.4em] text-white/60">Sobrenom</span>
+        <span className="text-sm uppercase tracking-[0.4em] text-white/60">Nom</span>
         <input
           className="w-full rounded-3xl border border-white/30 bg-white/10 px-5 py-4 text-lg md:text-xl text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-sky-300"
           type="text"
@@ -146,7 +146,7 @@ function Register({
         {sending ? 'Enviant…' : 'Unir-me a la sala'}
       </button>
       <p className="text-sm text-white/70 text-center">
-        El teu sobrenom es mostrarà a la pantalla gran. Pots canviar-lo abans que comence el joc.
+        El teu nom es mostrarà a la pantalla gran. Pots canviar-lo abans que comence el joc.
       </p>
     </form>
   )
