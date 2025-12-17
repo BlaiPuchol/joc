@@ -8,6 +8,7 @@ import {
   GameTeam,
   Participant,
   RoundLineup,
+  RoundOutcome,
   RoundVote,
   supabase,
 } from '@/types/types'
@@ -41,6 +42,7 @@ export default function Home({
   const [challenges, setChallenges] = useState<GameChallenge[]>([])
   const [activeRound, setActiveRound] = useState<GameRound | null>(null)
   const [roundVotes, setRoundVotes] = useState<RoundVote[]>([])
+  const [roundOutcomes, setRoundOutcomes] = useState<RoundOutcome[]>([])
 
   const fetchVotes = useCallback(async (roundId: string) => {
     const { data, error } = await supabase
@@ -71,6 +73,20 @@ export default function Home({
     setLineups((data ?? []) as unknown as LineupEntry[])
   }, [])
 
+  const fetchOutcomes = useCallback(async (roundId: string) => {
+    const { data, error } = await supabase
+      .from('round_outcomes')
+      .select('*')
+      .eq('round_id', roundId)
+
+    if (error) {
+      console.error(error.message)
+      return
+    }
+
+    setRoundOutcomes((data ?? []) as RoundOutcome[])
+  }, [])
+
   const fetchRound = useCallback(
     async (roundId: string) => {
       const { data, error } = await supabase
@@ -87,8 +103,9 @@ export default function Home({
       setActiveRound(data)
       fetchVotes(roundId)
       fetchLineups(roundId)
+      fetchOutcomes(roundId)
     },
-    [fetchLineups, fetchVotes]
+    [fetchLineups, fetchOutcomes, fetchVotes]
   )
 
   const refreshGameData = useCallback(async () => {
@@ -132,6 +149,7 @@ export default function Home({
         setActiveRound(null)
         setRoundVotes([])
         setLineups([])
+        setRoundOutcomes([])
       }
     }
 
@@ -189,6 +207,7 @@ export default function Home({
       setActiveRound(null)
       setRoundVotes([])
       setLineups([])
+      setRoundOutcomes([])
       return
     }
 
@@ -226,12 +245,22 @@ export default function Home({
         },
         () => fetchLineups(roundId)
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'round_outcomes',
+          filter: `round_id=eq.${roundId}`,
+        },
+        () => fetchOutcomes(roundId)
+      )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [fetchLineups, fetchRound, fetchVotes, game?.active_round_id])
+  }, [fetchLineups, fetchOutcomes, fetchRound, fetchVotes, game?.active_round_id])
 
 
   const onRegisterCompleted = (newParticipant: Participant) => {
@@ -325,6 +354,7 @@ export default function Home({
           round={activeRound}
           teams={teams}
           votes={roundVotes}
+          outcomes={roundOutcomes}
           onVote={castVote}
           playerVoteTeamId={playerVoteTeamId}
           roster={roster}

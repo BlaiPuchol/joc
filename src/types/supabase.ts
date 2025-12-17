@@ -507,6 +507,55 @@ export type Database = {
           },
         ]
       }
+      round_outcomes: {
+        Row: {
+          challenge_points: number
+          created_at: string
+          id: string
+          is_loser: boolean
+          round_id: string
+          team_id: string
+        }
+        Insert: {
+          challenge_points?: number
+          created_at?: string
+          id?: string
+          is_loser?: boolean
+          round_id: string
+          team_id: string
+        }
+        Update: {
+          challenge_points?: number
+          created_at?: string
+          id?: string
+          is_loser?: boolean
+          round_id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_outcomes_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "game_rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_outcomes_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "game_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_outcomes_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team_scores"
+            referencedColumns: ["team_id"]
+          },
+        ]
+      }
       round_votes: {
         Row: {
           created_at: string

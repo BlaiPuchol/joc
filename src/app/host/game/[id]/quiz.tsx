@@ -1,3 +1,4 @@
+import { VOTE_REWARD_PER_CORRECT } from '@/constants'
 import { TeamLeaderboard } from '@/components/team-leaderboard'
 import { useTeamScores } from '@/hooks/useTeamScores'
 import {
@@ -6,6 +7,7 @@ import {
   GameTeam,
   Participant,
   RoundLineup,
+  RoundOutcome,
   RoundVote,
   TeamScore,
 } from '@/types/types'
@@ -24,9 +26,11 @@ type Props = {
   teams: GameTeam[]
   votes: RoundVote[]
   lineups: LineupEntry[]
+  outcomes: RoundOutcome[]
   onOpenVoting: (notes: string) => void
   onLockVoting: () => void
-  onMarkLosingTeam: (teamId: string) => void
+  onUpdateOutcome: (teamId: string, updates: { isLoser?: boolean; challengePoints?: number }) => void
+  onFinalizeResults: () => void
   onNextRound: () => void
   onEndGame: () => void
 }
@@ -40,9 +44,11 @@ export default function RoundController({
   teams,
   votes,
   lineups,
+  outcomes,
   onOpenVoting,
   onLockVoting,
-  onMarkLosingTeam,
+  onUpdateOutcome,
+  onFinalizeResults,
   onNextRound,
   onEndGame,
 }: Props) {
@@ -66,7 +72,16 @@ export default function RoundController({
   }, [showRanking, reloadTeamScores])
   const totalPlayers = participants.length
   const pendingVotes = Math.max(totalPlayers - votes.length, 0)
-  const losingTeamId = round?.losing_team_id ?? null
+  const losingTeamIds = useMemo(() => {
+    return new Set(outcomes.filter((outcome) => outcome.is_loser).map((outcome) => outcome.team_id))
+  }, [outcomes])
+
+  const challengePointsByTeam = useMemo(() => {
+    return outcomes.reduce<Record<string, number>>((acc, outcome) => {
+      acc[outcome.team_id] = (acc[outcome.team_id] ?? 0) + outcome.challenge_points
+      return acc
+    }, {})
+  }, [outcomes])
 
   const lineupByTeam = useMemo(() => {
     return teams.reduce<Record<string, Participant[]>>((acc, team) => {
@@ -124,11 +139,13 @@ export default function RoundController({
   const perTeamScores = useMemo(() => {
     return teams.map((team) => {
       const teamVoters = votes.filter((vote) => vote.participant.game_team_id === team.id)
-      const correct = teamVoters.filter((vote) => vote.game_team_id === losingTeamId).length
-      const incorrect = losingTeamId ? teamVoters.length - correct : 0
-      return { team, correct, incorrect, delta: correct - incorrect }
+      const correctVotes = teamVoters.filter((vote) => losingTeamIds.has(vote.game_team_id)).length
+      const votePoints = correctVotes * VOTE_REWARD_PER_CORRECT
+      const challengePoints = challengePointsByTeam[team.id] ?? 0
+      const total = votePoints + challengePoints
+      return { team, correctVotes, votePoints, challengePoints, total }
     })
-  }, [losingTeamId, teams, votes])
+  }, [challengePointsByTeam, losingTeamIds, teams, votes])
 
   if (!round) {
     return (
@@ -215,29 +232,20 @@ export default function RoundController({
         </section>
       )}
 
-      {phase === 'voting' && <VotesPanel voteTotals={voteTotals} />}
+      {phase === 'voting' && <VotesPanel voteTotals={voteTotals} losingTeamIds={losingTeamIds} />}
 
       {phase === 'action' && (
-        <section className="bg-white/5 border border-white/10 rounded-3xl p-6 text-center">
-          <p className="text-white/70 text-lg">Repte en curs. Marca l&apos;equip que ha perdut quan ho sàpies.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-            {teams.map((team) => (
-              <button
-                key={team.id}
-                style={{ backgroundColor: team.color_hex }}
-                className="rounded-2xl text-white text-2xl font-semibold py-6 px-4 hover:opacity-90"
-                onClick={() => onMarkLosingTeam(team.id)}
-              >
-                Marca {team.name}
-              </button>
-            ))}
-          </div>
-        </section>
+        <OutcomeConfigurator
+          teams={activeTeams}
+          outcomes={outcomes}
+          onUpdateOutcome={onUpdateOutcome}
+          onFinalizeResults={onFinalizeResults}
+        />
       )}
 
       {phase === 'resolution' && (
         <section className="space-y-6">
-          <VotesPanel voteTotals={voteTotals} revealNames losingTeamId={losingTeamId} />
+          <VotesPanel voteTotals={voteTotals} revealNames losingTeamIds={losingTeamIds} />
           <Scoreboard perTeamScores={perTeamScores} />
           <div className="flex flex-col md:flex-row gap-4 flex-wrap">
             <button
@@ -333,11 +341,11 @@ function LineupGrid({
 function VotesPanel({
   voteTotals,
   revealNames = false,
-  losingTeamId,
+  losingTeamIds = new Set<string>(),
 }: {
   voteTotals: { team: GameTeam; count: number; percentage: number; voters: RoundVote[] }[]
   revealNames?: boolean
-  losingTeamId?: string | null
+  losingTeamIds?: Set<string>
 }) {
   return (
     <section className="grid gap-4 md:grid-cols-2">
@@ -350,7 +358,7 @@ function VotesPanel({
                 {percentage}%
               </p>
             </div>
-            {losingTeamId && losingTeamId === team.id && (
+            {losingTeamIds.has(team.id) && (
               <span className="px-3 py-1 rounded-full bg-white/20 text-xs uppercase tracking-[0.3em]">
                 Perdedor
               </span>
@@ -379,27 +387,142 @@ function VotesPanel({
 function Scoreboard({
   perTeamScores,
 }: {
-  perTeamScores: { team: GameTeam; correct: number; incorrect: number; delta: number }[]
+  perTeamScores: {
+    team: GameTeam
+    correctVotes: number
+    votePoints: number
+    challengePoints: number
+    total: number
+  }[]
 }) {
   return (
     <div className="grid md:grid-cols-2 gap-4">
-      {perTeamScores.map(({ team, correct, incorrect, delta }) => (
+      {perTeamScores.map(({ team, correctVotes, votePoints, challengePoints, total }) => (
         <article key={team.id} className="bg-black/30 border border-white/10 rounded-3xl p-5">
           <header className="flex items-center justify-between">
             <h3 className="text-xl font-semibold" style={{ color: team.color_hex }}>
               {team.name}
             </h3>
-            <span className={`text-2xl font-bold ${delta >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
-              {delta >= 0 ? '+' : ''}
-              {delta}
+            <span className="text-3xl font-bold text-emerald-300">
+              +{total}
             </span>
           </header>
-          <p className="text-white/60 text-sm mt-2">
-            {correct} encerts • {incorrect} errors
-          </p>
+          <dl className="text-white/70 text-sm mt-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <dt className="uppercase tracking-[0.3em] text-xs">Apostes encertades</dt>
+              <dd className="font-semibold text-white">
+                +{votePoints} pts <span className="text-white/50">({correctVotes})</span>
+              </dd>
+            </div>
+            <div className="flex items-center justify-between">
+              <dt className="uppercase tracking-[0.3em] text-xs">Punts del repte</dt>
+              <dd className="font-semibold text-white">+{challengePoints} pts</dd>
+            </div>
+          </dl>
         </article>
       ))}
     </div>
+  )
+}
+
+function OutcomeConfigurator({
+  teams,
+  outcomes,
+  onUpdateOutcome,
+  onFinalizeResults,
+}: {
+  teams: GameTeam[]
+  outcomes: RoundOutcome[]
+  onUpdateOutcome: (teamId: string, updates: { isLoser?: boolean; challengePoints?: number }) => void
+  onFinalizeResults: () => void
+}) {
+  const losingTeamIds = useMemo(() => {
+    return new Set(outcomes.filter((outcome) => outcome.is_loser).map((outcome) => outcome.team_id))
+  }, [outcomes])
+
+  const outcomeByTeam = useMemo(() => {
+    return outcomes.reduce<Record<string, RoundOutcome>>((acc, outcome) => {
+      acc[outcome.team_id] = outcome
+      return acc
+    }, {})
+  }, [outcomes])
+
+  const readyToReveal = losingTeamIds.size > 0
+
+  return (
+    <section className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-6">
+      <header className="space-y-2 text-center md:text-left">
+        <p className="text-sm uppercase tracking-[0.3em] text-white/50">Repte en marxa</p>
+        <h2 className="text-3xl font-semibold">Marca els equips perdedors i reparteix punts</h2>
+        <p className="text-white/70 text-sm">
+          Pots seleccionar els equips que han perdut i, si cal, sumar punts addicionals del repte a qualsevol equip.
+          Les apostes correctes sumen {VOTE_REWARD_PER_CORRECT} punts per jugadora del seu equip.
+        </p>
+      </header>
+      <div className="space-y-4">
+        {teams.map((team) => {
+          const entry = outcomeByTeam[team.id]
+          const isLoser = entry?.is_loser ?? false
+          const challengePoints = entry?.challenge_points ?? 0
+          return (
+            <article key={team.id} className="border border-white/10 rounded-2xl p-4 bg-black/20 space-y-3">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.3em] text-white/40">{team.name}</p>
+                  <p className="text-white/70 text-sm">
+                    {isLoser ? 'Marcat com a perdedor/a' : 'Encara sense resultat'}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-3 items-center">
+                  <button
+                    onClick={() => onUpdateOutcome(team.id, { isLoser: !isLoser })}
+                    className={`px-4 py-2 rounded-2xl border text-sm font-semibold transition ${
+                      isLoser
+                        ? 'border-rose-300/60 bg-rose-400/20 text-rose-100'
+                        : 'border-white/20 bg-white/10 text-white/80'
+                    }`}
+                  >
+                    {isLoser ? 'Perdedor seleccionat' : 'Marcar com perdedor'}
+                  </button>
+                  <label className="flex items-center gap-2 text-sm text-white/70">
+                    <span>Punts del repte</span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      className="w-20 rounded-xl bg-black/40 border border-white/20 px-2 py-1 text-right text-white"
+                      value={challengePoints}
+                      onChange={(event) =>
+                        onUpdateOutcome(team.id, {
+                          challengePoints: Math.max(0, Math.floor(Number(event.target.value) || 0)),
+                        })
+                      }
+                    />
+                  </label>
+                </div>
+              </div>
+            </article>
+          )
+        })}
+        {teams.length === 0 && (
+          <p className="text-white/60 text-center py-6">Encara no hi ha equips actius per a este repte.</p>
+        )}
+      </div>
+      <div className="flex flex-col md:flex-row gap-4 md:items-center">
+        <button
+          onClick={onFinalizeResults}
+          disabled={!readyToReveal}
+          className="flex-1 bg-emerald-400 text-black font-semibold px-6 py-3 rounded-2xl disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Revelar resultats
+        </button>
+        <p className="text-white/60 text-sm md:flex-1">
+          {readyToReveal
+            ? 'Ja pots passar a la resolució i mostrar els resultats.'
+            : 'Selecciona almenys un equip perdedor per a poder tancar el repte.'}
+        </p>
+      </div>
+    </section>
   )
 }
 

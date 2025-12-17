@@ -26,6 +26,8 @@ export type GameChallenge = Database['public']['Tables']['game_challenges']['Row
 
 export type RoundLineup = Database['public']['Tables']['round_lineups']['Row']
 
+export type RoundOutcome = Database['public']['Tables']['round_outcomes']['Row']
+
 export type TeamScore = Database['public']['Views']['team_scores']['Row']
 
 export type GameResult = Database['public']['Views']['game_results']['Row']

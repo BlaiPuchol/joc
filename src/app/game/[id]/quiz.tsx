@@ -1,4 +1,4 @@
-import { GameChallenge, GameRound, GameTeam, Participant, RoundLineup, RoundVote } from '@/types/types'
+import { GameChallenge, GameRound, GameTeam, Participant, RoundLineup, RoundOutcome, RoundVote } from '@/types/types'
 import { useMemo } from 'react'
 
 type LineupEntry = RoundLineup & { participant: Participant }
@@ -17,6 +17,7 @@ export default function Challenge({
   round,
   teams,
   votes,
+  outcomes,
   playerVoteTeamId,
   roster,
   lineups,
@@ -29,6 +30,7 @@ export default function Challenge({
   round: GameRound | null
   teams: GameTeam[]
   votes: RoundVote[]
+  outcomes: RoundOutcome[]
   playerVoteTeamId: string | null
   roster: Participant[]
   lineups: LineupEntry[]
@@ -70,7 +72,11 @@ export default function Challenge({
   )
   const playerTeamMembers = playerTeam ? membersByTeam[playerTeam.id] ?? [] : []
   const playerSelection = playerTeam ? lineupByTeam[playerTeam.id] ?? [] : []
-  const losingTeamId = round?.losing_team_id ?? null
+  const losingTeamIds = useMemo(() => {
+    return new Set(outcomes.filter((outcome) => outcome.is_loser).map((outcome) => outcome.team_id))
+  }, [outcomes])
+  const hasRoundResults = losingTeamIds.size > 0
+  const playerGuessedCorrectly = hasRoundResults && !!playerVoteTeamId && losingTeamIds.has(playerVoteTeamId)
 
   const groupedVotes = useMemo(() => {
     return teams.map((team) => ({
@@ -170,17 +176,17 @@ export default function Challenge({
       {phase === 'resolution' && (
         <div className="flex-grow w-full px-4 pb-16">
           <div className="text-center mb-8">
-            {losingTeamId && playerVoteTeamId === losingTeamId && (
+            {playerGuessedCorrectly && (
               <p className="text-2xl font-semibold text-green-400">
                 Has encertat! 🎉
               </p>
             )}
-            {losingTeamId && playerVoteTeamId && playerVoteTeamId !== losingTeamId && (
+            {hasRoundResults && playerVoteTeamId && !playerGuessedCorrectly && (
               <p className="text-2xl font-semibold text-red-400">
-                Esta vegada no — més sort en la pròxima ronda!
+                No has encertat  — Has de beure!! <br /> Més sort en la pròxima ronda!
               </p>
             )}
-            {!losingTeamId && (
+            {!hasRoundResults && (
               <p className="text-xl text-white/70">
                 Esperant que l&apos;amfitrió anuncie l&apos;equip perdedor.
               </p>
@@ -188,7 +194,7 @@ export default function Challenge({
           </div>
           <TransparencyPanel
             groupedVotes={groupedVotes}
-            losingTeamId={losingTeamId}
+            losingTeamIds={losingTeamIds}
           />
         </div>
       )}
@@ -198,10 +204,10 @@ export default function Challenge({
 
 function TransparencyPanel({
   groupedVotes,
-  losingTeamId,
+  losingTeamIds,
 }: {
   groupedVotes: { team: GameTeam; voters: RoundVote[] }[]
-  losingTeamId: string | null
+  losingTeamIds: Set<string>
 }) {
   return (
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
@@ -223,7 +229,7 @@ function TransparencyPanel({
                   {voters.length} {voters.length === 1 ? 'vot' : 'vots'}
                 </p>
               </div>
-              {losingTeamId === team.id && (
+              {losingTeamIds.has(team.id) && (
                 <span className="px-3 py-1 rounded-full text-sm bg-white/20 font-semibold">
                   Equip perdedor
                 </span>

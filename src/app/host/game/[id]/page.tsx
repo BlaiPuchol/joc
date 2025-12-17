@@ -7,6 +7,7 @@ import {
   GameTeam,
   Participant,
   RoundLineup,
+  RoundOutcome,
   RoundVote,
   supabase,
 } from '@/types/types'
@@ -41,6 +42,7 @@ export default function HostGame({
   const [activeRound, setActiveRound] = useState<GameRound | null>(null)
   const [votes, setVotes] = useState<RoundVote[]>([])
   const [lineups, setLineups] = useState<LineupEntry[]>([])
+  const [outcomes, setOutcomes] = useState<RoundOutcome[]>([])
 
   const sortedTeams = useMemo(
     () => [...teams].sort((a, b) => a.position - b.position),
@@ -81,6 +83,18 @@ export default function HostGame({
     setLineups((data ?? []) as unknown as LineupEntry[])
   }, [])
 
+  const fetchOutcomes = useCallback(async (roundId: string) => {
+    const { data, error } = await supabase
+      .from('round_outcomes')
+      .select('*')
+      .eq('round_id', roundId)
+    if (error) {
+      console.error(error.message)
+      return
+    }
+    setOutcomes((data ?? []) as RoundOutcome[])
+  }, [])
+
   const fetchRound = useCallback(
     async (roundId: string) => {
       const { data, error } = await supabase
@@ -95,8 +109,9 @@ export default function HostGame({
       setActiveRound(data)
       fetchVotes(roundId)
       fetchLineups(roundId)
+      fetchOutcomes(roundId)
     },
-    [fetchLineups, fetchVotes]
+    [fetchLineups, fetchOutcomes, fetchVotes]
   )
 
   const refreshGameState = useCallback(async () => {
@@ -125,6 +140,7 @@ export default function HostGame({
         setActiveRound(null)
         setVotes([])
         setLineups([])
+        setOutcomes([])
       }
     }
 
@@ -237,6 +253,7 @@ export default function HostGame({
       setActiveRound(null)
       setVotes([])
       setLineups([])
+       setOutcomes([])
       return
     }
 
@@ -259,12 +276,17 @@ export default function HostGame({
         { event: '*', schema: 'public', table: 'round_lineups', filter: `round_id=eq.${roundId}` },
         () => fetchLineups(roundId)
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'round_outcomes', filter: `round_id=eq.${roundId}` },
+        () => fetchOutcomes(roundId)
+      )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [fetchLineups, fetchRound, fetchVotes, game?.active_round_id])
+  }, [fetchLineups, fetchOutcomes, fetchRound, fetchVotes, game?.active_round_id])
 
   const getChallengeForSequence = useCallback(
     (sequence: number) => {
@@ -391,11 +413,55 @@ export default function HostGame({
     await refreshGameState()
   }
 
-  const markLosingTeam = async (teamId: string) => {
+  const updateOutcome = useCallback(
+    async (teamId: string, updates: { isLoser?: boolean; challengePoints?: number }) => {
+      if (!game?.active_round_id) return
+      const roundId = game.active_round_id
+      const existing = outcomes.find((outcome) => outcome.team_id === teamId)
+      const isLoser = updates.isLoser ?? existing?.is_loser ?? false
+      const challengePoints = Math.max(0, Math.floor(updates.challengePoints ?? existing?.challenge_points ?? 0))
+
+      if (!isLoser && challengePoints === 0) {
+        const { error } = await supabase
+          .from('round_outcomes')
+          .delete()
+          .match({ round_id: roundId, team_id: teamId })
+        if (error) {
+          alert(error.message)
+        }
+        return
+      }
+
+      const { error } = await supabase
+        .from('round_outcomes')
+        .upsert(
+          {
+            round_id: roundId,
+            team_id: teamId,
+            is_loser: isLoser,
+            challenge_points: challengePoints,
+          },
+          { onConflict: 'round_id,team_id' }
+        )
+
+      if (error) {
+        alert(error.message)
+      }
+    },
+    [game?.active_round_id, outcomes]
+  )
+
+  const finalizeRoundResults = async () => {
     if (!game?.active_round_id) return
+    const hasLosingTeam = outcomes.some((outcome) => outcome.is_loser)
+    if (!hasLosingTeam) {
+      alert('Selecciona almenys un equip perdedor abans de continuar.')
+      return
+    }
+    const primaryLoser = outcomes.find((outcome) => outcome.is_loser)?.team_id ?? null
     const { error } = await supabase
       .from('game_rounds')
-      .update({ losing_team_id: teamId, state: 'resolution' })
+      .update({ losing_team_id: primaryLoser, state: 'resolution' })
       .eq('id', game.active_round_id)
     if (error) {
       alert(error.message)
@@ -451,9 +517,11 @@ export default function HostGame({
           teams={sortedTeams}
           votes={votes}
           lineups={lineups}
+          outcomes={outcomes}
           onOpenVoting={openVoting}
           onLockVoting={lockVoting}
-          onMarkLosingTeam={markLosingTeam}
+          onUpdateOutcome={updateOutcome}
+          onFinalizeResults={finalizeRoundResults}
           onNextRound={nextRound}
           onEndGame={endGame}
         />

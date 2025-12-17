@@ -28,7 +28,7 @@ export default function Results({
         <p className="text-sm uppercase tracking-[0.4em] text-white/50">Classificació final</p>
         <h1 className="text-4xl font-bold mt-3">Gràcies per apostar, {participant.nickname}!</h1>
         <p className="mt-3 text-white/70">
-          Aci tens els punts totals segons cada predicció correcta de l&apos;equip perdedor.
+          Cada aposta encertada suma 3 punts al teu equip i l&apos;amfitrió pot afegir punts del repte després de cada prova.
         </p>
       </div>
       <div className="flex justify-center px-4 pb-16">
@@ -46,7 +46,7 @@ export default function Results({
               highlightTeamId={participant.game_team_id ?? null}
               highlightLabel="El teu equip"
               title="Classificació final"
-              subtitle="Els punts provenen dels encerts d'aposta i de les victòries en els reptes."
+              subtitle="Els punts combinen apostes encertades (3 punts) i els punts extra atorgats al final de cada repte."
             />
           )}
         </div>
