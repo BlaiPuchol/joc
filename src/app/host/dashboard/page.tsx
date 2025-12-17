@@ -180,7 +180,10 @@ export default function HostDashboard() {
     }
   }
 
-  const draftGames = useMemo(() => games.filter((game) => game.status === 'draft'), [games])
+  const draftGames = useMemo(
+    () => games.filter((game) => game.status === 'draft' || game.status === 'ready'),
+    [games]
+  )
   const activeGames = useMemo(() => games.filter((game) => game.status === 'live'), [games])
   const completedGames = useMemo(
     () => games.filter((game) => game.status === 'completed' || game.status === 'archived'),
