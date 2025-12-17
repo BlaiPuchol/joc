@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Game,
+  GameChallenge,
   GameRound,
   GameTeam,
   Participant,
+  RoundLineup,
   RoundVote,
   supabase,
 } from '@/types/types'
@@ -13,6 +15,8 @@ import { TEAM_ORDER_LOOKUP } from '@/constants'
 import Lobby from './lobby'
 import Challenge from './quiz'
 import Results from './results'
+
+type LineupEntry = RoundLineup & { participant: Participant }
 
 type GamePhase =
   | 'lobby'
@@ -32,6 +36,9 @@ export default function Home({
   const [participant, setParticipant] = useState<Participant | null>(null)
   const [game, setGame] = useState<Game | null>(null)
   const [teams, setTeams] = useState<GameTeam[]>([])
+  const [roster, setRoster] = useState<Participant[]>([])
+  const [lineups, setLineups] = useState<LineupEntry[]>([])
+  const [challenges, setChallenges] = useState<GameChallenge[]>([])
   const [activeRound, setActiveRound] = useState<GameRound | null>(null)
   const [roundVotes, setRoundVotes] = useState<RoundVote[]>([])
 
@@ -50,6 +57,20 @@ export default function Home({
     setRoundVotes((data ?? []) as unknown as RoundVote[])
   }, [])
 
+  const fetchLineups = useCallback(async (roundId: string) => {
+    const { data, error } = await supabase
+      .from('round_lineups')
+      .select('*, participant:participants(*)')
+      .eq('round_id', roundId)
+
+    if (error) {
+      console.error(error.message)
+      return
+    }
+
+    setLineups((data ?? []) as unknown as LineupEntry[])
+  }, [])
+
   const fetchRound = useCallback(
     async (roundId: string) => {
       const { data, error } = await supabase
@@ -65,18 +86,34 @@ export default function Home({
 
       setActiveRound(data)
       fetchVotes(roundId)
+      fetchLineups(roundId)
     },
-    [fetchVotes]
+    [fetchLineups, fetchVotes]
   )
 
   const refreshGameData = useCallback(async () => {
-    const [{ data: teamData, error: teamError }, { data: gameData, error: gameError }] = await Promise.all([
+    const [
+      { data: teamData, error: teamError },
+      { data: gameData, error: gameError },
+      { data: participantData, error: participantError },
+      { data: challengeData, error: challengeError },
+    ] = await Promise.all([
       supabase
         .from('game_teams')
         .select('*')
         .eq('game_id', gameId)
         .order('position', { ascending: true }),
       supabase.from('games').select('*').eq('id', gameId).single(),
+      supabase
+        .from('participants')
+        .select('*')
+        .eq('game_id', gameId)
+        .order('created_at'),
+      supabase
+        .from('game_challenges')
+        .select('*')
+        .eq('game_id', gameId)
+        .order('position', { ascending: true }),
     ])
 
     if (teamError) {
@@ -94,7 +131,20 @@ export default function Home({
       } else {
         setActiveRound(null)
         setRoundVotes([])
+        setLineups([])
       }
+    }
+
+    if (participantError) {
+      console.error(participantError.message)
+    } else if (participantData) {
+      setRoster(participantData)
+    }
+
+    if (challengeError) {
+      console.error(challengeError.message)
+    } else if (challengeData) {
+      setChallenges(challengeData)
     }
   }, [fetchRound, gameId])
 
@@ -138,6 +188,7 @@ export default function Home({
     if (!roundId) {
       setActiveRound(null)
       setRoundVotes([])
+      setLineups([])
       return
     }
 
@@ -165,12 +216,22 @@ export default function Home({
         },
         () => fetchVotes(roundId)
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'round_lineups',
+          filter: `round_id=eq.${roundId}`,
+        },
+        () => fetchLineups(roundId)
+      )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-}, [game?.active_round_id, fetchRound, fetchVotes])
+  }, [fetchLineups, fetchRound, fetchVotes, game?.active_round_id])
 
 
   const onRegisterCompleted = (newParticipant: Participant) => {
@@ -211,6 +272,41 @@ export default function Home({
     )
   }, [participant, roundVotes])
 
+  const activeChallenge = useMemo(() => {
+    if (!activeRound?.challenge_id) return null
+    return challenges.find((challenge) => challenge.id === activeRound.challenge_id) ?? null
+  }, [activeRound?.challenge_id, challenges])
+
+  const toggleLineupParticipant = async (teamId: string, participantId: string, shouldAdd: boolean) => {
+    if (!activeRound || game?.phase !== 'leader_selection') return
+    if (shouldAdd) {
+      const { error } = await supabase
+        .from('round_lineups')
+        .insert({ round_id: activeRound.id, team_id: teamId, participant_id: participantId })
+      if (error && error.code !== '23505') {
+        console.error(error.message)
+        alert(error.message)
+      }
+      if (!error) {
+        await fetchLineups(activeRound.id)
+      }
+      return
+    }
+
+    const { error } = await supabase
+      .from('round_lineups')
+      .delete()
+      .match({ round_id: activeRound.id, team_id: teamId, participant_id: participantId })
+
+    if (error) {
+      console.error(error.message)
+      alert(error.message)
+      return
+    }
+
+    await fetchLineups(activeRound.id)
+  }
+
   const currentPhase: GamePhase = (game?.phase as GamePhase) ?? 'lobby'
 
   return (
@@ -231,6 +327,10 @@ export default function Home({
           votes={roundVotes}
           onVote={castVote}
           playerVoteTeamId={playerVoteTeamId}
+          roster={roster}
+          lineups={lineups}
+          challenge={activeChallenge}
+          onToggleLineup={toggleLineupParticipant}
         />
       )}
 

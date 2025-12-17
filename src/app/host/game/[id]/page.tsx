@@ -423,31 +423,6 @@ export default function HostGame({
     await refreshGameState()
   }
 
-  const toggleLineupParticipant = async (teamId: string, participantId: string, shouldAdd: boolean) => {
-    if (!game?.active_round_id) return
-    if (shouldAdd) {
-      const { error } = await supabase
-        .from('round_lineups')
-        .insert({ round_id: game.active_round_id, team_id: teamId, participant_id: participantId })
-      if (error && error.code !== '23505') {
-        alert(error.message)
-      }
-      if (!error) {
-        await fetchRound(game.active_round_id)
-      }
-      return
-    }
-    const { error } = await supabase
-      .from('round_lineups')
-      .delete()
-      .match({ round_id: game.active_round_id, team_id: teamId, participant_id: participantId })
-    if (error) {
-      alert(error.message)
-      return
-    }
-    await fetchRound(game.active_round_id)
-  }
-
   const phase: HostPhase = (game?.phase as HostPhase) ?? 'lobby'
 
   return (
@@ -468,6 +443,7 @@ export default function HostGame({
 
       {phase !== 'lobby' && phase !== 'team_setup' && phase !== 'results' && (
         <RoundController
+          gameId={gameId}
           phase={phase}
           round={activeRound}
           challenge={activeChallenge}
@@ -480,7 +456,6 @@ export default function HostGame({
           onMarkLosingTeam={markLosingTeam}
           onNextRound={nextRound}
           onEndGame={endGame}
-          onToggleLineup={toggleLineupParticipant}
         />
       )}
 

@@ -1,3 +1,5 @@
+import { TeamLeaderboard } from '@/components/team-leaderboard'
+import { useTeamScores } from '@/hooks/useTeamScores'
 import {
   GameChallenge,
   GameRound,
@@ -5,6 +7,7 @@ import {
   Participant,
   RoundLineup,
   RoundVote,
+  TeamScore,
 } from '@/types/types'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -13,6 +16,7 @@ type Phase = 'leader_selection' | 'voting' | 'action' | 'resolution'
 type LineupEntry = RoundLineup & { participant: Participant }
 
 type Props = {
+  gameId: string
   phase: Phase | 'lobby'
   round: GameRound | null
   challenge: GameChallenge | null
@@ -25,10 +29,10 @@ type Props = {
   onMarkLosingTeam: (teamId: string) => void
   onNextRound: () => void
   onEndGame: () => void
-  onToggleLineup: (teamId: string, participantId: string, shouldAdd: boolean) => void
 }
 
 export default function RoundController({
+  gameId,
   phase,
   round,
   challenge,
@@ -41,9 +45,8 @@ export default function RoundController({
   onMarkLosingTeam,
   onNextRound,
   onEndGame,
-  onToggleLineup,
 }: Props) {
-  const [headline, setHeadline] = useState('')
+  const [showRanking, setShowRanking] = useState(false)
   const phaseLabels: Record<Phase | 'lobby', string> = {
     leader_selection: 'Selecció de líders',
     voting: 'Apostes obertes',
@@ -52,9 +55,15 @@ export default function RoundController({
     lobby: 'Sala d\'espera',
   }
 
+  const { scores: teamScores, loading: rankingLoading, reload: reloadTeamScores } = useTeamScores(gameId, {
+    refreshIntervalMs: showRanking ? 4000 : undefined,
+  })
+
   useEffect(() => {
-    setHeadline(round?.leader_notes ?? '')
-  }, [round?.leader_notes])
+    if (showRanking) {
+      reloadTeamScores()
+    }
+  }, [showRanking, reloadTeamScores])
   const totalPlayers = participants.length
   const pendingVotes = Math.max(totalPlayers - votes.length, 0)
   const losingTeamId = round?.losing_team_id ?? null
@@ -85,9 +94,19 @@ export default function RoundController({
     return selection.length === requiredCount
   }
 
-  const lineupReady = teams
-    .filter((team) => team.is_active)
-    .every((team) => (membersByTeam[team.id]?.length ?? 0) > 0 && isTeamReady(team))
+  const activeTeams = teams.filter((team) => team.is_active)
+  const readyTeams = activeTeams.filter((team) => (membersByTeam[team.id]?.length ?? 0) > 0 && isTeamReady(team))
+  const lineupReady = activeTeams.every((team) => (membersByTeam[team.id]?.length ?? 0) > 0 && isTeamReady(team))
+
+  const lineupSummary = useMemo(() => {
+    return teams
+      .map((team) => {
+        const selection = lineupByTeam[team.id] ?? []
+        if (selection.length === 0) return `${team.name}: —`
+        return `${team.name}: ${selection.map((player) => player.nickname).join(', ')}`
+      })
+      .join(' | ')
+  }, [lineupByTeam, teams])
 
   const voteTotals = useMemo(() => {
     const totalVotes = votes.length || 1
@@ -131,17 +150,17 @@ export default function RoundController({
               <span className="ml-2 text-white/50">({pendingVotes} pendents)</span>
             )}
           </p>
-          {headline && (
+          {activeTeams.length > 0 && (
             <p className="text-white mt-1">
-              Titular: <span className="font-semibold">{headline}</span>
+              Alineacions: <span className="font-semibold">{readyTeams.length} / {activeTeams.length}</span> equips preparats
             </p>
           )}
         </div>
         <div className="flex flex-wrap gap-3">
           {phase === 'leader_selection' && (
             <button
-              onClick={() => onOpenVoting(headline.trim())}
-              disabled={!headline.trim() || !lineupReady}
+              onClick={() => onOpenVoting(lineupSummary)}
+              disabled={!lineupReady}
               className="bg-emerald-400 text-black font-semibold px-8 py-3 rounded-2xl disabled:opacity-50"
             >
               Obrir apostes
@@ -172,25 +191,26 @@ export default function RoundController({
       {phase === 'leader_selection' && (
         <section className="space-y-4">
           <div className="bg-white/5 border border-white/10 rounded-3xl p-6">
-            <label className="text-sm uppercase tracking-[0.3em] text-white/50">Titular que veuran els jugadors</label>
-            <textarea
-              className="mt-3 w-full rounded-2xl bg-black/30 border border-white/10 p-4 text-lg"
-              placeholder="Blau vs Verd"
-              value={headline}
-              onChange={(event) => setHeadline(event.target.value)}
-            ></textarea>
-            {!lineupReady && (
-              <p className="text-amber-300 text-sm mt-2">
-                Selecciona la alineació de cada equip actiu per a continuar.
-              </p>
-            )}
+            <p className="text-sm uppercase tracking-[0.3em] text-white/50">Progrés de selecció</p>
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mt-3">
+              <div>
+                <p className="text-4xl font-semibold">{readyTeams.length} / {activeTeams.length}</p>
+                <p className="text-white/70">Equips amb alineació confirmada</p>
+              </div>
+              {!lineupReady ? (
+                <p className="text-amber-300 text-sm">
+                  Esperant que les persones líders confirmen les seues alineacions.
+                </p>
+              ) : (
+                <p className="text-emerald-300 text-sm">Tots els equips estan llestos! Pots obrir les apostes.</p>
+              )}
+            </div>
           </div>
           <LineupGrid
             teams={teams}
             membersByTeam={membersByTeam}
             lineupByTeam={lineupByTeam}
             requiredCount={requiredCount}
-            onToggleLineup={onToggleLineup}
           />
         </section>
       )}
@@ -219,7 +239,7 @@ export default function RoundController({
         <section className="space-y-6">
           <VotesPanel voteTotals={voteTotals} revealNames losingTeamId={losingTeamId} />
           <Scoreboard perTeamScores={perTeamScores} />
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:flex-row gap-4 flex-wrap">
             <button
               onClick={onNextRound}
               className="flex-1 bg-blue-500 rounded-2xl py-4 text-xl font-semibold hover:bg-blue-400"
@@ -227,13 +247,27 @@ export default function RoundController({
               Següent repte
             </button>
             <button
-              onClick={onEndGame}
-              className="flex-1 bg-white/10 border border-white/20 rounded-2xl py-4 text-xl font-semibold"
+              onClick={() => setShowRanking(true)}
+              className="flex-1 bg-white/15 border border-white/30 rounded-2xl py-4 text-xl font-semibold hover:bg-white/20"
             >
-              Mostrar resultats finals
+              Veure classificació
+            </button>
+            <button
+              onClick={onEndGame}
+              className="flex-1 bg-rose-500/20 border border-rose-300/40 rounded-2xl py-4 text-xl font-semibold text-rose-100"
+            >
+              Finalitzar partida
             </button>
           </div>
         </section>
+      )}
+
+      {showRanking && (
+        <RankingModal
+          scores={teamScores}
+          loading={rankingLoading}
+          onClose={() => setShowRanking(false)}
+        />
       )}
     </div>
   )
@@ -244,13 +278,11 @@ function LineupGrid({
   membersByTeam,
   lineupByTeam,
   requiredCount,
-  onToggleLineup,
 }: {
   teams: GameTeam[]
   membersByTeam: Record<string, Participant[]>
   lineupByTeam: Record<string, Participant[]>
   requiredCount: number | null
-  onToggleLineup: (teamId: string, participantId: string, shouldAdd: boolean) => void
 }) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -274,23 +306,20 @@ function LineupGrid({
               {members.length === 0 && <p className="text-white/50 text-sm">Assigna jugadors a este equip.</p>}
               {members.map((player) => {
                 const isPlaying = selected.has(player.id)
-                const disableAdd = !isPlaying && limit !== 0 && selected.size >= limit
                 return (
-                  <button
+                  <div
                     key={player.id}
-                    onClick={() => onToggleLineup(team.id, player.id, !isPlaying)}
-                    disabled={disableAdd}
                     className={`w-full flex items-center justify-between rounded-2xl border px-4 py-2 text-left transition ${
                       isPlaying
                         ? 'border-emerald-400 bg-emerald-400/10 text-emerald-200'
-                        : 'border-white/10 bg-white/5 text-white'
-                    } ${disableAdd ? 'opacity-40 cursor-not-allowed' : ''}`}
+                        : 'border-white/10 bg-white/5 text-white/80'
+                    }`}
                   >
                     <span>{player.nickname}</span>
                     <span className="text-xs uppercase tracking-[0.3em]">
-                      {isPlaying ? 'Jugant' : 'Banqueta'}
+                      {isPlaying ? 'En joc' : 'Banqueta'}
                     </span>
-                  </button>
+                  </div>
                 )
               })}
             </div>
@@ -370,6 +399,40 @@ function Scoreboard({
           </p>
         </article>
       ))}
+    </div>
+  )
+}
+
+function RankingModal({
+  scores,
+  loading,
+  onClose,
+}: {
+  scores: TeamScore[]
+  loading: boolean
+  onClose: () => void
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur flex items-center justify-center p-4 z-50">
+      <div className="w-full max-w-3xl bg-slate-950 border border-white/10 rounded-3xl p-6 space-y-6 shadow-2xl">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm uppercase tracking-[0.4em] text-white/50">Classificació global</p>
+            <h2 className="text-3xl font-semibold mt-2">Rànquing d&apos;equips</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-white/70 hover:text-white text-sm uppercase tracking-[0.3em]"
+          >
+            Tancar
+          </button>
+        </div>
+        {loading ? (
+          <p className="text-center text-white/70 py-10">Actualitzant classificació…</p>
+        ) : (
+          <TeamLeaderboard scores={scores} dense />
+        )}
+      </div>
     </div>
   )
 }

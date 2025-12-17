@@ -1,5 +1,7 @@
-import { GameRound, GameTeam, Participant, RoundVote } from '@/types/types'
+import { GameChallenge, GameRound, GameTeam, Participant, RoundLineup, RoundVote } from '@/types/types'
 import { useMemo } from 'react'
+
+type LineupEntry = RoundLineup & { participant: Participant }
 
 type Phase =
   | 'lobby'
@@ -16,7 +18,11 @@ export default function Challenge({
   teams,
   votes,
   playerVoteTeamId,
+  roster,
+  lineups,
+  challenge,
   onVote,
+  onToggleLineup,
 }: {
   phase: Phase
   participant: Participant
@@ -24,8 +30,46 @@ export default function Challenge({
   teams: GameTeam[]
   votes: RoundVote[]
   playerVoteTeamId: string | null
+  roster: Participant[]
+  lineups: LineupEntry[]
+  challenge: GameChallenge | null
   onVote: (teamId: string) => void
+  onToggleLineup: (teamId: string, participantId: string, shouldAdd: boolean) => void
 }) {
+  const lineupByTeam = useMemo(() => {
+    return teams.reduce<Record<string, Participant[]>>((acc, team) => {
+      acc[team.id] = lineups
+        .filter((entry) => entry.team_id === team.id)
+        .map((entry) => entry.participant)
+      return acc
+    }, {})
+  }, [lineups, teams])
+
+  const membersByTeam = useMemo(() => {
+    return teams.reduce<Record<string, Participant[]>>((acc, team) => {
+      acc[team.id] = roster.filter((member) => member.game_team_id === team.id)
+      return acc
+    }, {})
+  }, [roster, teams])
+
+  const playerTeam = teams.find((team) => team.id === participant.game_team_id) ?? null
+  const isLeader = playerTeam ? playerTeam.leader_participant_id === participant.id : false
+  const requiredCount = challenge?.participants_per_team ?? null
+
+  const isTeamReady = (team: GameTeam) => {
+    const selection = lineupByTeam[team.id] ?? []
+    if (!requiredCount) {
+      return selection.length > 0
+    }
+    return selection.length === requiredCount
+  }
+
+  const activeTeams = teams.filter((team) => team.is_active)
+  const lineupReady = activeTeams.every(
+    (team) => (membersByTeam[team.id]?.length ?? 0) > 0 && isTeamReady(team)
+  )
+  const playerTeamMembers = playerTeam ? membersByTeam[playerTeam.id] ?? [] : []
+  const playerSelection = playerTeam ? lineupByTeam[playerTeam.id] ?? [] : []
   const losingTeamId = round?.losing_team_id ?? null
 
   const groupedVotes = useMemo(() => {
@@ -79,17 +123,41 @@ export default function Challenge({
         <p className="text-sm uppercase tracking-[0.3em] text-white/60">Repte en directe</p>
         <h1 className="text-3xl font-bold mt-2">Ei, {participant.nickname}!</h1>
         <p className="mt-4 text-lg text-white/80">{statusCopy[phase]}</p>
-        {round?.leader_notes && (
-          <div className="mt-6 inline-block bg-white/10 border border-white/15 rounded-xl px-6 py-3 text-lg">
-            Participants en joc: <span className="font-semibold">{round.leader_notes}</span>
-          </div>
-        )}
       </div>
+
+      {phase !== 'lobby' && (
+        <section className="px-4 pb-6">
+          <LineupBoard
+            teams={teams}
+            lineupByTeam={lineupByTeam}
+            membersByTeam={membersByTeam}
+            requiredCount={requiredCount}
+            highlightTeamId={playerTeam?.id ?? null}
+            lineupReady={lineupReady}
+          />
+        </section>
+      )}
 
       {phase === 'voting' && renderVotingGrid()}
 
       {phase === 'leader_selection' && (
-        <MessageBlock text="Esperant que els líders trien participants..." />
+        <section className="px-4 pb-12 w-full max-w-3xl mx-auto">
+          {isLeader && playerTeam ? (
+            <LeaderLineupSelector
+              team={playerTeam}
+              members={playerTeamMembers}
+              selected={new Set(playerSelection.map((player) => player.id))}
+              requiredCount={requiredCount}
+              onToggle={(playerId, shouldAdd) => onToggleLineup(playerTeam.id, playerId, shouldAdd)}
+            />
+          ) : (
+            <div className="bg-white/5 border border-white/10 rounded-2xl px-5 py-6 text-center text-white/70 text-lg">
+              {playerTeam
+                ? 'La teua persona líder està triant qui jugarà aquest repte. Mantín-te a l\'espera!'
+                : 'Esperant que l\'amfitrió assigne el teu equip.'}
+            </div>
+          )}
+        </section>
       )}
 
       {phase === 'lobby' && (
@@ -179,6 +247,142 @@ function TransparencyPanel({
         )
       })}
     </div>
+  )
+}
+
+function LineupBoard({
+  teams,
+  lineupByTeam,
+  membersByTeam,
+  requiredCount,
+  highlightTeamId,
+  lineupReady,
+}: {
+  teams: GameTeam[]
+  lineupByTeam: Record<string, Participant[]>
+  membersByTeam: Record<string, Participant[]>
+  requiredCount: number | null
+  highlightTeamId: string | null
+  lineupReady: boolean
+}) {
+  if (teams.length === 0) return null
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-4">
+      <header className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-sm uppercase tracking-[0.3em] text-white/60">Participants en joc</p>
+          <p className="text-white/80 text-base">
+            {lineupReady ? 'Totes les alineacions estan llestes.' : 'Alguns equips encara estan confirmant la seua alineació.'}
+          </p>
+        </div>
+      </header>
+      <div className="grid gap-4 md:grid-cols-2">
+        {teams.map((team) => {
+          const selection = lineupByTeam[team.id] ?? []
+          const rosterSize = membersByTeam[team.id]?.length ?? 0
+          const limit = requiredCount ?? rosterSize
+          const ready = rosterSize > 0 && (requiredCount ? selection.length === requiredCount : selection.length > 0)
+          return (
+            <article
+              key={team.id}
+              className={`rounded-2xl border px-4 py-4 bg-black/30 space-y-3 ${
+                highlightTeamId === team.id ? 'border-white/40' : 'border-white/10'
+              }`}
+            >
+              <header className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.3em] text-white/50">{team.name}</p>
+                  <p className="text-xs text-white/50">
+                    {selection.length} / {limit || '∞'} jugadors confirmats
+                  </p>
+                </div>
+                <span
+                  className={`text-xs px-3 py-1 rounded-full uppercase tracking-[0.3em] ${
+                    ready ? 'bg-emerald-400/20 text-emerald-200' : 'bg-white/10 text-white/60'
+                  }`}
+                >
+                  {ready ? 'Llest' : 'Pendent'}
+                </span>
+              </header>
+              <div className="space-y-2">
+                {selection.length === 0 && (
+                  <p className="text-white/60 text-sm">Encara no hi ha jugadors assignats.</p>
+                )}
+                {selection.map((player) => (
+                  <div
+                    key={player.id}
+                    className="bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-sm flex items-center gap-2"
+                  >
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: team.color_hex }}></span>
+                    <span>{player.nickname}</span>
+                  </div>
+                ))}
+              </div>
+            </article>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function LeaderLineupSelector({
+  team,
+  members,
+  selected,
+  requiredCount,
+  onToggle,
+}: {
+  team: GameTeam
+  members: Participant[]
+  selected: Set<string>
+  requiredCount: number | null
+  onToggle: (participantId: string, shouldAdd: boolean) => void
+}) {
+  const limit = requiredCount ?? members.length
+  const maxSelectable = limit === 0 ? members.length : limit
+  return (
+    <article className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-4">
+      <header className="space-y-2">
+        <p className="text-sm uppercase tracking-[0.3em] text-white/60">Alineació de {team.name}</p>
+        <h2 className="text-2xl font-semibold">Tria qui competirà hui</h2>
+        <p className="text-white/70 text-sm">
+          Selecciona fins a {maxSelectable || '∞'} jugador(s). Pots tocar un nom per a afegir-lo o llevar-lo.
+        </p>
+      </header>
+      <div className="space-y-2">
+        {members.length === 0 && (
+          <p className="text-white/60 text-sm">Encara no tens companys assignats al teu equip.</p>
+        )}
+        {members.map((member) => {
+          const isPlaying = selected.has(member.id)
+          const disableAdd = !isPlaying && maxSelectable !== 0 && selected.size >= maxSelectable
+          return (
+            <button
+              key={member.id}
+              onClick={() => onToggle(member.id, !isPlaying)}
+              disabled={disableAdd}
+              className={`w-full flex items-center justify-between rounded-2xl border px-4 py-2 text-left transition ${
+                isPlaying
+                  ? 'border-emerald-400 bg-emerald-400/10 text-emerald-100'
+                  : 'border-white/10 bg-white/5 text-white'
+              } ${disableAdd ? 'opacity-40 cursor-not-allowed' : ''}`}
+            >
+              <span>{member.nickname}</span>
+              <span className="text-xs uppercase tracking-[0.3em]">
+                {isPlaying ? 'En joc' : 'Banqueta'}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+      <p className="text-white/60 text-sm">
+        {selected.size} / {maxSelectable || '∞'} jugadors seleccionats
+      </p>
+      {maxSelectable > 0 && selected.size === maxSelectable && (
+        <p className="text-emerald-300 text-sm">Alineació completa! Espera que l&apos;amfitrió òbriga les apostes.</p>
+      )}
+    </article>
   )
 }
 

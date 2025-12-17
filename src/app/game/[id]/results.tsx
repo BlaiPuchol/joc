@@ -1,5 +1,7 @@
-import { GameResult, Participant, supabase } from '@/types/types'
-import { useEffect, useState } from 'react'
+import { TeamLeaderboard } from '@/components/team-leaderboard'
+import { useTeamScores } from '@/hooks/useTeamScores'
+import { Participant } from '@/types/types'
+import { useEffect } from 'react'
 import Confetti from 'react-confetti'
 import useWindowSize from 'react-use/lib/useWindowSize'
 
@@ -10,26 +12,15 @@ export default function Results({
   participant: Participant
   gameId: string
 }) {
-  const [gameResults, setGameResults] = useState<GameResult[]>([])
+  const { scores, loading, reload } = useTeamScores(gameId, { refreshIntervalMs: 5000 })
   const { width, height } = useWindowSize()
 
   useEffect(() => {
-    const getResults = async () => {
-      const { data, error } = await supabase
-        .from('game_results')
-        .select('*')
-        .eq('game_id', gameId)
-        .order('total_score', { ascending: false })
-      if (error) {
-        alert(error.message)
-        return
-      }
+    reload()
+  }, [gameId, reload])
 
-      setGameResults(data ?? [])
-    }
-
-    getResults()
-  }, [gameId])
+  const playerTeamId = participant.game_team_id ?? null
+  const playerTeamName = scores.find((score) => score.team_id === playerTeamId)?.name
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -40,34 +31,24 @@ export default function Results({
           Aci tens els punts totals segons cada predicció correcta de l&apos;equip perdedor.
         </p>
       </div>
-      <div className="flex justify-center">
-        <div className="w-full max-w-3xl px-4 pb-16">
-          {gameResults.map((gameResult, index) => (
-            <div
-              key={gameResult.participant_id}
-              className={`flex items-center justify-between px-5 py-4 my-3 rounded-2xl border transition ${
-                participant.id === gameResult.participant_id
-                  ? 'border-green-400 bg-green-400/10'
-                  : 'border-white/10 bg-white/5'
-              } ${index < 3 ? 'shadow-lg shadow-black/40' : ''}`}
-            >
-              <div className={`text-3xl font-bold w-14 ${index < 3 ? 'text-white' : 'text-white/60'}`}>
-                {index + 1}
-              </div>
-              <div className="flex-1">
-                <p className={`font-semibold text-2xl ${index < 3 ? 'text-white' : 'text-white/80'}`}>
-                  {gameResult.nickname}
-                </p>
-                {participant.id === gameResult.participant_id && (
-                  <p className="text-sm text-green-300 mt-1">Ets tu!</p>
-                )}
-              </div>
-              <div className="text-right">
-                <p className="text-3xl font-bold">{gameResult.total_score}</p>
-                <p className="text-xs uppercase tracking-widest text-white/60">punts</p>
-              </div>
-            </div>
-          ))}
+      <div className="flex justify-center px-4 pb-16">
+        <div className="w-full max-w-3xl">
+          {participant.game_team_id && playerTeamName && (
+            <p className="text-center text-white/70 mb-4">
+              Formes part de <span className="font-semibold">{playerTeamName}</span>
+            </p>
+          )}
+          {loading ? (
+            <p className="text-center text-white/60 py-10">Carregant classificació…</p>
+          ) : (
+            <TeamLeaderboard
+              scores={scores}
+              highlightTeamId={participant.game_team_id ?? null}
+              highlightLabel="El teu equip"
+              title="Classificació final"
+              subtitle="Els punts provenen dels encerts d'aposta i de les victòries en els reptes."
+            />
+          )}
         </div>
       </div>
       <Confetti width={width} height={height} recycle={false} />
