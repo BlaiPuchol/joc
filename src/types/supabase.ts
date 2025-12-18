@@ -688,6 +688,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      reset_game_state: {
+        Args: {
+          game_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

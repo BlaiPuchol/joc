@@ -124,61 +124,8 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
       setError(null)
       await ensureHostSession()
 
-      const { data: existingRounds, error: roundsLookupError } = await supabase
-        .from('game_rounds')
-        .select('id')
-        .eq('game_id', game.id)
-      if (roundsLookupError) throw roundsLookupError
-      const roundIds = (existingRounds ?? []).map((round) => round.id)
-
-      const { error: releaseRoundError } = await supabase
-        .from('games')
-        .update({ active_round_id: null, current_round_sequence: 0 })
-        .eq('id', game.id)
-      if (releaseRoundError) throw releaseRoundError
-
-      if (roundIds.length > 0) {
-        const { error: lineupCleanupError } = await supabase
-          .from('round_lineups')
-          .delete()
-          .in('round_id', roundIds)
-        if (lineupCleanupError) throw lineupCleanupError
-
-        const { error: voteCleanupError } = await supabase
-          .from('round_votes')
-          .delete()
-          .in('round_id', roundIds)
-        if (voteCleanupError) throw voteCleanupError
-
-        const { error: outcomesCleanupError } = await supabase
-          .from('round_outcomes')
-          .delete()
-          .in('round_id', roundIds)
-        if (outcomesCleanupError) throw outcomesCleanupError
-      }
-
-      const { error: participantsError } = await supabase.from('participants').delete().eq('game_id', game.id)
-      if (participantsError) throw participantsError
-
-      const { error: roundsError } = await supabase.from('game_rounds').delete().eq('game_id', game.id)
-      if (roundsError) throw roundsError
-
-      const { error: teamResetError } = await supabase
-        .from('game_teams')
-        .update({ is_active: true, leader_participant_id: null })
-        .eq('game_id', game.id)
-      if (teamResetError) throw teamResetError
-
-      const { error: resetGameError } = await supabase
-        .from('games')
-        .update({
-          phase: 'lobby',
-          status: 'ready',
-          active_round_id: null,
-          current_round_sequence: 0,
-        })
-        .eq('id', game.id)
-      if (resetGameError) throw resetGameError
+      const { error: resetError } = await supabase.rpc('reset_game_state', { game_id: game.id })
+      if (resetError) throw resetError
 
       setGame((prev) =>
         prev
