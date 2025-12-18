@@ -131,6 +131,12 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
       if (roundsLookupError) throw roundsLookupError
       const roundIds = (existingRounds ?? []).map((round) => round.id)
 
+      const { error: releaseRoundError } = await supabase
+        .from('games')
+        .update({ active_round_id: null, current_round_sequence: 0 })
+        .eq('id', game.id)
+      if (releaseRoundError) throw releaseRoundError
+
       if (roundIds.length > 0) {
         const { error: lineupCleanupError } = await supabase
           .from('round_lineups')
@@ -174,6 +180,17 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
         .eq('id', game.id)
       if (resetGameError) throw resetGameError
 
+      setGame((prev) =>
+        prev
+          ? {
+              ...prev,
+              phase: 'lobby',
+              status: 'ready',
+              active_round_id: null,
+              current_round_sequence: 0,
+            }
+          : prev
+      )
       await loadGame()
     } catch (err) {
       console.error(err)
