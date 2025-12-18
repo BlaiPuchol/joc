@@ -26,10 +26,7 @@ export default function Results({
     <div className="min-h-screen bg-slate-950 text-white">
       <div className="text-center pt-12 pb-6 px-4">
         <p className="text-sm uppercase tracking-[0.4em] text-white/50">Classificació final</p>
-        <h1 className="text-4xl font-bold mt-3">Gràcies per apostar, {participant.nickname}!</h1>
-        <p className="mt-3 text-white/70">
-          Cada aposta encertada suma 3 punts al teu equip i l&apos;amfitrió pot afegir punts del repte després de cada prova.
-        </p>
+        <h1 className="text-4xl font-bold mt-3">Gràcies per jugar, {participant.nickname}!</h1>
       </div>
       <div className="flex justify-center px-4 pb-16">
         <div className="w-full max-w-3xl">
