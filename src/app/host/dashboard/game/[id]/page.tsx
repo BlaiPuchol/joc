@@ -141,7 +141,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
       await loadGame()
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : "No s'ha pogut reiniciar el joc")
+      setError(getErrorMessage(err, "No s'ha pogut reiniciar el joc"))
     } finally {
       setResettingLobby(false)
     }
@@ -631,4 +631,17 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
       </div>
     </main>
   )
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+  if (error && typeof error === 'object' && 'message' in error) {
+    const candidate = (error as { message?: unknown }).message
+    if (typeof candidate === 'string' && candidate.length > 0) {
+      return candidate
+    }
+  }
+  return fallback
 }
