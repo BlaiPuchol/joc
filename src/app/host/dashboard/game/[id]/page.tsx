@@ -124,6 +124,33 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
       setError(null)
       await ensureHostSession()
 
+      const { data: existingRounds, error: roundsLookupError } = await supabase
+        .from('game_rounds')
+        .select('id')
+        .eq('game_id', game.id)
+      if (roundsLookupError) throw roundsLookupError
+      const roundIds = (existingRounds ?? []).map((round) => round.id)
+
+      if (roundIds.length > 0) {
+        const { error: lineupCleanupError } = await supabase
+          .from('round_lineups')
+          .delete()
+          .in('round_id', roundIds)
+        if (lineupCleanupError) throw lineupCleanupError
+
+        const { error: voteCleanupError } = await supabase
+          .from('round_votes')
+          .delete()
+          .in('round_id', roundIds)
+        if (voteCleanupError) throw voteCleanupError
+
+        const { error: outcomesCleanupError } = await supabase
+          .from('round_outcomes')
+          .delete()
+          .in('round_id', roundIds)
+        if (outcomesCleanupError) throw outcomesCleanupError
+      }
+
       const { error: participantsError } = await supabase.from('participants').delete().eq('game_id', game.id)
       if (participantsError) throw participantsError
 
