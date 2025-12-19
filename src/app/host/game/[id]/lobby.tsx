@@ -72,7 +72,7 @@ export default function Lobby({
                <div className="w-full h-full rounded-3xl border border-white/20 bg-white/5 p-4 flex flex-col items-center justify-center gap-4">
                   <div 
                     ref={qrWrapperRef}
-                    className="bg-white rounded-2xl shadow-2xl aspect-square w-auto h-auto max-w-full flex-1 min-h-0 flex items-center justify-center overflow-hidden"
+                    className="bg-white rounded-2xl p-4 shadow-2xl aspect-square w-auto h-auto max-w-full flex-1 min-h-0 flex items-center justify-center overflow-hidden"
                     style={{ width: 'auto', height: 'auto' }} 
                   >
                      {joinUrl ? (
