@@ -62,7 +62,7 @@ export default function Lobby({
           </div>
           <div className="flex flex-col xl:flex-row gap-8 items-stretch flex-1 min-h-0">
             <div
-              className="flex flex-col items-center gap-6 w-full xl:w-auto max-w-full min-h-0"
+              className="flex flex-col items-center gap-6 w-auto max-w-full min-h-0"
               style={{ flexBasis: '20%', maxWidth: '520px' }}
             >
               <div
