@@ -13,7 +13,7 @@ export default function Lobby({
 }) {
   const { Canvas } = useQRCode()
   const [joinUrl, setJoinUrl] = useState('')
-  const [qrSize, setQrSize] = useState(320)
+  const [qrSize, setQrSize] = useState(280)
 
   useEffect(() => {
     const baseEnv = process.env.NEXT_PUBLIC_SITE_URL
@@ -32,9 +32,8 @@ export default function Lobby({
         setQrSize(320)
         return
       }
-      const viewportMin = Math.min(window.innerWidth, window.innerHeight)
-      const desired = Math.min(viewportMin * 0.55, 420)
-      setQrSize(Math.max(160, Math.floor(desired)))
+      const desired = Math.min(window.innerWidth * 0.5, window.innerHeight * 0.45, 360)
+      setQrSize(Math.max(140, Math.floor(desired)))
     }
 
     updateQrSize()
@@ -48,8 +47,7 @@ export default function Lobby({
   const screenBackground = `radial-gradient(circle at 18% 20%, rgba(34,197,94,0.35), transparent 45%), #020617`
   const heroBackground = `linear-gradient(135deg, rgba(34,197,94,0.45), rgba(2,6,23,0.92))`
   const totalParticipants = participants.length
-  const qrShellSize = Math.min(qrSize + 64, 500)
-  const qrCanvasMax = Math.max(140, Math.min(qrSize, qrShellSize - 40))
+  const qrShellSize = Math.min(qrSize + 48, 420)
 
   return (
     <div className="h-screen" style={{ background: screenBackground }}>
@@ -74,12 +72,10 @@ export default function Lobby({
                 {joinUrl ? (
                   <div className="flex flex-col items-center gap-4 w-full">
                     <div
-                      className="bg-white p-4 sm:p-8 rounded-3xl shadow-2xl flex items-center justify-center w-full"
-                      style={{ width: '100%', maxWidth: qrCanvasMax, aspectRatio: '1 / 1' }}
+                      className="bg-white rounded-3xl shadow-2xl flex items-center justify-center"
+                      style={{ width: '100%', maxWidth: qrSize, aspectRatio: '1 / 1' }}
                     >
-                      <div className="w-full h-full">
-                        <Canvas text={joinUrl} options={{ width: qrCanvasMax * 2, margin: 0, scale: 12 }} />
-                      </div>
+                      <Canvas text={joinUrl} options={{ width: qrSize, margin: 0 }} />
                     </div>
                     <p className="text-base text-white/75 text-center break-all">{joinUrl}</p>
                   </div>
