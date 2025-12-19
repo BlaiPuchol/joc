@@ -49,7 +49,7 @@ export default function Lobby({
   const heroBackground = `linear-gradient(135deg, rgba(34,197,94,0.45), rgba(2,6,23,0.92))`
   const totalParticipants = participants.length
   const qrShellSize = Math.min(qrSize + 64, 500)
-  const qrCanvasSize = Math.max(120, qrSize - 20)
+  const qrCanvasMax = Math.max(140, Math.min(qrSize, qrShellSize - 40))
 
   return (
     <div className="h-screen" style={{ background: screenBackground }}>
@@ -60,7 +60,7 @@ export default function Lobby({
         >
           <div className="space-y-4 text-center lg:text-left">
             <p className="text-xs uppercase tracking-[0.5em] text-white/60">Sala d&apos;espera</p>
-            <h1 className="text-4xl md:text-6xl font-black leading-tight">Escaneu per jugar</h1>
+            <h1 className="text-4xl md:text-4xl font-black leading-tight">Escaneu per jugar</h1>
           </div>
           <div className="flex flex-col xl:flex-row gap-8 items-stretch flex-1 min-h-0">
             <div
@@ -74,10 +74,14 @@ export default function Lobby({
                 {joinUrl ? (
                   <div className="flex flex-col items-center gap-4 w-full">
                     <div
-                      className="bg-white p-4 sm:p-8 rounded-3xl shadow-2xl"
-                      style={{ width: qrCanvasSize, height: qrCanvasSize }}
+                      className="bg-white p-4 sm:p-8 rounded-3xl shadow-2xl flex items-center justify-center w-full"
+                      style={{ width: '100%', maxWidth: qrCanvasMax, aspectRatio: '1 / 1' }}
                     >
-                      <Canvas text={joinUrl} options={{ width: qrCanvasSize, margin: 0, scale: 12 }} />
+                      <Canvas
+                        text={joinUrl}
+                        options={{ width: qrCanvasMax * 2, margin: 0, scale: 12 }}
+                        style={{ width: '100%', height: '100%' }}
+                      />
                     </div>
                     <p className="text-base text-white/75 text-center break-all">{joinUrl}</p>
                   </div>
