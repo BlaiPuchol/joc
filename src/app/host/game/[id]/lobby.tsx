@@ -77,11 +77,9 @@ export default function Lobby({
                       className="bg-white p-4 sm:p-8 rounded-3xl shadow-2xl flex items-center justify-center w-full"
                       style={{ width: '100%', maxWidth: qrCanvasMax, aspectRatio: '1 / 1' }}
                     >
-                      <Canvas
-                        text={joinUrl}
-                        options={{ width: qrCanvasMax * 2, margin: 0, scale: 12 }}
-                        style={{ width: '100%', height: '100%' }}
-                      />
+                      <div className="w-full h-full">
+                        <Canvas text={joinUrl} options={{ width: qrCanvasMax * 2, margin: 0, scale: 12 }} />
+                      </div>
                     </div>
                     <p className="text-base text-white/75 text-center break-all">{joinUrl}</p>
                   </div>
