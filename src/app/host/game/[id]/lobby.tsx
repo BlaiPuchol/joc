@@ -31,10 +31,10 @@ export default function Lobby({
   const totalParticipants = participants.length
 
   return (
-    <div className="min-h-screen" style={{ background: screenBackground }}>
-      <div className="min-h-screen px-6 py-10 text-white flex">
+    <div className="h-screen" style={{ background: screenBackground }}>
+      <div className="h-full px-6 py-10 text-white flex">
         <section
-          className="glow-panel relative overflow-hidden p-8 md:p-12 w-full max-w-none flex flex-col gap-10"
+          className="glow-panel relative overflow-hidden p-8 md:p-12 w-full max-w-none h-full flex flex-col gap-10"
           style={{ background: heroBackground }}
         >
           <div className="space-y-4 text-center lg:text-left">
