@@ -48,12 +48,14 @@ export default function Lobby({
   const screenBackground = `radial-gradient(circle at 18% 20%, rgba(34,197,94,0.35), transparent 45%), #020617`
   const heroBackground = `linear-gradient(135deg, rgba(34,197,94,0.45), rgba(2,6,23,0.92))`
   const totalParticipants = participants.length
+  const qrShellSize = Math.min(qrSize + 64, 500)
+  const qrCanvasSize = Math.max(120, qrSize - 20)
 
   return (
     <div className="h-screen" style={{ background: screenBackground }}>
       <div className="h-full px-4 sm:px-6 py-6 sm:py-10 text-white flex">
         <section
-          className="glow-panel relative overflow-hidden p-6 sm:p-8 md:p-12 w-full max-w-none h-full flex flex-col gap-8"
+          className="glow-panel relative overflow-y-auto p-6 sm:p-8 md:p-12 w-full max-w-none h-full flex flex-col gap-8"
           style={{ background: heroBackground }}
         >
           <div className="space-y-4 text-center lg:text-left">
@@ -65,14 +67,17 @@ export default function Lobby({
               className="flex flex-col items-center gap-6 w-full xl:w-auto max-w-full min-h-0"
               style={{ flexBasis: '30%', maxWidth: '520px' }}
             >
-              <div className="rounded-3xl border border-white/20 bg-white/5 p-4 sm:p-6 aspect-square w-full flex items-center justify-center">
+              <div
+                className="rounded-3xl border border-white/20 bg-white/5 p-4 sm:p-6 flex items-center justify-center w-full"
+                style={{ width: `min(100%, ${qrShellSize}px)`, aspectRatio: '1 / 1' }}
+              >
                 {joinUrl ? (
                   <div className="flex flex-col items-center gap-4 w-full">
                     <div
                       className="bg-white p-4 sm:p-8 rounded-3xl shadow-2xl"
-                      style={{ width: qrSize, height: qrSize }}
+                      style={{ width: qrCanvasSize, height: qrCanvasSize }}
                     >
-                      <Canvas text={joinUrl} options={{ width: qrSize - 20, margin: 0, scale: 12 }} />
+                      <Canvas text={joinUrl} options={{ width: qrCanvasSize, margin: 0, scale: 12 }} />
                     </div>
                     <p className="text-base text-white/75 text-center break-all">{joinUrl}</p>
                   </div>
@@ -82,7 +87,7 @@ export default function Lobby({
               </div>
               <button
                 onClick={onStart}
-                className="tactile-button w-full bg-emerald-400 text-black text-xl py-4"
+                className="tactile-button w-full bg-emerald-400 text-black text-xl py-4 mt-auto"
               >
                 Organitza els equips
               </button>
