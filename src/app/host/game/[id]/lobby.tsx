@@ -72,16 +72,16 @@ export default function Lobby({
                <div className="w-full h-full rounded-3xl border border-white/20 bg-white/5 p-4 flex flex-col items-center justify-center gap-4">
                   <div 
                     ref={qrWrapperRef}
-                    className="bg-white rounded-2xl p-4 shadow-2xl aspect-square w-auto h-auto max-w-full max-h-[80%] flex items-center justify-center"
+                    className="bg-white rounded-2xl shadow-2xl aspect-square w-auto h-auto max-w-full flex-1 min-h-0 flex items-center justify-center overflow-hidden"
                     style={{ width: 'auto', height: 'auto' }} 
                   >
                      {joinUrl ? (
-                        <Canvas text={joinUrl} options={{ width: Math.max(100, qrSize - 32), margin: 0 }} />
+                        <Canvas text={joinUrl} options={{ width: qrSize, margin: 0 }} />
                      ) : (
                         <div className="w-full h-full flex items-center justify-center text-black/50">...</div>
                      )}
                   </div>
-                  <p className="text-sm md:text-base text-white/75 text-center break-all line-clamp-2 px-2">
+                  <p className="text-sm md:text-base text-white/75 text-center break-all line-clamp-2 px-2 shrink-0">
                     {joinUrl || 'Generant...'}
                   </p>
                </div>
