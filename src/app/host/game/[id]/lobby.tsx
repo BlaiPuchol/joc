@@ -63,7 +63,7 @@ export default function Lobby({
           <div className="flex flex-col xl:flex-row gap-8 items-stretch flex-1 min-h-0">
             <div
               className="flex flex-col items-center gap-6 w-full xl:w-auto max-w-full min-h-0"
-              style={{ flexBasis: '30%', maxWidth: '520px' }}
+              style={{ flexBasis: '20%', maxWidth: '520px' }}
             >
               <div
                 className="rounded-3xl border border-white/20 bg-white/5 p-4 sm:p-6 flex items-center justify-center w-full"
@@ -73,9 +73,9 @@ export default function Lobby({
                   <div className="flex flex-col items-center gap-4 w-full">
                     <div
                       className="bg-white rounded-3xl shadow-2xl flex items-center justify-center"
-                      style={{ width: '100%', maxWidth: qrSize, aspectRatio: '1 / 1' }}
+                      style={{ width: '100%', maxWidth: qrSize, aspectRatio: '1 / 1', padding: '1.25rem' }}
                     >
-                      <Canvas text={joinUrl} options={{ width: qrSize, margin: 0 }} />
+                      <Canvas text={joinUrl} options={{ width: Math.max(120, qrSize - 40), margin: 0 }} />
                     </div>
                     <p className="text-base text-white/75 text-center break-all">{joinUrl}</p>
                   </div>
