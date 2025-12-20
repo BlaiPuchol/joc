@@ -574,7 +574,7 @@ function LineupGrid({
           >
             <header className="flex items-center justify-between shrink-0">
               <div>
-                <p className="text-xs uppercase tracking-[0.5em] text-white/60">Equip</p>
+                <p className="text-lg uppercase tracking-[0.5em] text-white/60">Equip</p>
                 <h3 className="text-4xl font-semibold" style={{ color: team.color_hex }}>
                   {team.name}
                 </h3>
