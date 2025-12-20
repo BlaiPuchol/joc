@@ -444,7 +444,7 @@ function LeaderLineupSelector({
         <p className="text-xs uppercase tracking-[0.5em] text-white/60">Alineació de {team.name}</p>
         <h2 className="text-3xl font-semibold">Selecciona competidors</h2>
         <p className="text-white/80 text-base">
-          Toca per a activar o desactivar fins a {maxSelectable || '∞'} jugadors. Prioritza qui tinga millor strat!
+          Toca per a activar o desactivar fins a {maxSelectable || '∞'} jugadors. Penseu bé qui jugarà!
         </p>
       </header>
       <div className="space-y-3">

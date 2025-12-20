@@ -242,7 +242,7 @@ export default function RoundController({
                     </span>
                     <span className="px-3 py-1 rounded-full bg-white/10">Selecció</span>
                   </div>
-                  <h2 className="text-3xl font-black leading-tight">
+                  <h2 className="text-4xl font-black leading-tight">
                     {challenge?.title ?? 'Repte en directe'}
                   </h2>
                   {challenge?.description && (
@@ -296,6 +296,63 @@ export default function RoundController({
               </section>
             </div>
           )
+        ) : phase === 'voting' ? (
+          <div className="flex flex-col lg:flex-row gap-6 h-full w-full">
+            <section
+              className="glow-panel lg:w-1/3 flex flex-col gap-6 p-8 shrink-0"
+              style={{ background: heroBackground }}
+            >
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.5em] text-white/70">
+                  <span className="px-3 py-1 rounded-full bg-white/15">
+                    Repte {round.sequence + 1}
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-white/10">Apostes</span>
+                </div>
+                <h2 className="text-3xl font-black leading-tight">
+                  {challenge?.title ?? 'Repte en directe'}
+                </h2>
+                {challenge?.description && (
+                  <p className="text-lg text-white/80">{challenge.description}</p>
+                )}
+              </div>
+
+              <div className="space-y-4 flex-1">
+                <dl className="grid gap-4 text-lg">
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <dt className="text-xs uppercase tracking-[0.5em] text-white/60">
+                      Vots registrats
+                    </dt>
+                    <dd className="text-3xl font-bold">{votes.length}</dd>
+                    {pendingVotes > 0 && (
+                      <p className="text-sm text-white/70 mt-1">{pendingVotes} pendents</p>
+                    )}
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <dt className="text-xs uppercase tracking-[0.5em] text-white/60">
+                      Jugadors actius
+                    </dt>
+                    <dd className="text-3xl font-bold">{totalPlayers}</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <button
+                onClick={onLockVoting}
+                className="tactile-button w-full bg-yellow-300 text-black text-xl py-5 mt-auto"
+              >
+                Tancar apostes
+              </button>
+            </section>
+
+            <section className="flex-1 min-h-0 overflow-y-auto rounded-3xl">
+              <VotingDashboard
+                voteTotals={voteTotals}
+                lineupByTeam={lineupByTeam}
+                losingTeamIds={losingTeamIds}
+              />
+            </section>
+          </div>
         ) : (
           <div className="h-full w-full overflow-y-auto pr-2">
             <div className="screen-frame space-y-10 pb-10 mx-auto">
@@ -434,59 +491,75 @@ export default function RoundController({
   )
 }
 
-function VotingLineupSummary({
-  teams,
+function VotingDashboard({
+  voteTotals,
   lineupByTeam,
+  losingTeamIds = new Set<string>(),
 }: {
-  teams: GameTeam[]
+  voteTotals: { team: GameTeam; count: number; percentage: number; voters: RoundVote[] }[]
   lineupByTeam: Record<string, Participant[]>
+  losingTeamIds?: Set<string>
 }) {
-  if (teams.length === 0) return null
   return (
-    <section className="space-y-4">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.5em] text-white/60">Participants confirmats</p>
-          <p className="text-2xl font-semibold">Qui jugarà este repte</p>
-        </div>
-        <p className="text-white/70 text-sm">Visible durant el període d&apos;apostes.</p>
-      </div>
-      <div className="game-grid grid-cols-1 md:grid-cols-2">
-        {teams.map((team) => {
-          const lineup = lineupByTeam[team.id] ?? []
-          return (
-            <article
-              key={team.id}
-              className="glow-panel p-5 space-y-3"
-              style={{
-                borderColor: hexToRgba(team.color_hex, 0.35),
-                boxShadow: `0 20px 60px ${hexToRgba(team.color_hex, 0.2)}`,
-              }}
-            >
-              <header className="flex items-center justify-between">
-                <h3 className="text-xl font-semibold" style={{ color: team.color_hex }}>
-                  {team.name}
-                </h3>
-                <span className="text-white/80 text-sm">{lineup.length} jugadors</span>
-              </header>
-              <div className="space-y-2">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full content-start">
+      {voteTotals.map(({ team, count, percentage }) => {
+        const lineup = lineupByTeam[team.id] ?? []
+        return (
+          <article
+            key={team.id}
+            className="glow-panel p-6 space-y-6 flex flex-col"
+            style={{
+              borderColor: hexToRgba(team.color_hex, 0.35),
+              background: `linear-gradient(145deg, ${hexToRgba(
+                team.color_hex,
+                0.35
+              )}, rgba(2, 6, 23, 0.95))`,
+            }}
+          >
+            <header className="flex items-center justify-between shrink-0">
+              <div>
+                <p className="text-xs uppercase tracking-[0.4em] text-white/70">{team.name}</p>
+                <p className="text-5xl font-black mt-1">{percentage}%</p>
+              </div>
+              {losingTeamIds.has(team.id) && (
+                <span className="px-4 py-2 rounded-full bg-white/20 text-xs uppercase tracking-[0.4em]">
+                  Perdedor
+                </span>
+              )}
+            </header>
+
+            <div className="space-y-2 shrink-0">
+              <div className="bg-white/25 rounded-full h-4 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${percentage}%`, backgroundColor: '#fff' }}
+                ></div>
+              </div>
+              <p className="text-white/80 text-lg text-right">
+                {count} {count === 1 ? 'vot' : 'vots'}
+              </p>
+            </div>
+
+            <div className="space-y-3 flex-1 min-h-0 overflow-y-auto pr-2">
+              <p className="text-xs uppercase tracking-[0.5em] text-white/60">Alineació</p>
+              <div className="flex flex-wrap gap-2">
                 {lineup.length === 0 && (
-                  <p className="text-white/60 text-sm">Encara no han confirmat jugadors.</p>
+                  <p className="text-white/60 text-sm">Sense jugadors confirmats.</p>
                 )}
                 {lineup.map((player) => (
                   <div
                     key={player.id}
-                    className="bg-white/10 border border-white/10 rounded-2xl px-4 py-2 text-white"
+                    className="bg-white/15 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm"
                   >
                     {player.nickname}
                   </div>
                 ))}
               </div>
-            </article>
-          )
-        })}
-      </div>
-    </section>
+            </div>
+          </article>
+        )
+      })}
+    </div>
   )
 }
 
