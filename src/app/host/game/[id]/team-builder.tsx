@@ -1,6 +1,6 @@
 import { GameTeam, Participant } from '@/types/types'
 import type { DragEvent } from 'react'
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 
 export default function TeamBuilder({
   teams,
@@ -26,17 +26,17 @@ export default function TeamBuilder({
     activeTeams.every((team) => assignedCountByTeam(team.id).length > 0 && team.leader_participant_id)
 
   const UNASSIGNED_ZONE = 'unassigned'
-  const dragParticipantIdRef = useRef<string | null>(null)
+  const [dragParticipantId, setDragParticipantId] = useState<string | null>(null)
   const [activeDropZone, setActiveDropZone] = useState<string | null>(null)
 
   const handleDragStart = (participantId: string) => (event: DragEvent<HTMLDivElement>) => {
-    dragParticipantIdRef.current = participantId
+    setDragParticipantId(participantId)
     event.dataTransfer.setData('text/plain', participantId)
     event.dataTransfer.effectAllowed = 'move'
   }
 
   const handleDragEnd = () => {
-    dragParticipantIdRef.current = null
+    setDragParticipantId(null)
     setActiveDropZone(null)
   }
 
@@ -50,17 +50,16 @@ export default function TeamBuilder({
 
   const handleDropOnZone = (teamId: string | null) => (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault()
-    event.stopPropagation()
-    const participantId = dragParticipantIdRef.current ?? event.dataTransfer.getData('text/plain')
+    const participantId = dragParticipantId ?? event.dataTransfer.getData('text/plain')
     if (!participantId) return
     onAssign(participantId, teamId)
-    dragParticipantIdRef.current = null
+    setDragParticipantId(null)
     setActiveDropZone(null)
   }
 
   return (
-    <section className="min-h-screen bg-slate-900 text-white px-6 py-10">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <section className="min-h-screen h-screen bg-slate-900 text-white px-6 py-10 flex flex-col">
+      <div className="max-w-6xl mx-auto space-y-6 flex-1 flex flex-col overflow-y-auto pb-6">
         <header className="space-y-2">
           <p className="text-sm uppercase tracking-[0.3em] text-white/40">Organitzador d&apos;equips</p>
           <h1 className="text-4xl font-semibold">Distribuïx els jugadors als seus equips</h1>
@@ -74,11 +73,8 @@ export default function TeamBuilder({
           className={`bg-black/40 border rounded-3xl p-5 transition ${
             activeDropZone === UNASSIGNED_ZONE ? 'border-emerald-400/50 bg-emerald-400/10' : 'border-white/10'
           }`}
-          // Capture events so drops on nested children still reach this zone
           onDragOver={handleDragOverZone(UNASSIGNED_ZONE)}
-          onDragOverCapture={handleDragOverZone(UNASSIGNED_ZONE)}
           onDrop={handleDropOnZone(null)}
-          onDropCapture={handleDropOnZone(null)}
         >
           <h2 className="text-xl font-semibold mb-1">Jugadors en espera ({unassigned.length})</h2>
           <p className="text-sm text-white/60 mb-3">Arrossega&apos;ls fins a un equip per a assignar-los.</p>
@@ -89,7 +85,7 @@ export default function TeamBuilder({
                 draggable
                 onDragStart={handleDragStart(participant.id)}
                 onDragEnd={handleDragEnd}
-                className="cursor-grab active:cursor-grabbing bg-white/10 border border-white/15 rounded-full px-4 py-2 text-sm font-medium flex items-center justify-center text-center"
+                className="inline-flex items-center cursor-grab active:cursor-grabbing bg-white/10 border border-white/15 rounded-full px-4 py-2 text-sm font-medium"
               >
                 {participant.nickname}
               </div>
@@ -111,11 +107,8 @@ export default function TeamBuilder({
                   dropIsActive ? 'border-emerald-400/50 bg-emerald-400/10' : 'border-white/10'
                 }`}
                 style={{ boxShadow: `0 0 30px ${team.color_hex}22` }}
-                // Capture events so drops on nested children still reach this zone
                 onDragOver={handleDragOverZone(team.id)}
-                onDragOverCapture={handleDragOverZone(team.id)}
                 onDrop={handleDropOnZone(team.id)}
-                onDropCapture={handleDropOnZone(team.id)}
               >
                 <header className="flex items-center justify-between">
                   <div>
