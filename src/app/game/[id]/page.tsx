@@ -394,6 +394,7 @@ export default function Home({
           roster={roster}
           lineups={lineups}
           challenge={activeChallenge}
+          totalChallenges={challenges.length}
           onToggleLineup={toggleLineupParticipant}
         />
       )}

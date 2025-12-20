@@ -34,6 +34,7 @@ export default function Challenge({
   roster,
   lineups,
   challenge,
+  totalChallenges,
   onVote,
   onToggleLineup,
 }: {
@@ -47,6 +48,7 @@ export default function Challenge({
   roster: Participant[]
   lineups: LineupEntry[]
   challenge: GameChallenge | null
+  totalChallenges: number
   onVote: (teamId: string) => void
   onToggleLineup: (teamId: string, participantId: string, shouldAdd: boolean) => void
 }) {
@@ -221,41 +223,52 @@ export default function Challenge({
   return (
     <div className="min-h-screen pb-20" style={{ background: screenBackground }}>
       {/* Top Bar */}
-      <header className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <header 
+        className="sticky top-0 z-30 shadow-xl transition-colors duration-500"
+        style={{ backgroundColor: playerTeam?.color_hex ?? '#0f172a' }}
+      >
+        <div className="px-5 py-4 flex flex-col gap-3">
+          <div className="flex items-start justify-between">
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-white/90 mb-1">{participant.nickname}</span>
+              {playerTeam && (
+                <h1 className="text-4xl font-black leading-none tracking-tight text-white drop-shadow-md">
+                  {playerTeam.name}
+                </h1>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setShowTeams(true)}
+                className="p-3 bg-black/20 rounded-full hover:bg-black/30 text-white transition-colors backdrop-blur-sm"
+                aria-label="Veure equips"
+              >
+                👥
+              </button>
+              <button 
+                onClick={() => setShowHistory(true)}
+                className="p-3 bg-black/20 rounded-full hover:bg-black/30 text-white transition-colors backdrop-blur-sm"
+                aria-label="Veure historial"
+              >
+                📜
+              </button>
+              <button 
+                onClick={() => setShowLeaderboard(true)}
+                className="p-3 bg-black/20 rounded-full hover:bg-black/30 text-white transition-colors backdrop-blur-sm"
+                aria-label="Veure classificació"
+              >
+                🏆
+              </button>
+            </div>
+          </div>
+          
           {round && (
-            <span className="text-xs font-bold uppercase tracking-wider bg-white/10 px-2 py-1 rounded">
-              Repte {round.sequence + 1}
-            </span>
+            <div className="flex items-center justify-between border-t border-white/20 pt-3">
+              <span className="text-xs font-bold uppercase tracking-[0.2em] text-white/80">
+                Repte {round.sequence + 1} / {totalChallenges}
+              </span>
+            </div>
           )}
-          {playerTeam && (
-            <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded" style={{ backgroundColor: hexToRgba(playerTeam.color_hex, 0.3) }}>
-              {playerTeam.name}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => setShowTeams(true)}
-            className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-            aria-label="Veure equips"
-          >
-            👥
-          </button>
-          <button 
-            onClick={() => setShowHistory(true)}
-            className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-            aria-label="Veure historial"
-          >
-            📜
-          </button>
-          <button 
-            onClick={() => setShowLeaderboard(true)}
-            className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-            aria-label="Veure classificació"
-          >
-            🏆
-          </button>
         </div>
       </header>
 
