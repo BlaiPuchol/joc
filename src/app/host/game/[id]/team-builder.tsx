@@ -1,6 +1,6 @@
 import { GameTeam, Participant } from '@/types/types'
 import type { DragEvent } from 'react'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 export default function TeamBuilder({
   teams,
@@ -26,17 +26,17 @@ export default function TeamBuilder({
     activeTeams.every((team) => assignedCountByTeam(team.id).length > 0 && team.leader_participant_id)
 
   const UNASSIGNED_ZONE = 'unassigned'
-  const [dragParticipantId, setDragParticipantId] = useState<string | null>(null)
+  const dragParticipantIdRef = useRef<string | null>(null)
   const [activeDropZone, setActiveDropZone] = useState<string | null>(null)
 
   const handleDragStart = (participantId: string) => (event: DragEvent<HTMLDivElement>) => {
-    setDragParticipantId(participantId)
+    dragParticipantIdRef.current = participantId
     event.dataTransfer.setData('text/plain', participantId)
     event.dataTransfer.effectAllowed = 'move'
   }
 
   const handleDragEnd = () => {
-    setDragParticipantId(null)
+    dragParticipantIdRef.current = null
     setActiveDropZone(null)
   }
 
@@ -51,10 +51,10 @@ export default function TeamBuilder({
   const handleDropOnZone = (teamId: string | null) => (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault()
     event.stopPropagation()
-    const participantId = dragParticipantId ?? event.dataTransfer.getData('text/plain')
+    const participantId = dragParticipantIdRef.current ?? event.dataTransfer.getData('text/plain')
     if (!participantId) return
     onAssign(participantId, teamId)
-    setDragParticipantId(null)
+    dragParticipantIdRef.current = null
     setActiveDropZone(null)
   }
 
