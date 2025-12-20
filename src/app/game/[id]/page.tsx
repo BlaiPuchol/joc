@@ -34,6 +34,7 @@ export default function Home({
 }: {
   params: { id: string }
 }) {
+  const [loading, setLoading] = useState(true)
   const [participant, setParticipant] = useState<Participant | null>(null)
   const [game, setGame] = useState<Game | null>(null)
   const [teams, setTeams] = useState<GameTeam[]>([])
@@ -43,6 +44,42 @@ export default function Home({
   const [activeRound, setActiveRound] = useState<GameRound | null>(null)
   const [roundVotes, setRoundVotes] = useState<RoundVote[]>([])
   const [roundOutcomes, setRoundOutcomes] = useState<RoundOutcome[]>([])
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        let userId: string | null = null
+        const { data: sessionData } = await supabase.auth.getSession()
+        
+        if (sessionData.session) {
+          userId = sessionData.session.user.id
+        } else {
+          const { data, error } = await supabase.auth.signInAnonymously()
+          if (error) throw error
+          userId = data.user?.id ?? null
+        }
+
+        if (userId) {
+          const { data: participantData } = await supabase
+            .from('participants')
+            .select()
+            .eq('game_id', gameId)
+            .eq('user_id', userId)
+            .maybeSingle()
+            
+          if (participantData) {
+            setParticipant(participantData)
+          }
+        }
+      } catch (error) {
+        console.error('Error checking session:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    checkSession()
+  }, [gameId])
 
   const fetchVotes = useCallback(async (roundId: string) => {
     const { data, error } = await supabase
@@ -378,14 +415,26 @@ export default function Home({
       .eq('id', participant.id)
     
     if (error) {
-      console.error(error.message)
+      console.error('Error updating nickname:', error.message)
       alert(error.message)
       return
     }
+    console.log('Nickname updated successfully to:', newNickname)
     setParticipant({ ...participant, nickname: newNickname })
   }
 
   const currentPhase: GamePhase = (game?.phase as GamePhase) ?? 'lobby'
+
+  if (loading) {
+    return (
+      <main className="bg-slate-900 min-h-screen flex items-center justify-center text-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-white/60 animate-pulse">Carregant partida...</p>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="bg-slate-900 min-h-screen">

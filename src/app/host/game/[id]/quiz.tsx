@@ -65,6 +65,7 @@ export default function RoundController({
   isLastRound,
 }: Props) {
   const [showRanking, setShowRanking] = useState(false)
+  const [showEndGameConfirmation, setShowEndGameConfirmation] = useState(false)
   const [viewMode, setViewMode] = useState<'intro' | 'selection'>('intro')
 
   const phaseLabels: Record<Phase | 'lobby', string> = {
@@ -422,7 +423,7 @@ export default function RoundController({
                     Classificació
                   </button>
                   <button
-                    onClick={onEndGame}
+                    onClick={() => setShowEndGameConfirmation(true)}
                     className="tactile-button bg-rose-500/20 border border-rose-500/50 text-rose-200 py-4 text-lg"
                   >
                     Finalitzar
@@ -447,6 +448,32 @@ export default function RoundController({
             loading={rankingLoading}
             onClose={() => setShowRanking(false)}
           />
+        )}
+
+        {showEndGameConfirmation && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-slate-900 border border-white/10 rounded-2xl p-8 max-w-md w-full space-y-6 text-center shadow-2xl">
+              <h3 className="text-2xl font-bold text-white">Estàs segur de que vols acabar el joc?</h3>
+              <p className="text-white/70">Aquesta acció no es pot desfer.</p>
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={() => setShowEndGameConfirmation(false)}
+                  className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold transition-colors"
+                >
+                  Cancel·lar
+                </button>
+                <button
+                  onClick={() => {
+                    onEndGame()
+                    setShowEndGameConfirmation(false)
+                  }}
+                  className="px-6 py-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold transition-colors shadow-lg shadow-rose-500/20"
+                >
+                  Sí, acabar
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

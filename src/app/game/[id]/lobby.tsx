@@ -10,45 +10,6 @@ export default function Lobby({
 }) {
   const [participant, setParticipant] = useState<Participant | null>(null)
 
-  useEffect(() => {
-    const fetchParticipant = async () => {
-      let userId: string | null = null
-
-      const { data: sessionData, error: sessionError } =
-        await supabase.auth.getSession()
-
-      if (sessionData.session) {
-        userId = sessionData.session?.user.id ?? null
-      } else {
-        const { data, error } = await supabase.auth.signInAnonymously()
-        if (error) console.error(error)
-        userId = data?.user?.id ?? null
-      }
-
-      if (!userId) {
-        return
-      }
-
-      const { data: participantData, error } = await supabase
-        .from('participants')
-        .select()
-        .eq('game_id', gameId)
-        .eq('user_id', userId)
-        .maybeSingle()
-
-      if (error) {
-        return alert(error.message)
-      }
-
-      if (participantData) {
-        setParticipant(participantData)
-        onRegisterCompleted(participantData)
-      }
-    }
-
-    fetchParticipant()
-  }, [gameId, onRegisterCompleted])
-
   const accentColor = '#38bdf8'
   const screenBackground = `radial-gradient(circle at 18% 20%, rgba(62,255,150,0.3), transparent 45%), #020617`
   const heroBackground = `linear-gradient(135deg, rgba(62,255,150,0.45), rgba(2,6,23,0.92))`

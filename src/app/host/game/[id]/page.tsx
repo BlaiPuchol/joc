@@ -198,6 +198,7 @@ export default function HostGame({
           filter: `game_id=eq.${gameId}`,
         },
         (payload) => {
+          console.log('Participant update received:', payload)
           setParticipants((prev) =>
             prev.map((participant) =>
               participant.id === payload.new.id ? (payload.new as Participant) : participant
