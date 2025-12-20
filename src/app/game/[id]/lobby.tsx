@@ -133,7 +133,7 @@ function Register({
           type="text"
           onChange={(val) => setNickname(val.currentTarget.value)}
           value={nickname}
-          placeholder="Nom"
+          placeholder=""
           maxLength={20}
           autoComplete="off"
           autoFocus

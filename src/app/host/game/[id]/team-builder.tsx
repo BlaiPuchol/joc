@@ -136,7 +136,7 @@ export default function TeamBuilder({
                       {team.name}
                     </h3>
                   </div>
-                  <span className="text-white/60 text-sm">{members.length} jugadors</span>
+                  <span className="text-white/60 text-sm">{members.length} {members.length === 1 ? 'jugador' : 'jugadors'}</span>
                 </header>
                 <div className="space-y-2">
                   {members.map((member) => {

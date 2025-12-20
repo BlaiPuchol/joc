@@ -1,3 +1,5 @@
+import { TeamLeaderboard } from '@/components/team-leaderboard'
+import { useTeamScores } from '@/hooks/useTeamScores'
 import { GameChallenge, GameRound, GameTeam, Participant, RoundLineup, RoundOutcome, RoundVote } from '@/types/types'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -48,6 +50,15 @@ export default function Challenge({
   onVote: (teamId: string) => void
   onToggleLineup: (teamId: string, participantId: string, shouldAdd: boolean) => void
 }) {
+  const [showLeaderboard, setShowLeaderboard] = useState(false)
+  const { scores, loading: scoresLoading, reload: reloadScores } = useTeamScores(round?.game_id ?? null)
+
+  useEffect(() => {
+    if (showLeaderboard) {
+      reloadScores()
+    }
+  }, [showLeaderboard, reloadScores])
+
   const lineupByTeam = useMemo(() => {
     return teams.reduce<Record<string, Participant[]>>((acc, team) => {
       acc[team.id] = lineups
@@ -131,15 +142,14 @@ export default function Challenge({
   const heroDescription = shouldRevealChallenge ? challenge?.description ?? null : null
 
   const renderVotingGrid = () => (
-    <section className="space-y-6">
-      <header className="text-center space-y-3">
-        <p className="text-xs uppercase tracking-[0.5em] text-white/60">Aposta ràpida</p>
-        <h2 className="text-3xl md:text-5xl font-black tracking-tight">Quin equip quedarà últim?</h2>
-        <p className="text-base md:text-xl text-white/70 max-w-3xl mx-auto">
-          Toca una targeta per a bloquejar la teua aposta.
+    <section className="space-y-4">
+      <header className="text-center space-y-2">
+        <h2 className="text-2xl font-bold">Qui perdrà?</h2>
+        <p className="text-sm text-white/70">
+          Toca una targeta per a apostar.
         </p>
       </header>
-      <div className="game-grid grid-cols-1 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3">
         {teams.map((team) => {
           const isSelected = playerVoteTeamId === team.id
           return (
@@ -147,23 +157,20 @@ export default function Challenge({
               key={team.id}
               onClick={() => onVote(team.id)}
               disabled={phase !== 'voting'}
-              className={`tactile-button relative overflow-hidden text-left text-white px-6 py-8 sm:py-12 min-h-[160px] flex flex-col justify-between shadow-[0_20px_60px_rgba(0,0,0,0.35)]
-                ${phase !== 'voting' ? 'opacity-60 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.99]'}
+              className={`relative overflow-hidden text-left text-white px-5 py-4 rounded-xl transition-all
+                ${phase !== 'voting' ? 'opacity-60' : 'active:scale-[0.98]'}
               `}
               style={{
-                backgroundImage: `linear-gradient(145deg, ${hexToRgba(team.color_hex, 0.9)}, ${hexToRgba(team.color_hex, 0.65)})`,
-                boxShadow: isSelected ? `0 0 0 4px rgba(255,255,255,0.9)` : undefined,
+                background: `linear-gradient(145deg, ${hexToRgba(team.color_hex, 0.8)}, ${hexToRgba(team.color_hex, 0.5)})`,
+                boxShadow: isSelected ? `0 0 0 3px white` : undefined,
+                transform: isSelected ? 'scale(1.02)' : undefined
               }}
             >
-              <div className="absolute inset-0 opacity-25" style={{
-                background: `radial-gradient(circle at top left, rgba(255,255,255,0.4), transparent 55%)`,
-              }}></div>
-              <div className="relative z-10 space-y-4">
-                <span className="text-sm uppercase tracking-[0.4em] text-white/80">Equip</span>
-                <p className="text-3xl md:text-4xl font-black leading-tight break-words">{team.name}</p>
+              <div className="flex items-center justify-between relative z-10">
+                <span className="text-xl font-bold">{team.name}</span>
                 {isSelected && (
-                  <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.3em]">
-                    Aposta enviada
+                  <span className="bg-white text-black text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">
+                    Aposta
                   </span>
                 )}
               </div>
@@ -175,119 +182,167 @@ export default function Challenge({
   )
 
   return (
-    <div className="min-h-screen" style={{ background: screenBackground }}>
-      <div className="screen-frame py-10 flex flex-col gap-10 text-white">
-        <section
-          className="glow-panel relative overflow-hidden p-8 md:p-12"
-          style={{ background: heroBackground }}
+    <div className="min-h-screen pb-20" style={{ background: screenBackground }}>
+      {/* Top Bar */}
+      <header className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {round && (
+            <span className="text-xs font-bold uppercase tracking-wider bg-white/10 px-2 py-1 rounded">
+              Ronda {round.sequence}
+            </span>
+          )}
+          {playerTeam && (
+            <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded" style={{ backgroundColor: hexToRgba(playerTeam.color_hex, 0.3) }}>
+              {playerTeam.name}
+            </span>
+          )}
+        </div>
+        <button 
+          onClick={() => setShowLeaderboard(true)}
+          className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+          aria-label="Veure classificació"
         >
-          <div className="relative z-10 space-y-6">
-            <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.4em] text-white/80">
-              <span className="px-4 py-2 rounded-full bg-white/20">
-                {phase === 'voting' ? 'Apostes obertes' : 'Repte en directe'}
-              </span>
-              {round && (
-                <span className="px-4 py-2 rounded-full bg-white/10">
-                  {round.sequence} Rondes 
-                </span>
-              )}
-              {playerTeam && (
-                <span
-                  className="px-4 py-2 rounded-full"
-                  style={{ backgroundColor: hexToRgba(accentColor, 0.25) }}
-                >
-                  {playerTeam.name}
-                </span>
-              )}
-            </div>
-            <div className="space-y-4">
-              <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-tight">
-                {heroTitle}
-              </h1>
-              {heroDescription && (
-                <p className="text-lg md:text-2xl text-white/90 max-w-4xl">
-                  {heroDescription}
-                </p>
-              )}
-              <p className="text-base md:text-xl text-white/80 font-medium">
-                {statusCopy[phase]}
-              </p>
-            </div>
-          </div>
-          <div className="absolute inset-y-0 right-0 w-1/3 pointer-events-none opacity-40 blur-3xl" style={{
-            background: `radial-gradient(circle at center, rgba(255,255,255,0.6), transparent 60%)`,
-          }}></div>
-        </section>
+          🏆
+        </button>
+      </header>
 
-        {playerTeam && leaderNotificationVisible && (
-          <div className="glow-panel border border-emerald-400/40 bg-emerald-500/10 text-center text-lg md:text-xl font-semibold text-emerald-100 px-6 py-5">
-            {playerTeam.leader_participant_id === participant.id
-              ? `Has sigut nomenat/da líder de ${playerTeam.name}. Tria qui jugarà aquesta ronda!`
-              : `${playerTeam.name} ja té lideratge assignat.`}
+      <main className="p-4 flex flex-col gap-6 text-white">
+        {/* Phase: Lobby */}
+        {phase === 'lobby' && (
+          <div className="text-center py-10 space-y-4">
+            <div className="text-4xl">⏳</div>
+            <h2 className="text-xl font-semibold">Preparant la partida...</h2>
+            <p className="text-white/60">Estigues atent a la pantalla principal.</p>
           </div>
         )}
 
-        {phase !== 'lobby' && playerTeam && (
-          <PlayerLineupPanel
-            team={playerTeam}
-            lineup={playerSelection}
-            totalMembers={playerTeamMembers.length}
-            requiredCount={requiredCount}
-            ready={isTeamReady(playerTeam)}
-          />
+        {/* Phase: Leader Selection */}
+        {phase === 'leader_selection' && playerTeam && (
+          <div className="space-y-6">
+            {isLeader ? (
+              <div className="space-y-4">
+                <div className="bg-emerald-500/20 border border-emerald-500/40 p-4 rounded-xl text-center">
+                  <p className="text-emerald-200 font-bold text-lg">👑 Eres líder!</p>
+                  <p className="text-sm text-emerald-100/80">Tria qui jugarà aquesta ronda.</p>
+                </div>
+                <LeaderLineupSelector
+                  team={playerTeam}
+                  members={playerTeamMembers}
+                  selected={new Set(playerSelection.map((player) => player.id))}
+                  requiredCount={requiredCount}
+                  onToggle={(playerId, shouldAdd) => onToggleLineup(playerTeam.id, playerId, shouldAdd)}
+                />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="bg-white/5 border border-white/10 p-6 rounded-xl text-center space-y-3">
+                  <p className="text-sm uppercase tracking-widest text-white/50">El teu equip</p>
+                  <h2 className="text-3xl font-bold" style={{ color: playerTeam.color_hex }}>{playerTeam.name}</h2>
+                  <div className="pt-4 border-t border-white/10 mt-4">
+                    <p className="text-sm text-white/70 mb-1">Líder actual</p>
+                    <p className="text-lg font-semibold">
+                      {playerTeamMembers.find(m => m.id === playerTeam.leader_participant_id)?.nickname ?? 'Assignant...'}
+                    </p>
+                  </div>
+                  <div className="pt-2">
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs uppercase tracking-wider ${
+                      isTeamReady(playerTeam) ? 'bg-emerald-500/20 text-emerald-300' : 'bg-yellow-500/20 text-yellow-300'
+                    }`}>
+                      {isTeamReady(playerTeam) ? 'Alineació llesta' : 'Triant jugadors...'}
+                    </span>
+                  </div>
+                </div>
+                {playerSelection.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs uppercase tracking-widest text-white/50 px-1">Convocats</p>
+                    {playerSelection.map(p => (
+                      <div key={p.id} className="bg-white/10 px-4 py-3 rounded-lg flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        {p.nickname}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         )}
 
-        {phase === 'leader_selection' && (
-          isLeader && playerTeam ? (
-            <LeaderLineupSelector
-              team={playerTeam}
-              members={playerTeamMembers}
-              selected={new Set(playerSelection.map((player) => player.id))}
-              requiredCount={requiredCount}
-              onToggle={(playerId, shouldAdd) => onToggleLineup(playerTeam.id, playerId, shouldAdd)}
-            />
-          ) : (
-            <div className="glow-panel p-6 md:p-10 text-center text-xl md:text-2xl font-semibold text-white/80">
-              {playerTeam
-                ? 'La teua persona líder està ultimant qui competirà. Guarda el mòbil a mà!'
-                : 'Encara no se t\'ha assignat equip; espera instruccions de l\'amfitrió.'}
-            </div>
-          )
-        )}
-
+        {/* Phase: Voting */}
         {phase === 'voting' && renderVotingGrid()}
 
-        {phase === 'lobby' && (
-          <MessageBlock text="Mantín-te a l'espera mentre l'amfitrió ho prepara tot." />
-        )}
-
+        {/* Phase: Action */}
         {phase === 'action' && (
-          <MessageBlock text="Repte en marxa. Bona sort! 🎉" />
+          <div className="space-y-6">
+            <div className="bg-gradient-to-br from-indigo-900/50 to-slate-900/50 border border-white/10 p-6 rounded-2xl space-y-4 text-center">
+              <span className="inline-block px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs uppercase tracking-wider">
+                Repte en curs
+              </span>
+              <h1 className="text-3xl font-black leading-tight">
+                {challenge?.title ?? 'Repte sorpresa'}
+              </h1>
+              {challenge?.description && (
+                <p className="text-white/80 text-lg leading-relaxed">
+                  {challenge.description}
+                </p>
+              )}
+            </div>
+            <div className="text-center text-white/50 text-sm">
+              Mira la pantalla principal per a seguir l&apos;acció!
+            </div>
+          </div>
         )}
 
+        {/* Phase: Resolution */}
         {phase === 'resolution' && (
-          <section className="space-y-8 pb-8">
-            <div className="text-center space-y-3">
+          <div className="space-y-6">
+            <div className="text-center space-y-3 py-6">
               {playerGuessedCorrectly && (
-                <p className="text-3xl font-bold text-emerald-300">
-                  Has encertat! 🎉
-                </p>
+                <div className="bg-emerald-500/20 border border-emerald-500/40 p-6 rounded-2xl">
+                  <p className="text-4xl mb-2">🎉</p>
+                  <p className="text-2xl font-bold text-emerald-300">Has encertat!</p>
+                  <p className="text-emerald-100/80">+3 punts per al teu equip</p>
+                </div>
               )}
               {hasRoundResults && playerVoteTeamId && !playerGuessedCorrectly && (
-                <p className="text-3xl font-bold text-rose-300">
-                  Esta vegada no has encertat. Prepara la pròxima ronda!
-                </p>
+                <div className="bg-rose-500/20 border border-rose-500/40 p-6 rounded-2xl">
+                  <p className="text-4xl mb-2">😢</p>
+                  <p className="text-2xl font-bold text-rose-300">Llàstima!</p>
+                  <p className="text-rose-100/80">No has encertat l&apos;equip perdedor.</p>
+                </div>
               )}
               {!hasRoundResults && (
-                <p className="text-2xl text-white/80">
-                  Esperant que l&apos;amfitrió publique l&apos;equip perdedor…
-                </p>
+                <div className="animate-pulse text-xl text-white/80">
+                  Esperant resultats...
+                </div>
               )}
             </div>
             <TransparencyPanel groupedVotes={groupedVotes} losingTeamIds={losingTeamIds} />
-          </section>
+          </div>
         )}
-      </div>
+      </main>
+
+      {/* Leaderboard Modal */}
+      {showLeaderboard && (
+        <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur flex flex-col">
+          <header className="flex items-center justify-between p-4 border-b border-white/10">
+            <h2 className="text-lg font-bold uppercase tracking-widest">Classificació</h2>
+            <button 
+              onClick={() => setShowLeaderboard(false)}
+              className="p-2 bg-white/10 rounded-full hover:bg-white/20"
+            >
+              ✕
+            </button>
+          </header>
+          <div className="flex-1 overflow-y-auto p-4">
+            {scoresLoading ? (
+              <p className="text-center text-white/50 py-10">Carregant...</p>
+            ) : (
+              <TeamLeaderboard scores={scores} highlightTeamId={participant.game_team_id} highlightLabel="Tu" />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -301,7 +356,7 @@ function TransparencyPanel({
 }) {
   const totalVotes = groupedVotes.reduce((sum, entry) => sum + entry.voters.length, 0) || 1
   return (
-    <div className="game-grid grid-cols-1 md:grid-cols-2">
+    <div className="space-y-4">
       {groupedVotes.map(({ team, voters }) => {
         const sortedVoters = [...voters].sort((a, b) =>
           a.participant.nickname.localeCompare(b.participant.nickname)
@@ -310,110 +365,49 @@ function TransparencyPanel({
         return (
           <article
             key={team.id}
-            className="relative overflow-hidden glow-panel p-6 md:p-8"
+            className="relative overflow-hidden rounded-xl p-4 border border-white/10"
             style={{
-              borderColor: hexToRgba(team.color_hex, 0.4),
-              background: `linear-gradient(140deg, ${hexToRgba(team.color_hex, 0.4)}, rgba(2, 6, 23, 0.95))`,
+              background: `linear-gradient(140deg, ${hexToRgba(team.color_hex, 0.2)}, rgba(2, 6, 23, 0.95))`,
             }}
           >
-            <div className="relative z-10 space-y-4">
+            <div className="relative z-10 space-y-3">
               <header className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.5em] text-white/70">{team.name}</p>
-                  <p className="text-4xl font-black">
+                  <p className="text-xs uppercase tracking-wider text-white/70">{team.name}</p>
+                  <p className="text-2xl font-bold">
                     {voters.length} {voters.length === 1 ? 'vot' : 'vots'}
                   </p>
                 </div>
                 {isLoser && (
-                  <span className="px-4 py-2 rounded-full text-xs uppercase tracking-[0.4em] bg-white/20">
+                  <span className="px-3 py-1 rounded-full text-xs uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30">
                     Perdedor
                   </span>
                 )}
               </header>
-              <div className="bg-white/25 rounded-full h-3" role="meter" aria-valuenow={voters.length}>
+              <div className="bg-white/10 rounded-full h-2" role="meter" aria-valuenow={voters.length}>
                 <div
                   className="h-full rounded-full"
                   style={{
                     width: `${Math.round((voters.length / totalVotes) * 100)}%`,
-                    backgroundColor: '#ffffff',
+                    backgroundColor: team.color_hex,
                   }}
                 ></div>
               </div>
-              <div className="max-h-40 overflow-y-auto space-y-2 pr-2 text-sm">
+              <div className="flex flex-wrap gap-2 text-sm">
                 {sortedVoters.length === 0 && (
-                  <p className="text-white/70">Sense apostes registrades.</p>
+                  <p className="text-white/50 text-xs">Sense apostes.</p>
                 )}
                 {sortedVoters.map((vote) => (
-                  <div key={vote.id} className="bg-white/15 rounded-2xl px-3 py-2">
+                  <div key={vote.id} className="bg-white/10 rounded-lg px-2 py-1 text-xs">
                     {vote.participant.nickname}
                   </div>
                 ))}
               </div>
             </div>
-            <div className="absolute inset-0 opacity-20" style={{
-              background: 'radial-gradient(circle at top right, rgba(255,255,255,0.6), transparent 60%)',
-            }}></div>
           </article>
         )
       })}
     </div>
-  )
-}
-
-function PlayerLineupPanel({
-  team,
-  lineup,
-  totalMembers,
-  requiredCount,
-  ready,
-}: {
-  team: GameTeam
-  lineup: Participant[]
-  totalMembers: number
-  requiredCount: number | null
-  ready: boolean
-}) {
-  const limit = requiredCount ?? totalMembers
-  return (
-    <article
-      className="glow-panel p-6 md:p-10 space-y-5"
-      style={{
-        background: `linear-gradient(120deg, ${hexToRgba(team.color_hex, 0.55)}, rgba(2, 6, 23, 0.95))`,
-        borderColor: hexToRgba(team.color_hex, 0.45),
-        boxShadow: `0 35px 90px ${hexToRgba(team.color_hex, 0.35)}`,
-      }}
-    >
-      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.5em] text-white/70">El teu equip</p>
-          <h2 className="text-3xl md:text-4xl font-black leading-tight">{team.name}</h2>
-          <p className="text-sm text-white/80 mt-2">
-            {lineup.length} / {limit || '∞'} jugadors confirmats
-          </p>
-        </div>
-        <span
-          className={`px-6 py-2 rounded-full text-xs uppercase tracking-[0.4em] ${
-            ready ? 'bg-emerald-300 text-black' : 'bg-white/15 text-white'
-          }`}
-        >
-          {ready ? 'Llest' : 'En curs'}
-        </span>
-      </header>
-      <div className="space-y-3">
-        {lineup.length === 0 && (
-          <p className="text-white/70 text-base">Encara no hi ha jugadors confirmats per a este repte.</p>
-        )}
-        {lineup.map((player) => (
-          <div
-            key={player.id}
-            className="flex items-center gap-3 text-lg bg-white/10 rounded-2xl px-4 py-3"
-            style={{ borderLeft: `6px solid ${team.color_hex}` }}
-          >
-            <span className="font-semibold">{player.nickname}</span>
-          </div>
-        ))}
-      </div>
-    </article>
   )
 }
 
@@ -432,24 +426,20 @@ function LeaderLineupSelector({
 }) {
   const limit = requiredCount ?? members.length
   const maxSelectable = limit === 0 ? members.length : limit
+  const remaining = maxSelectable - selected.size
+
   return (
-    <article
-      className="glow-panel space-y-5 p-6 md:p-8"
-      style={{
-        borderColor: hexToRgba(team.color_hex, 0.35),
-        boxShadow: `0 25px 70px ${hexToRgba(team.color_hex, 0.25)}`,
-      }}
-    >
-      <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.5em] text-white/60">Alineació de {team.name}</p>
-        <h2 className="text-3xl font-semibold">Selecciona competidors</h2>
-        <p className="text-white/80 text-base">
-          Toca per a activar o desactivar fins a {maxSelectable || '∞'} jugadors. Penseu bé qui jugarà!
-        </p>
+    <article className="space-y-4">
+      <header className="flex items-center justify-between text-sm">
+        <span className="text-white/60">Selecciona {maxSelectable} jugadors</span>
+        <span className={`${remaining === 0 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+          {remaining === 0 ? 'Complet' : `Falten ${remaining}`}
+        </span>
       </header>
-      <div className="space-y-3">
+      
+      <div className="grid grid-cols-1 gap-2">
         {members.length === 0 && (
-          <p className="text-white/70 text-base">Encara no tens companys assignats al teu equip.</p>
+          <p className="text-white/50 text-center py-4">No hi ha membres disponibles.</p>
         )}
         {members.map((member) => {
           const isPlaying = selected.has(member.id)
@@ -459,25 +449,21 @@ function LeaderLineupSelector({
               key={member.id}
               onClick={() => onToggle(member.id, !isPlaying)}
               disabled={disableAdd}
-              className={`tactile-button w-full flex items-center justify-between px-5 py-4 text-left text-lg border-2 ${
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
                 isPlaying
-                  ? 'bg-emerald-400/20 border-emerald-300 text-emerald-100'
-                  : 'bg-white/5 border-white/20 text-white'
-              } ${disableAdd ? 'opacity-40 cursor-not-allowed' : 'hover:scale-[1.01]'}`}
+                  ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-100'
+                  : 'bg-white/5 border border-white/10 text-white/70'
+              } ${disableAdd ? 'opacity-50' : 'active:scale-[0.98]'}`}
             >
-              <span className="font-semibold">{member.nickname}</span>
-              <span className="text-xs uppercase tracking-[0.4em]">
-                {isPlaying ? 'En joc' : 'Banqueta'}
-              </span>
+              <span className="font-medium">{member.nickname}</span>
+              <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                isPlaying ? 'border-emerald-400 bg-emerald-400' : 'border-white/30'
+              }`}>
+                {isPlaying && <span className="text-black text-xs">✓</span>}
+              </div>
             </button>
           )
         })}
-      </div>
-      <div className="flex items-center justify-between text-sm text-white/70">
-        <span>{selected.size} / {maxSelectable || '∞'} jugadors</span>
-        {maxSelectable > 0 && selected.size === maxSelectable && (
-          <span className="text-emerald-300 font-semibold">Alineació completa</span>
-        )}
       </div>
     </article>
   )
@@ -485,7 +471,7 @@ function LeaderLineupSelector({
 
 function MessageBlock({ text }: { text: string }) {
   return (
-    <div className="glow-panel text-center text-2xl md:text-3xl font-semibold px-6 py-10">
+    <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center text-lg font-medium text-white/80">
       {text}
     </div>
   )

@@ -89,20 +89,20 @@ export default function Lobby({
 
             <div className="flex-1 rounded-3xl border border-white/15 bg-white/5 p-6 md:p-8 flex flex-col gap-4 min-w-0 overflow-hidden h-full">
               <header className="space-y-1 shrink-0">
-                <p className="text-xs uppercase tracking-[0.5em] text-white/60">Participants</p>
-                <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight">
+                <p className="text-base uppercase tracking-[0.5em] text-white/60">Participants</p>
+                <h2 className="text-3xl md:text-3xl lg:text-4xl font-semibold tracking-tight">
                   {totalParticipants} {totalParticipants === 1 ? 'persona' : 'persones'}
                 </h2>
               </header>
               <div className="grow overflow-y-auto pr-2 min-h-0">
                 {participants.length === 0 ? (
-                  <p className="text-white/70 text-lg">Encara no s&apos;ha unit ningú.</p>
+                  <p className="text-white/70 text-xl">Encara no s&apos;ha unit ningú.</p>
                 ) : (
                   <div className="flex flex-wrap gap-3">
                     {participants.map((participant) => (
                       <div
                         key={participant.id}
-                        className="px-4 py-2 rounded-full border border-white/20 bg-white/10 text-base md:text-lg font-semibold tracking-tight shadow-lg"
+                        className="px-4 py-2 rounded-full border border-white/20 bg-white/10 text-lg md:text-xl font-semibold tracking-tight shadow-lg"
                       >
                         {participant.nickname}
                       </div>
