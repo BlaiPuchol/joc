@@ -481,7 +481,7 @@ export default function HostGame({
   }
 
   const endGame = async () => {
-    const { error } = await supabase.from('games').update({ phase: 'results' }).eq('id', gameId)
+    const { error } = await supabase.from('games').update({ phase: 'results', status: 'completed' }).eq('id', gameId)
     if (error) {
       alert(error.message)
       return

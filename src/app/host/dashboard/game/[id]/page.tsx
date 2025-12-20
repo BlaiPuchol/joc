@@ -147,6 +147,64 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
     }
   }
 
+  const duplicateGame = async () => {
+    if (!game) return
+    if (!window.confirm('Vols duplicar aquest joc?')) return
+    
+    try {
+      setLoading(true)
+      const { data: newGame, error: gameError } = await supabase
+        .from('games')
+        .insert({
+          title: `${game.title} (Còpia)`,
+          description: game.description,
+          status: 'draft',
+          max_players_per_team: game.max_players_per_team,
+          max_teams: game.max_teams
+        })
+        .select()
+        .single()
+      
+      if (gameError || !newGame) throw gameError ?? new Error("Error creant el joc")
+
+      if (challenges.length > 0) {
+        const { error: challengesError } = await supabase
+          .from('game_challenges')
+          .insert(
+            challenges.map(c => ({
+              game_id: newGame.id,
+              title: c.title,
+              description: c.description,
+              position: c.position,
+              participants_per_team: c.participants_per_team
+            }))
+          )
+        if (challengesError) throw challengesError
+      }
+
+      if (teams.length > 0) {
+        const { error: teamsError } = await supabase
+          .from('game_teams')
+          .insert(
+            teams.map(t => ({
+              game_id: newGame.id,
+              name: t.name,
+              color_hex: t.color_hex,
+              position: t.position,
+              slug: `team-${t.position + 1}-${newGame.id.slice(0, 4)}`,
+              is_active: t.is_active
+            }))
+          )
+        if (teamsError) throw teamsError
+      }
+
+      router.push(`/host/dashboard/game/${newGame.id}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No s'ha pogut duplicar el joc")
+      setLoading(false)
+    }
+  }
+
   const addChallenge = async () => {
     if (!game) return
     const nextPosition = challenges.length === 0 ? 0 : Math.max(...challenges.map((c) => c.position)) + 1
@@ -349,7 +407,13 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
               <h1 className="text-4xl font-semibold mt-2">{game.title}</h1>
               <p className="text-white/70">Creat el {new Date(game.created_at).toLocaleString()}</p>
             </div>
-            <div className="text-right">
+            <div className="flex flex-col items-end gap-3">
+              <button 
+                onClick={duplicateGame}
+                className="text-sm text-white/60 hover:text-white underline decoration-white/30 underline-offset-4"
+              >
+                Duplicar joc
+              </button>
               <span
                 className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
                   readyForShow ? 'bg-emerald-400/20 text-emerald-300 border border-emerald-400/30' : 'bg-white/10 text-white/70 border border-white/15'
@@ -380,18 +444,21 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
               {challenges.map((challenge, index) => (
                 <article key={challenge.id} className="bg-white/5 border border-white/10 rounded-3xl p-5 space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <input
-                      className="text-2xl font-semibold bg-transparent border-b border-white/20 focus:outline-none"
-                      value={challenge.title}
-                      onChange={(event) =>
-                        setChallenges((prev) =>
-                          prev.map((item) =>
-                            item.id === challenge.id ? { ...item, title: event.target.value } : item
+                    <div className="flex items-center gap-3 flex-1">
+                      <span className="text-2xl font-bold text-white/30 select-none">#{index + 1}</span>
+                      <input
+                        className="text-2xl font-semibold bg-transparent border-b border-white/20 focus:outline-none w-full"
+                        value={challenge.title}
+                        onChange={(event) =>
+                          setChallenges((prev) =>
+                            prev.map((item) =>
+                              item.id === challenge.id ? { ...item, title: event.target.value } : item
+                            )
                           )
-                        )
-                      }
-                      onBlur={(event) => updateChallenge(challenge.id, { title: event.target.value })}
-                    />
+                        }
+                        onBlur={(event) => updateChallenge(challenge.id, { title: event.target.value })}
+                      />
+                    </div>
                     <div className="flex gap-2">
                       <button
                         disabled={index === 0}
@@ -525,21 +592,6 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
               </button>
             </section>
 
-            <section className="bg-black/40 border border-white/10 rounded-3xl p-5 space-y-3">
-              <h2 className="text-xl font-semibold text-red-200">Restablir lobby</h2>
-              <p className="text-white/60 text-sm">
-                Elimina tots els jugadors registrats i les rondes guardades per a tornar a començar des de zero. Esta acció
-                no es pot desfer.
-              </p>
-              <button
-                onClick={resetLobby}
-                disabled={resettingLobby}
-                className="w-full rounded-2xl border border-red-400/60 text-red-200 font-semibold py-3 hover:bg-red-400/10 disabled:opacity-60"
-              >
-                {resettingLobby ? 'Restablint…' : 'Buidar jugadors i rondes'}
-              </button>
-            </section>
-
             <section className="bg-white/5 border border-white/10 rounded-3xl p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -611,6 +663,21 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                   </div>
                 )}
               </div>
+            </section>
+
+            <section className="bg-black/40 border border-white/10 rounded-3xl p-5 space-y-3">
+              <h2 className="text-xl font-semibold text-red-200">Restablir lobby</h2>
+              <p className="text-white/60 text-sm">
+                Elimina tots els jugadors registrats i les rondes guardades per a tornar a començar des de zero. Esta acció
+                no es pot desfer.
+              </p>
+              <button
+                onClick={resetLobby}
+                disabled={resettingLobby}
+                className="w-full rounded-2xl border border-red-400/60 text-red-200 font-semibold py-3 hover:bg-red-400/10 disabled:opacity-60"
+              >
+                {resettingLobby ? 'Restablint…' : 'Buidar jugadors i rondes'}
+              </button>
             </section>
 
             <section className="bg-black/40 border border-white/10 rounded-3xl p-5 space-y-3">
