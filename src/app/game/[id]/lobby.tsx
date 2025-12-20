@@ -50,7 +50,7 @@ export default function Lobby({
   }, [gameId, onRegisterCompleted])
 
   const accentColor = '#38bdf8'
-  const screenBackground = `radial-gradient(circle at 18% 20%, rgba(62 255 150,0.3), transparent 45%), #020617`
+  const screenBackground = `radial-gradient(circle at 18% 20%, rgba(62,255,150,0.3), transparent 45%), #020617`
   const heroBackground = `linear-gradient(135deg, rgba(62,255,150,0.45), rgba(2,6,23,0.92))`
 
   return (
