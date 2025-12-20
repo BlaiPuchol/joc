@@ -242,7 +242,7 @@ export default function RoundController({
                     </span>
                     <span className="px-3 py-1 rounded-full bg-white/10">Selecció</span>
                   </div>
-                  <h2 className="text-4xl font-black leading-tight">
+                  <h2 className="text-5xl font-black leading-tight">
                     {challenge?.title ?? 'Repte en directe'}
                   </h2>
                   {challenge?.description && (
@@ -309,7 +309,7 @@ export default function RoundController({
                   </span>
                   <span className="px-3 py-1 rounded-full bg-white/10">Apostes</span>
                 </div>
-                <h2 className="text-3xl font-black leading-tight">
+                <h2 className="text-5xl font-black leading-tight">
                   {challenge?.title ?? 'Repte en directe'}
                 </h2>
                 {challenge?.description && (
@@ -422,6 +422,8 @@ export default function RoundController({
                   outcomes={outcomes}
                   onUpdateOutcome={onUpdateOutcome}
                   onFinalizeResults={onFinalizeResults}
+                  challenge={challenge}
+                  round={round}
                 />
               )}
 
@@ -529,7 +531,7 @@ function VotingDashboard({
                 {lineup.map((player) => (
                   <div
                     key={player.id}
-                    className="bg-white/15 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm"
+                    className="bg-white/15 rounded-full px-4 py-2 text-2xl font-semibold text-white shadow-sm"
                   >
                     {player.nickname}
                   </div>
@@ -736,14 +738,23 @@ function OutcomeConfigurator({
   outcomes,
   onUpdateOutcome,
   onFinalizeResults,
+  challenge,
+  round,
 }: {
   teams: GameTeam[]
   outcomes: RoundOutcome[]
-  onUpdateOutcome: (teamId: string, updates: { isLoser?: boolean; challengePoints?: number }) => void
+  onUpdateOutcome: (
+    teamId: string,
+    updates: { isLoser?: boolean; challengePoints?: number }
+  ) => void
   onFinalizeResults: () => void
+  challenge: GameChallenge | null
+  round: GameRound
 }) {
   const losingTeamIds = useMemo(() => {
-    return new Set(outcomes.filter((outcome) => outcome.is_loser).map((outcome) => outcome.team_id))
+    return new Set(
+      outcomes.filter((outcome) => outcome.is_loser).map((outcome) => outcome.team_id)
+    )
   }, [outcomes])
 
   const outcomeByTeam = useMemo(() => {
@@ -756,16 +767,58 @@ function OutcomeConfigurator({
   const readyToReveal = losingTeamIds.size > 0
 
   return (
-    <section className="glow-panel p-6 md:p-10 space-y-6">
-      <header className="space-y-3 text-center md:text-left">
-        <p className="text-xs uppercase tracking-[0.5em] text-white/60">Repte en marxa</p>
-        <h2 className="text-4xl font-semibold">Marca els perdedors i reparteix punts extra</h2>
-        <p className="text-white/80 text-lg">
-          Cada aposta encertada suma {VOTE_REWARD_PER_CORRECT} punts. Utilitza estes targetes per a afegir punts del repte
-          o marcar qui ha perdut.
-        </p>
-      </header>
-      <div className="space-y-4">
+    <div className="flex flex-col lg:flex-row gap-6 h-full w-full">
+      <section
+        className="glow-panel lg:w-1/3 flex flex-col gap-6 p-8 shrink-0"
+        style={{
+          background: `linear-gradient(135deg, rgba(124, 58, 237, 0.45), rgba(2, 6, 23, 0.95))`,
+        }}
+      >
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.5em] text-white/70">
+            <span className="px-3 py-1 rounded-full bg-white/15">
+              Repte {round.sequence + 1}
+            </span>
+            <span className="px-3 py-1 rounded-full bg-white/10">En marxa</span>
+          </div>
+          <h2 className="text-3xl font-black leading-tight">
+            {challenge?.title ?? 'Repte en directe'}
+          </h2>
+          {challenge?.description && (
+            <p className="text-lg text-white/80">{challenge.description}</p>
+          )}
+        </div>
+
+        <div className="space-y-4 flex-1">
+          <div className="bg-white/5 rounded-xl p-6 space-y-4">
+            <h3 className="text-xl font-semibold">Instruccions</h3>
+            <p className="text-white/80 leading-relaxed">
+              Marca els equips que han perdut el repte. Cada aposta encertada sumarà{' '}
+              <span className="text-emerald-300 font-bold">
+                +{VOTE_REWARD_PER_CORRECT} punts
+              </span>
+              . També pots assignar punts extra manualment si el repte ho requereix.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-3 mt-auto">
+          <button
+            onClick={onFinalizeResults}
+            disabled={!readyToReveal}
+            className="tactile-button w-full bg-emerald-400 text-black text-xl py-5 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Revelar resultats
+          </button>
+          <p className="text-white/60 text-sm text-center">
+            {readyToReveal
+              ? 'Tot llest per a mostrar els resultats.'
+              : 'Selecciona almenys un perdedor.'}
+          </p>
+        </div>
+      </section>
+
+      <section className="flex-1 min-h-0 overflow-y-auto rounded-3xl pr-2 space-y-4">
         {teams.map((team) => {
           const entry = outcomeByTeam[team.id]
           const isLoser = entry?.is_loser ?? false
@@ -776,12 +829,17 @@ function OutcomeConfigurator({
               className="rounded-3xl p-5 md:p-6 flex flex-col gap-4"
               style={{
                 border: `2px solid ${hexToRgba(team.color_hex, 0.35)}`,
-                background: `linear-gradient(140deg, ${hexToRgba(team.color_hex, 0.35)}, rgba(2,6,23,0.9))`,
+                background: `linear-gradient(140deg, ${hexToRgba(
+                  team.color_hex,
+                  0.35
+                )}, rgba(2,6,23,0.9))`,
               }}
             >
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.5em] text-white/70">{team.name}</p>
+                  <p className="text-xs uppercase tracking-[0.5em] text-white/70">
+                    {team.name}
+                  </p>
                   <p className="text-xl font-semibold">
                     {isLoser ? 'Marcat com a perdedor' : 'Encara sense resultat'}
                   </p>
@@ -790,9 +848,7 @@ function OutcomeConfigurator({
                   <button
                     onClick={() => onUpdateOutcome(team.id, { isLoser: !isLoser })}
                     className={`tactile-button px-5 py-3 text-sm uppercase tracking-[0.3em] ${
-                      isLoser
-                        ? 'bg-rose-400 text-black'
-                        : 'bg-white/15 text-white'
+                      isLoser ? 'bg-rose-400 text-black' : 'bg-white/15 text-white'
                     }`}
                   >
                     {isLoser ? 'Perdedor' : 'Marcar perdedor'}
@@ -807,7 +863,10 @@ function OutcomeConfigurator({
                       value={challengePoints}
                       onChange={(event) =>
                         onUpdateOutcome(team.id, {
-                          challengePoints: Math.max(0, Math.floor(Number(event.target.value) || 0)),
+                          challengePoints: Math.max(
+                            0,
+                            Math.floor(Number(event.target.value) || 0)
+                          ),
                         })
                       }
                     />
@@ -818,24 +877,12 @@ function OutcomeConfigurator({
           )
         })}
         {teams.length === 0 && (
-          <p className="text-white/70 text-center py-6 text-lg">Encara no hi ha equips actius per a este repte.</p>
+          <div className="h-full flex items-center justify-center text-white/50 text-xl">
+            No hi ha equips actius.
+          </div>
         )}
-      </div>
-      <div className="flex flex-col md:flex-row gap-4 md:items-center">
-        <button
-          onClick={onFinalizeResults}
-          disabled={!readyToReveal}
-          className="tactile-button flex-1 bg-emerald-400 text-black text-xl py-5 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          Revelar resultats
-        </button>
-        <p className="text-white/70 text-base md:flex-1">
-          {readyToReveal
-            ? 'Ja pots passar a la resolució i mostrar els resultats.'
-            : 'Selecciona almenys un equip perdedor per a tancar el repte.'}
-        </p>
-      </div>
-    </section>
+      </section>
+    </div>
   )
 }
 

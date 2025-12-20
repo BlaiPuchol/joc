@@ -262,7 +262,7 @@ export default function Challenge({
         )}
 
         {phase === 'action' && (
-          <MessageBlock text="Repte en marxa. Les apostes romandran bloquejades fins al final!" />
+          <MessageBlock text="Repte en marxa. Bona sort! 🎉" />
         )}
 
         {phase === 'resolution' && (
