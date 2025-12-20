@@ -353,6 +353,15 @@ export default function RoundController({
               />
             </section>
           </div>
+        ) : phase === 'action' ? (
+          <OutcomeConfigurator
+            teams={activeTeams}
+            outcomes={outcomes}
+            onUpdateOutcome={onUpdateOutcome}
+            onFinalizeResults={onFinalizeResults}
+            challenge={challenge}
+            round={round}
+          />
         ) : (
           <div className="h-full w-full overflow-y-auto pr-2">
             <div className="screen-frame space-y-10 pb-10 mx-auto">
@@ -415,17 +424,6 @@ export default function RoundController({
                   }}
                 ></div>
               </section>
-
-              {phase === 'action' && (
-                <OutcomeConfigurator
-                  teams={activeTeams}
-                  outcomes={outcomes}
-                  onUpdateOutcome={onUpdateOutcome}
-                  onFinalizeResults={onFinalizeResults}
-                  challenge={challenge}
-                  round={round}
-                />
-              )}
 
               {phase === 'resolution' && (
                 <section className="space-y-8">
@@ -781,7 +779,7 @@ function OutcomeConfigurator({
             </span>
             <span className="px-3 py-1 rounded-full bg-white/10">En marxa</span>
           </div>
-          <h2 className="text-3xl font-black leading-tight">
+          <h2 className="text-5xl font-black leading-tight">
             {challenge?.title ?? 'Repte en directe'}
           </h2>
           {challenge?.description && (
@@ -797,7 +795,7 @@ function OutcomeConfigurator({
               <span className="text-emerald-300 font-bold">
                 +{VOTE_REWARD_PER_CORRECT} punts
               </span>
-              . També pots assignar punts extra manualment si el repte ho requereix.
+              . Assigna també els punts obtinguts en la prova.
             </p>
           </div>
         </div>
