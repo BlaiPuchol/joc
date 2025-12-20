@@ -180,7 +180,7 @@ export default function Challenge({
   const renderVotingGrid = () => (
     <section className="space-y-4">
       <header className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">Qui perdrà?</h2>
+        <h2 className="text-2xl font-bold">Quin equip perdrà?</h2>
         <p className="text-sm text-white/70">
           Toca una targeta per a apostar.
         </p>
@@ -193,7 +193,7 @@ export default function Challenge({
               key={team.id}
               onClick={() => onVote(team.id)}
               disabled={phase !== 'voting'}
-              className={`relative overflow-hidden text-left text-white px-6 py-8 rounded-2xl transition-all
+              className={`relative overflow-hidden text-center text-white px-6 py-8 rounded-2xl transition-all
                 ${phase !== 'voting' ? 'opacity-60' : 'active:scale-[0.98]'}
               `}
               style={{
@@ -202,11 +202,11 @@ export default function Challenge({
                 transform: isSelected ? 'scale(1.02)' : undefined
               }}
             >
-              <div className="flex items-center justify-between relative z-10">
+              <div className="flex flex-col items-center justify-center gap-3 relative z-10">
                 <span className="text-3xl font-black tracking-tight">{team.name}</span>
                 {isSelected && (
                   <span className="bg-white text-black text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg">
-                    Aposta
+                    La teua aposta
                   </span>
                 )}
               </div>
@@ -340,7 +340,7 @@ export default function Challenge({
                 </p>
               )}
             </div>
-            <div className="text-center text-white/50 text-sm">
+            <div className="text-center text-white/50 text-lg">
               {lineups.some(l => l.participant_id === participant.id)
                 ? 'Has de participar! Bona sort en el repte!'
                 : 'Descansa en aquest repte i anima als teus companys!'}

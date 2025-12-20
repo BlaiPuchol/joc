@@ -253,7 +253,7 @@ export default function RoundController({
                 </div>
 
                 <div className="space-y-4 flex-1">
-                  <dl className="grid gap-4 text-lg">
+                  <dl className="grid grid-cols-2 gap-4 text-lg">
                     <div className="bg-white/5 rounded-xl p-4">
                       <dt className="text-xs uppercase tracking-[0.5em] text-white/60">
                         Equips llestos
@@ -320,7 +320,7 @@ export default function RoundController({
               </div>
 
               <div className="space-y-4 flex-1">
-                <dl className="grid gap-4 text-lg">
+                <dl className="grid grid-cols-2 gap-4 text-lg">
                   <div className="bg-white/5 rounded-xl p-4">
                     <dt className="text-xs uppercase tracking-[0.5em] text-white/60">
                       Vots registrats
@@ -386,7 +386,7 @@ export default function RoundController({
               </div>
 
               <div className="space-y-4 flex-1">
-                <dl className="grid gap-4 text-lg">
+                <dl className="grid grid-cols-2 gap-4 text-lg">
                   <div className="bg-white/5 rounded-xl p-4">
                     <dt className="text-xs uppercase tracking-[0.5em] text-white/60">
                       Vots totals
