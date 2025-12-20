@@ -361,8 +361,8 @@ export default function Challenge({
               )}
               {hasRoundResults && playerVoteTeamId && !playerGuessedCorrectly && (
                 <div className="bg-rose-500/20 border border-rose-500/40 p-6 rounded-2xl">
-                  <p className="text-4xl mb-2">😢</p>
-                  <p className="text-2xl font-bold text-rose-300">Llàstima!</p>
+                  <p className="text-4xl mb-2">🥃</p>
+                  <p className="text-2xl font-bold text-rose-300">Has de beure!</p>
                   <p className="text-rose-100/80">No has encertat l&apos;equip perdedor.</p>
                 </div>
               )}
@@ -511,18 +511,18 @@ function TransparencyPanel({
             <div className="relative z-10 space-y-3">
               <header className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-wider text-white/70">{team.name}</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-lg uppercase tracking-wider text-white/70">{team.name}</p>
+                  <p className="text-3xl font-bold">
                     {voters.length} {voters.length === 1 ? 'vot' : 'vots'}
                   </p>
                 </div>
                 {isLoser && (
-                  <span className="px-3 py-1 rounded-full text-xs uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                  <span className="px-3 py-1 rounded-full text-lg uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30">
                     Perdedor
                   </span>
                 )}
               </header>
-              <div className="bg-white/10 rounded-full h-2" role="meter" aria-valuenow={voters.length}>
+              <div className="bg-white/10 rounded-full h-6" role="meter" aria-valuenow={voters.length}>
                 <div
                   className="h-full rounded-full"
                   style={{
@@ -536,7 +536,7 @@ function TransparencyPanel({
                   <p className="text-white/50 text-xs">Sense apostes.</p>
                 )}
                 {sortedVoters.map((vote) => (
-                  <div key={vote.id} className="bg-white/10 rounded-lg px-2 py-1 text-xs">
+                  <div key={vote.id} className="bg-white/10 rounded-lg px-2 py-1 text-lg">
                     {vote.participant.nickname}
                   </div>
                 ))}

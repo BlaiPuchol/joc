@@ -212,7 +212,7 @@ export default function RoundController({
               style={{ background: heroBackground }}
             >
               <div className="space-y-6 max-w-4xl">
-                <p className="text-sm uppercase tracking-[0.5em] text-white/60">
+                <p className="text-large uppercase tracking-[0.5em] text-white/60">
                   Repte {round.sequence + 1}
                 </p>
                 <h1 className="text-6xl md:text-7xl font-black leading-tight">
