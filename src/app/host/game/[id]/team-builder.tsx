@@ -42,16 +42,28 @@ export default function TeamBuilder({
 
   const handleDragOverZone = (zoneId: string) => (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault()
-    event.stopPropagation()
     if (activeDropZone !== zoneId) {
       setActiveDropZone(zoneId)
     }
     event.dataTransfer.dropEffect = 'move'
   }
 
+  const handleDragEnterZone = (zoneId: string) => (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    if (activeDropZone !== zoneId) {
+      setActiveDropZone(zoneId)
+    }
+  }
+
+  const handleDragLeaveZone = (zoneId: string) => (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    if (activeDropZone === zoneId) {
+      setActiveDropZone(null)
+    }
+  }
+
   const handleDropOnZone = (teamId: string | null) => (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault()
-    event.stopPropagation()
     const dataId = event.dataTransfer.getData('text/plain')
     const participantId = dataId || dragParticipantId
     if (!participantId) return
@@ -76,8 +88,10 @@ export default function TeamBuilder({
           className={`bg-black/40 border rounded-3xl p-5 transition ${
             activeDropZone === UNASSIGNED_ZONE ? 'border-emerald-400/50 bg-emerald-400/10' : 'border-white/10'
           }`}
-          onDragOverCapture={handleDragOverZone(UNASSIGNED_ZONE)}
-          onDropCapture={handleDropOnZone(null)}
+          onDragOver={handleDragOverZone(UNASSIGNED_ZONE)}
+          onDragEnter={handleDragEnterZone(UNASSIGNED_ZONE)}
+          onDragLeave={handleDragLeaveZone(UNASSIGNED_ZONE)}
+          onDrop={handleDropOnZone(null)}
         >
           <h2 className="text-xl font-semibold mb-1">Jugadors en espera ({unassigned.length})</h2>
           <p className="text-sm text-white/60 mb-3">Arrossega&apos;ls fins a un equip per a assignar-los.</p>
@@ -110,8 +124,10 @@ export default function TeamBuilder({
                   dropIsActive ? 'border-emerald-400/50 bg-emerald-400/10' : 'border-white/10'
                 }`}
                 style={{ boxShadow: `0 0 30px ${team.color_hex}22` }}
-                onDragOverCapture={handleDragOverZone(team.id)}
-                onDropCapture={handleDropOnZone(team.id)}
+                onDragOver={handleDragOverZone(team.id)}
+                onDragEnter={handleDragEnterZone(team.id)}
+                onDragLeave={handleDragLeaveZone(team.id)}
+                onDrop={handleDropOnZone(team.id)}
               >
                 <header className="flex items-center justify-between">
                   <div>
