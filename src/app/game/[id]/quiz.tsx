@@ -450,7 +450,7 @@ export default function Challenge({
                 <div key={item.round.id} className="bg-white/5 rounded-xl p-4 space-y-3 border border-white/10">
                   <div className="flex justify-between items-start">
                     <div>
-                      <span className="text-xs uppercase tracking-wider text-white/50">Ronda {item.round.sequence + 1}</span>
+                      <span className="text-xs uppercase tracking-wider text-white/50">Repte {item.round.sequence + 1}</span>
                       <h3 className="font-bold text-lg">{item.challenge?.title ?? 'Repte desconegut'}</h3>
                     </div>
                   </div>
@@ -511,18 +511,18 @@ function TransparencyPanel({
             <div className="relative z-10 space-y-3">
               <header className="flex items-center justify-between">
                 <div>
-                  <p className="text-lg uppercase tracking-wider text-white/70">{team.name}</p>
+                  <p className="text-base uppercase tracking-wider text-white/70">{team.name}</p>
                   <p className="text-3xl font-bold">
                     {voters.length} {voters.length === 1 ? 'vot' : 'vots'}
                   </p>
                 </div>
                 {isLoser && (
-                  <span className="px-3 py-1 rounded-full text-lg uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                  <span className="px-3 py-1 rounded-full text-base uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30">
                     Perdedor
                   </span>
                 )}
               </header>
-              <div className="bg-white/10 rounded-full h-6" role="meter" aria-valuenow={voters.length}>
+              <div className="bg-white/10 rounded-full h-4" role="meter" aria-valuenow={voters.length}>
                 <div
                   className="h-full rounded-full"
                   style={{
