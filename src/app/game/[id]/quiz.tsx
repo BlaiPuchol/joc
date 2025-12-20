@@ -307,9 +307,9 @@ export default function Challenge({
                 </div>
                 {playerSelection.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs uppercase tracking-widest text-white/50 px-1">Convocats</p>
+                    <p className="text-lg uppercase tracking-widest text-white/50 px-1">Convocats</p>
                     {playerSelection.map(p => (
-                      <div key={p.id} className="bg-white/10 px-4 py-3 rounded-lg flex items-center gap-2">
+                      <div key={p.id} className="bg-white/10 px-4 py-3 text-lg rounded-lg flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                         {p.nickname}
                       </div>
@@ -414,10 +414,10 @@ export default function Challenge({
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
             {teams.map(team => (
               <div key={team.id} className="space-y-2">
-                <h3 className="text-xl font-bold" style={{ color: team.color_hex }}>{team.name}</h3>
+                <h3 className="text-3xl font-bold" style={{ color: team.color_hex }}>{team.name}</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {membersByTeam[team.id]?.map(member => (
-                    <div key={member.id} className="bg-white/5 p-2 rounded text-sm">
+                    <div key={member.id} className="bg-white/5 p-2 rounded text-lg">
                       {member.nickname}
                     </div>
                   ))}
@@ -568,7 +568,7 @@ function LeaderLineupSelector({
 
   return (
     <article className="space-y-4">
-      <header className="flex items-center justify-between text-sm">
+      <header className="flex items-center justify-between text-base">
         <span className="text-white/60">Selecciona {maxSelectable} jugadors</span>
         <span className={`${remaining === 0 ? 'text-emerald-400' : 'text-yellow-400'}`}>
           {remaining === 0 ? 'Complet' : `Falten ${remaining}`}
@@ -577,7 +577,7 @@ function LeaderLineupSelector({
       
       <div className="grid grid-cols-1 gap-2">
         {members.length === 0 && (
-          <p className="text-white/50 text-center py-4">No hi ha membres disponibles.</p>
+          <p className="text-white/50 text-center py-4 text-lg">No hi ha membres disponibles.</p>
         )}
         {members.map((member) => {
           const isPlaying = selected.has(member.id)
@@ -593,7 +593,7 @@ function LeaderLineupSelector({
                   : 'bg-white/5 border border-white/10 text-white/70'
               } ${disableAdd ? 'opacity-50' : 'active:scale-[0.98]'}`}
             >
-              <span className="font-medium">{member.nickname}</span>
+              <span className="text-lg">{member.nickname}</span>
               <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
                 isPlaying ? 'border-emerald-400 bg-emerald-400' : 'border-white/30'
               }`}>

@@ -226,7 +226,7 @@ export default function RoundController({
               </div>
               <button
                 onClick={() => setViewMode('selection')}
-                className="tactile-button bg-emerald-400 text-black text-2xl font-bold px-12 py-6 rounded-2xl shadow-xl hover:scale-105 transition-transform"
+                className="tactile-button bg-emerald-400 text-black text-xl font-bold px-12 py-6 rounded-2xl shadow-xl hover:scale-105 transition-transform"
               >
                 Seleccionar jugadors
               </button>

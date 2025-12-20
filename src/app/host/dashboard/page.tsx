@@ -267,7 +267,7 @@ function GameShelf({
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">{title}</h2>
-        <span className="text-white/50 text-sm tracking-[0.2em]">{games.length} jocs</span>
+        <span className="text-white/50 text-sm tracking-[0.2em]">{games.length} {games.length === 1 ? 'joc' : 'jocs'}</span>
       </div>
       <div className="grid gap-6 md:grid-cols-2">
         {games.map((game) => (
