@@ -579,7 +579,7 @@ function LineupGrid({
                   {team.name}
                 </h3>
               </div>
-              <span className="text-white text-xl font-semibold">
+              <span className="text-white text-3xl font-semibold">
                 {selected.size}/{limit || '∞'}
               </span>
             </header>
@@ -658,7 +658,7 @@ function ResolutionDashboard({
                 <span className="text-4xl font-black text-emerald-300">+{score.total}</span>
                 {isLoser && (
                   <div className="mt-1">
-                    <span className="text-xs uppercase tracking-widest bg-rose-500/20 text-rose-200 px-2 py-1 rounded">
+                    <span className="text-lg uppercase tracking-widest bg-red-800 text-rose-200 px-2 py-1 rounded">
                       Perdedor
                     </span>
                   </div>
@@ -677,7 +677,7 @@ function ResolutionDashboard({
 
             <dl className="grid grid-cols-2 gap-4 text-sm bg-black/20 p-3 rounded-xl shrink-0">
               <div>
-                <dt className="text-white/60 text-xs uppercase tracking-wider">Apostes</dt>
+                <dt className="text-white/60 text-xs uppercase tracking-wider">Apostes ({score.correctVotes} encerts)</dt>
                 <dd className="font-mono text-lg">+{score.votePoints}</dd>
               </div>
               <div className="text-right">
@@ -688,16 +688,16 @@ function ResolutionDashboard({
 
             <div className="flex-1 min-h-0 overflow-y-auto pr-2 space-y-2">
               <p className="text-xs uppercase tracking-[0.5em] text-white/60">
-                Apostes ({score.correctVotes} encerts)
+                Apostadors en contra
               </p>
               <div className="flex flex-wrap gap-2">
                 {voters.length === 0 && (
-                  <span className="text-white/40 text-sm italic">Sense vots</span>
+                  <span className="text-white/40 text-lg italic">Sense vots</span>
                 )}
                 {voters.map((v) => (
                   <span
                     key={v.id}
-                    className="px-2 py-1 bg-white/10 rounded text-sm text-white/80"
+                    className="px-2 py-1 bg-white/10 rounded text-lg text-white/80"
                   >
                     {v.participant.nickname}
                   </span>
