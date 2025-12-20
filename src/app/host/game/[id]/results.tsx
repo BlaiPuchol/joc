@@ -28,8 +28,6 @@ export default function Results({ gameId }: { gameId: string }) {
           ) : (
             <TeamLeaderboard
               scores={scores}
-              title="Classificació final"
-              subtitle="Els punts combinen apostes encertades (3 punts cadascuna) i els punts del repte que has assignat."
             />
           )}
         </div>

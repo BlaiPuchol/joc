@@ -1,5 +1,5 @@
 import { TeamScore, supabase } from '@/types/types'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 type Options = {
   refreshIntervalMs?: number
@@ -8,6 +8,7 @@ type Options = {
 export function useTeamScores(gameId: string | null, options?: Options) {
   const [scores, setScores] = useState<TeamScore[]>([])
   const [loading, setLoading] = useState(false)
+  const lastLoadedGameId = useRef<string | null>(null)
 
   const load = useCallback(async () => {
     if (!gameId) {
@@ -15,7 +16,7 @@ export function useTeamScores(gameId: string | null, options?: Options) {
       return
     }
 
-    if (scores.length === 0) {
+    if (lastLoadedGameId.current !== gameId) {
       setLoading(true)
     }
     
@@ -33,6 +34,7 @@ export function useTeamScores(gameId: string | null, options?: Options) {
 
     setScores((data ?? []) as TeamScore[])
     setLoading(false)
+    lastLoadedGameId.current = gameId
   }, [gameId])
 
   useEffect(() => {
