@@ -145,9 +145,6 @@ function Register({
       >
         {sending ? 'Enviant…' : 'Unir-me a la sala'}
       </button>
-      <p className="text-sm text-white/70 text-center">
-        El teu nom es mostrarà a la pantalla gran. Pots canviar-lo abans que comence el joc.
-      </p>
     </form>
   )
 }

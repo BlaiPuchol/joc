@@ -50,6 +50,7 @@ export default function TeamBuilder({
 
   const handleDropOnZone = (teamId: string | null) => (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault()
+    event.stopPropagation()
     const participantId = dragParticipantId ?? event.dataTransfer.getData('text/plain')
     if (!participantId) return
     onAssign(participantId, teamId)
@@ -85,7 +86,7 @@ export default function TeamBuilder({
                 draggable
                 onDragStart={handleDragStart(participant.id)}
                 onDragEnd={handleDragEnd}
-                className="cursor-grab active:cursor-grabbing bg-white/10 border border-white/15 rounded-full px-4 py-2 text-sm font-medium"
+                className="cursor-grab active:cursor-grabbing bg-white/10 border border-white/15 rounded-full px-4 py-2 text-sm font-medium flex items-center justify-center text-center"
               >
                 {participant.nickname}
               </div>
