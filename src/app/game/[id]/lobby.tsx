@@ -50,8 +50,8 @@ export default function Lobby({
   }, [gameId, onRegisterCompleted])
 
   const accentColor = '#38bdf8'
-  const screenBackground = `radial-gradient(circle at 18% 20%, rgba(56,189,248,0.3), transparent 45%), #020617`
-  const heroBackground = `linear-gradient(135deg, rgba(56,189,248,0.45), rgba(2,6,23,0.92))`
+  const screenBackground = `radial-gradient(circle at 18% 20%, rgba(62 255 150,0.3), transparent 45%), #020617`
+  const heroBackground = `linear-gradient(135deg, rgba(62,255,150,0.45), rgba(2,6,23,0.92))`
 
   return (
     <div className="min-h-screen" style={{ background: screenBackground }}>
@@ -129,7 +129,7 @@ function Register({
       <label className="space-y-2 block">
         <span className="text-sm uppercase tracking-[0.4em] text-white/60">Nom</span>
         <input
-          className="w-full rounded-3xl border border-white/30 bg-white/10 px-5 py-4 text-lg md:text-xl text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-sky-300"
+          className="w-full rounded-3xl border border-white/30 bg-white/10 px-5 py-4 text-lg md:text-xl text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-offset-green-400"
           type="text"
           onChange={(val) => setNickname(val.currentTarget.value)}
           value={nickname}
@@ -141,7 +141,7 @@ function Register({
       </label>
       <button
         disabled={sending}
-        className="tactile-button w-full bg-sky-400 text-black text-xl py-4 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="tactile-button w-full bg-green-600 text-black text-xl py-4 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {sending ? 'Enviant…' : 'Unir-me a la sala'}
       </button>
