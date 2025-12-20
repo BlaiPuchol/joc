@@ -431,8 +431,11 @@ export default function RoundController({
 
               {phase === 'voting' && (
                 <div className="space-y-8">
-                  <VotingLineupSummary teams={activeTeams} lineupByTeam={lineupByTeam} />
-                  <VotesPanel voteTotals={voteTotals} losingTeamIds={losingTeamIds} />
+                  <VotingDashboard
+                    voteTotals={voteTotals}
+                    lineupByTeam={lineupByTeam}
+                    losingTeamIds={losingTeamIds}
+                  />
                 </div>
               )}
 
