@@ -389,9 +389,6 @@ export default function RoundController({
                           Vots registrats
                         </dt>
                         <dd className="text-3xl font-bold">{votes.length}</dd>
-                        {pendingVotes > 0 && phase === 'voting' && (
-                          <p className="text-sm text-white/70">{pendingVotes} pendents</p>
-                        )}
                       </div>
                       <div>
                         <dt className="text-xs uppercase tracking-[0.5em] text-white/60">
@@ -408,16 +405,6 @@ export default function RoundController({
                         <dd className="text-3xl font-bold">{totalPlayers}</dd>
                       </div>
                     </dl>
-                    <div className="flex flex-col md:flex-row gap-4">
-                      {phase === 'voting' && (
-                        <button
-                          onClick={onLockVoting}
-                          className="tactile-button flex-1 bg-yellow-300 text-black text-xl py-5"
-                        >
-                          Tancar apostes
-                        </button>
-                      )}
-                    </div>
                   </div>
                 </div>
                 <div
@@ -428,16 +415,6 @@ export default function RoundController({
                   }}
                 ></div>
               </section>
-
-              {phase === 'voting' && (
-                <div className="space-y-8">
-                  <VotingDashboard
-                    voteTotals={voteTotals}
-                    lineupByTeam={lineupByTeam}
-                    losingTeamIds={losingTeamIds}
-                  />
-                </div>
-              )}
 
               {phase === 'action' && (
                 <OutcomeConfigurator
