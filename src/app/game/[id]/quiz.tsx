@@ -37,6 +37,7 @@ export default function Challenge({
   totalChallenges,
   onVote,
   onToggleLineup,
+  onUpdateNickname,
 }: {
   phase: Phase
   participant: Participant
@@ -51,10 +52,13 @@ export default function Challenge({
   totalChallenges: number
   onVote: (teamId: string) => void
   onToggleLineup: (teamId: string, participantId: string, shouldAdd: boolean) => void
+  onUpdateNickname: (newNickname: string) => void
 }) {
   const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [showTeams, setShowTeams] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [newName, setNewName] = useState(participant.nickname)
   const [history, setHistory] = useState<{ round: GameRound; challenge: GameChallenge | null; outcomes: RoundOutcome[] }[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
 
@@ -279,10 +283,66 @@ export default function Challenge({
       <main className="p-4 flex flex-col gap-6 text-white">
         {/* Phase: Lobby */}
         {phase === 'lobby' && (
-          <div className="text-center py-10 space-y-4">
-            <div className="text-4xl">⏳</div>
-            <h2 className="text-xl font-semibold">Preparant la partida...</h2>
-            <p className="text-white/60">Estigues atent a la pantalla principal.</p>
+          <div className="text-center py-10 space-y-6">
+            <div className="text-4xl animate-pulse">⏳</div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold">Preparant la partida...</h2>
+              <p className="text-white/60">Estigues atent a la pantalla principal.</p>
+            </div>
+            
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4 max-w-xs mx-auto">
+              {isEditingName ? (
+                <div className="flex flex-col gap-3">
+                  <input
+                    type="text"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    className="bg-black/30 border border-white/20 rounded px-3 py-2 text-center text-white focus:outline-none focus:border-emerald-400"
+                    placeholder="El teu nom"
+                    autoFocus
+                  />
+                  <div className="flex gap-2 justify-center">
+                    <button
+                      onClick={() => {
+                        if (newName.trim()) {
+                          onUpdateNickname(newName.trim())
+                          setIsEditingName(false)
+                        }
+                      }}
+                      className="bg-emerald-500/20 text-emerald-300 px-4 py-1 rounded text-sm font-medium hover:bg-emerald-500/30"
+                    >
+                      Guardar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setNewName(participant.nickname)
+                        setIsEditingName(false)
+                      }}
+                      className="bg-white/10 text-white/70 px-4 py-1 rounded text-sm font-medium hover:bg-white/20"
+                    >
+                      Cancel·lar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-sm text-white/50 uppercase tracking-wider">Jugant com a</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-xl font-bold">{participant.nickname}</span>
+                    <button
+                      onClick={() => {
+                        setNewName(participant.nickname)
+                        setIsEditingName(true)
+                      }}
+                      className="p-1 text-white/40 hover:text-white transition-colors"
+                      aria-label="Editar nom"
+                    >
+                      ✏️
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

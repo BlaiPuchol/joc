@@ -370,6 +370,21 @@ export default function Home({
     await fetchLineups(activeRound.id)
   }
 
+  const updateNickname = async (newNickname: string) => {
+    if (!participant) return
+    const { error } = await supabase
+      .from('participants')
+      .update({ nickname: newNickname })
+      .eq('id', participant.id)
+    
+    if (error) {
+      console.error(error.message)
+      alert(error.message)
+      return
+    }
+    setParticipant({ ...participant, nickname: newNickname })
+  }
+
   const currentPhase: GamePhase = (game?.phase as GamePhase) ?? 'lobby'
 
   return (
@@ -396,6 +411,7 @@ export default function Home({
           challenge={activeChallenge}
           totalChallenges={challenges.length}
           onToggleLineup={toggleLineupParticipant}
+          onUpdateNickname={updateNickname}
         />
       )}
 
