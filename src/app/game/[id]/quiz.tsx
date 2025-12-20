@@ -1,6 +1,6 @@
 import { TeamLeaderboard } from '@/components/team-leaderboard'
 import { useTeamScores } from '@/hooks/useTeamScores'
-import { GameChallenge, GameRound, GameTeam, Participant, RoundLineup, RoundOutcome, RoundVote } from '@/types/types'
+import { GameChallenge, GameRound, GameTeam, Participant, RoundLineup, RoundOutcome, RoundVote, supabase } from '@/types/types'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 const hexToRgba = (hex?: string | null, alpha = 1) => {
@@ -51,6 +51,11 @@ export default function Challenge({
   onToggleLineup: (teamId: string, participantId: string, shouldAdd: boolean) => void
 }) {
   const [showLeaderboard, setShowLeaderboard] = useState(false)
+  const [showTeams, setShowTeams] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
+  const [history, setHistory] = useState<{ round: GameRound; challenge: GameChallenge | null; outcomes: RoundOutcome[] }[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+
   const { scores, loading: scoresLoading, reload: reloadScores } = useTeamScores(round?.game_id ?? null)
 
   useEffect(() => {
@@ -58,6 +63,37 @@ export default function Challenge({
       reloadScores()
     }
   }, [showLeaderboard, reloadScores])
+
+  useEffect(() => {
+    if (showHistory && round?.game_id) {
+      const loadHistory = async () => {
+        setHistoryLoading(true)
+        const { data: roundsData } = await supabase
+          .from('game_rounds')
+          .select('*, game_challenges(*)')
+          .eq('game_id', round.game_id)
+          .lt('sequence', round.sequence)
+          .order('sequence', { ascending: false })
+
+        if (roundsData) {
+          const roundIds = roundsData.map(r => r.id)
+          const { data: outcomesData } = await supabase
+            .from('round_outcomes')
+            .select('*')
+            .in('round_id', roundIds)
+
+          const combined = roundsData.map(r => ({
+            round: r,
+            challenge: r.game_challenges as unknown as GameChallenge | null,
+            outcomes: (outcomesData ?? []).filter(o => o.round_id === r.id)
+          }))
+          setHistory(combined)
+        }
+        setHistoryLoading(false)
+      }
+      loadHistory()
+    }
+  }, [showHistory, round?.game_id, round?.sequence])
 
   const lineupByTeam = useMemo(() => {
     return teams.reduce<Record<string, Participant[]>>((acc, team) => {
@@ -149,7 +185,7 @@ export default function Challenge({
           Toca una targeta per a apostar.
         </p>
       </header>
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 gap-4">
         {teams.map((team) => {
           const isSelected = playerVoteTeamId === team.id
           return (
@@ -157,23 +193,24 @@ export default function Challenge({
               key={team.id}
               onClick={() => onVote(team.id)}
               disabled={phase !== 'voting'}
-              className={`relative overflow-hidden text-left text-white px-5 py-4 rounded-xl transition-all
+              className={`relative overflow-hidden text-left text-white px-6 py-8 rounded-2xl transition-all
                 ${phase !== 'voting' ? 'opacity-60' : 'active:scale-[0.98]'}
               `}
               style={{
                 background: `linear-gradient(145deg, ${hexToRgba(team.color_hex, 0.8)}, ${hexToRgba(team.color_hex, 0.5)})`,
-                boxShadow: isSelected ? `0 0 0 3px white` : undefined,
+                boxShadow: isSelected ? `0 0 0 4px white` : `0 10px 20px -5px ${hexToRgba(team.color_hex, 0.5)}`,
                 transform: isSelected ? 'scale(1.02)' : undefined
               }}
             >
               <div className="flex items-center justify-between relative z-10">
-                <span className="text-xl font-bold">{team.name}</span>
+                <span className="text-3xl font-black tracking-tight">{team.name}</span>
                 {isSelected && (
-                  <span className="bg-white text-black text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">
+                  <span className="bg-white text-black text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg">
                     Aposta
                   </span>
                 )}
               </div>
+              <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-white/20 rounded-full blur-2xl"></div>
             </button>
           )
         })}
@@ -188,7 +225,7 @@ export default function Challenge({
         <div className="flex items-center gap-3">
           {round && (
             <span className="text-xs font-bold uppercase tracking-wider bg-white/10 px-2 py-1 rounded">
-              Ronda {round.sequence}
+              Repte {round.sequence + 1}
             </span>
           )}
           {playerTeam && (
@@ -197,13 +234,29 @@ export default function Challenge({
             </span>
           )}
         </div>
-        <button 
-          onClick={() => setShowLeaderboard(true)}
-          className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-          aria-label="Veure classificació"
-        >
-          🏆
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setShowTeams(true)}
+            className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+            aria-label="Veure equips"
+          >
+            👥
+          </button>
+          <button 
+            onClick={() => setShowHistory(true)}
+            className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+            aria-label="Veure historial"
+          >
+            📜
+          </button>
+          <button 
+            onClick={() => setShowLeaderboard(true)}
+            className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+            aria-label="Veure classificació"
+          >
+            🏆
+          </button>
+        </div>
       </header>
 
       <main className="p-4 flex flex-col gap-6 text-white">
@@ -288,7 +341,9 @@ export default function Challenge({
               )}
             </div>
             <div className="text-center text-white/50 text-sm">
-              Mira la pantalla principal per a seguir l&apos;acció!
+              {lineups.some(l => l.participant_id === participant.id)
+                ? 'Has de participar! Bona sort en el repte!'
+                : 'Descansa en aquest repte i anima als teus companys!'}
             </div>
           </div>
         )}
@@ -338,7 +393,90 @@ export default function Challenge({
             {scoresLoading ? (
               <p className="text-center text-white/50 py-10">Carregant...</p>
             ) : (
-              <TeamLeaderboard scores={scores} highlightTeamId={participant.game_team_id} highlightLabel="Tu" />
+              <TeamLeaderboard scores={scores} highlightTeamId={participant.game_team_id} highlightLabel="El teu equip" />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Teams Modal */}
+      {showTeams && (
+        <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur flex flex-col">
+          <header className="flex items-center justify-between p-4 border-b border-white/10">
+            <h2 className="text-lg font-bold uppercase tracking-widest">Equips</h2>
+            <button 
+              onClick={() => setShowTeams(false)}
+              className="p-2 bg-white/10 rounded-full hover:bg-white/20"
+            >
+              ✕
+            </button>
+          </header>
+          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+            {teams.map(team => (
+              <div key={team.id} className="space-y-2">
+                <h3 className="text-xl font-bold" style={{ color: team.color_hex }}>{team.name}</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {membersByTeam[team.id]?.map(member => (
+                    <div key={member.id} className="bg-white/5 p-2 rounded text-sm">
+                      {member.nickname}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* History Modal */}
+      {showHistory && (
+        <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur flex flex-col">
+          <header className="flex items-center justify-between p-4 border-b border-white/10">
+            <h2 className="text-lg font-bold uppercase tracking-widest">Historial</h2>
+            <button 
+              onClick={() => setShowHistory(false)}
+              className="p-2 bg-white/10 rounded-full hover:bg-white/20"
+            >
+              ✕
+            </button>
+          </header>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {historyLoading ? (
+              <p className="text-center text-white/50 py-10">Carregant...</p>
+            ) : history.length === 0 ? (
+              <p className="text-center text-white/50 py-10">Encara no hi ha historial.</p>
+            ) : (
+              history.map((item) => (
+                <div key={item.round.id} className="bg-white/5 rounded-xl p-4 space-y-3 border border-white/10">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-xs uppercase tracking-wider text-white/50">Ronda {item.round.sequence + 1}</span>
+                      <h3 className="font-bold text-lg">{item.challenge?.title ?? 'Repte desconegut'}</h3>
+                    </div>
+                  </div>
+                  
+                  {item.outcomes.length > 0 ? (
+                    <div className="space-y-2">
+                      <p className="text-xs uppercase tracking-wider text-white/50">Resultats</p>
+                      {item.outcomes.map(outcome => {
+                        const team = teams.find(t => t.id === outcome.team_id)
+                        if (!team) return null
+                        return (
+                          <div key={outcome.id} className="flex items-center justify-between bg-black/20 p-2 rounded">
+                            <span style={{ color: team.color_hex }} className="font-medium">{team.name}</span>
+                            <div className="flex items-center gap-2">
+                              {outcome.is_loser && <span className="text-xs bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded">Perdedor</span>}
+                              <span className="font-mono font-bold">+{outcome.challenge_points} pts</span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-white/50 italic">Sense resultats registrats.</p>
+                  )}
+                </div>
+              ))
             )}
           </div>
         </div>
