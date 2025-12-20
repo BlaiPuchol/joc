@@ -224,8 +224,12 @@ export default function Challenge({
     <div className="min-h-screen pb-20" style={{ background: screenBackground }}>
       {/* Top Bar */}
       <header 
-        className="sticky top-0 z-30 shadow-xl transition-colors duration-500"
-        style={{ backgroundColor: playerTeam?.color_hex ?? '#0f172a' }}
+        className="sticky top-0 z-30 shadow-xl backdrop-blur-md border-b border-white/10 transition-all duration-500"
+        style={{ 
+          background: playerTeam 
+            ? `linear-gradient(135deg, ${hexToRgba(playerTeam.color_hex, 0.5)}, rgba(2, 6, 23, 0.95))` 
+            : '#0f172a' 
+        }}
       >
         <div className="px-5 py-4 flex flex-col gap-3">
           <div className="flex items-start justify-between">
