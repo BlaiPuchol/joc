@@ -39,7 +39,7 @@ export function TeamLeaderboard({
           return (
             <article
               key={score.team_id ?? index}
-              className={`flex items-center gap-4 rounded-2xl border px-4 py-3 ${
+              className={`flex items-center gap-3 md:gap-4 rounded-2xl border px-3 py-2 md:px-4 md:py-3 ${
                 isHighlighted
                   ? 'border-emerald-400/70 bg-emerald-400/10 shadow-[0_0_25px_rgba(16,185,129,0.25)]'
                   : index < 3
@@ -47,26 +47,26 @@ export function TeamLeaderboard({
                     : 'border-white/10 bg-white/5'
               }`}
             >
-              <div className={`text-5xl font-bold w-14 text-center flex justify-center ${index < 3 ? 'text-white' : 'text-white/60'}`}>
+              <div className={`text-2xl md:text-5xl font-bold w-8 md:w-14 text-center flex justify-center ${index < 3 ? 'text-white' : 'text-white/60'}`}>
                 {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
               </div>
-              <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
                 <span
-                  className="h-8 w-8 rounded-full border border-white/50"
+                  className="h-6 w-6 md:h-8 md:w-8 rounded-full border border-white/50"
                   style={{ backgroundColor: score.color_hex ?? '#475569' }}
                 ></span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-4xl font-semibold truncate">
+                  <p className="text-lg md:text-4xl font-semibold truncate">
                     {score.name ?? 'Equip desconegut'}
                   </p>
                   {isHighlighted && highlightLabel && (
-                    <p className="text-lg text-emerald-300">{highlightLabel}</p>
+                    <p className="text-sm md:text-lg text-emerald-300">{highlightLabel}</p>
                   )}
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-5xl font-bold leading-none">{total}</p>
-                <p className="text-2xl uppercase tracking-[0.3em] text-white/60">punts</p>
+                <p className="text-2xl md:text-5xl font-bold leading-none">{total}</p>
+                <p className="text-xs md:text-xl uppercase tracking-[0.3em] text-white/60">punts</p>
               </div>
             </article>
           )

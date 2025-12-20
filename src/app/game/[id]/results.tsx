@@ -22,6 +22,13 @@ export default function Results({
   const playerTeamId = participant.game_team_id ?? null
   const playerTeamName = scores.find((score) => score.team_id === playerTeamId)?.name
 
+  const maxScore = Math.max(...scores.map((s) => s.total_score ?? 0))
+  const isWinner =
+    playerTeamId &&
+    scores.some(
+      (s) => s.team_id === playerTeamId && (s.total_score ?? 0) === maxScore && maxScore > 0
+    )
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <div className="text-center pt-12 pb-6 px-4">
@@ -42,13 +49,11 @@ export default function Results({
               scores={scores}
               highlightTeamId={participant.game_team_id ?? null}
               highlightLabel="El teu equip"
-              title="Classificació final"
-              subtitle="Els punts combinen apostes encertades (3 punts) i els punts extra atorgats al final de cada repte."
             />
           )}
         </div>
       </div>
-      <Confetti width={width} height={height} recycle={false} />
+      {isWinner && <Confetti width={width} height={height} recycle={true} />}
     </div>
   )
 }

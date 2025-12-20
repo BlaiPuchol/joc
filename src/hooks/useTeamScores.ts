@@ -15,7 +15,10 @@ export function useTeamScores(gameId: string | null, options?: Options) {
       return
     }
 
-    setLoading(true)
+    if (scores.length === 0) {
+      setLoading(true)
+    }
+    
     const { data, error } = await supabase
       .from('team_scores')
       .select('*')

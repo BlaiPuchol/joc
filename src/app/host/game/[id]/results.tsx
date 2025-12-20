@@ -18,7 +18,7 @@ export default function Results({ gameId }: { gameId: string }) {
         <p className="text-sm uppercase tracking-[0.4em] text-white/50">Classificació final</p>
         <h1 className="text-4xl font-bold mt-3">Taula de lideratge</h1>
         <p className="mt-3 text-white/70">
-          Cada aposta encertada suma 3 punts al total del seu equip i pots afegir punts extres segons el resultat del repte.
+          Cada aposta encertada suma 3 punts al total del seu equip i es sumen els resultats dels reptes.
         </p>
       </div>
       <div className="flex justify-center px-4 pb-16">
@@ -34,7 +34,7 @@ export default function Results({ gameId }: { gameId: string }) {
           )}
         </div>
       </div>
-      <Confetti width={width} height={height} recycle={false} />
+      <Confetti width={width} height={height} recycle={true} />
     </div>
   )
 }
