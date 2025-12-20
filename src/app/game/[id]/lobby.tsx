@@ -125,11 +125,11 @@ function Register({
   const [sending, setSending] = useState(false)
 
   return (
-    <form onSubmit={(e) => onFormSubmit(e)} className="space-y-6 text-left">
+    <form onSubmit={(e) => onFormSubmit(e)} className="space-y-6 text-center">
       <label className="space-y-2 block">
         <span className="text-sm uppercase tracking-[0.4em] text-white/60">Nom</span>
         <input
-          className="w-full rounded-3xl border border-white/30 bg-white/10 px-5 py-4 text-lg md:text-xl text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-offset-green-400"
+          className="w-full rounded-3xl border border-white/30 bg-white/10 px-5 py-4 text-lg text-center md:text-xl text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-offset-green-400"
           type="text"
           onChange={(val) => setNickname(val.currentTarget.value)}
           value={nickname}
