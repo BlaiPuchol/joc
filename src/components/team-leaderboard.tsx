@@ -56,17 +56,17 @@ export function TeamLeaderboard({
                   style={{ backgroundColor: score.color_hex ?? '#475569' }}
                 ></span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-2xl font-semibold truncate">
+                  <p className="text-4xl font-semibold truncate">
                     {score.name ?? 'Equip desconegut'}
                   </p>
                   {isHighlighted && highlightLabel && (
-                    <p className="text-sm text-emerald-300">{highlightLabel}</p>
+                    <p className="text-lg text-emerald-300">{highlightLabel}</p>
                   )}
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold leading-none">{total}</p>
-                <p className="text-xs uppercase tracking-[0.3em] text-white/60">punts</p>
+                <p className="text-5xl font-bold leading-none">{total}</p>
+                <p className="text-2xl uppercase tracking-[0.3em] text-white/60">punts</p>
               </div>
             </article>
           )
