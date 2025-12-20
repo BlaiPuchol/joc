@@ -141,7 +141,7 @@ function Register({
       </label>
       <button
         disabled={sending}
-        className="tactile-button w-full bg-green-600 text-black text-xl py-4 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="tactile-button w-full bg-green-400 text-black text-xl py-4 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {sending ? 'Enviant…' : 'Unir-me a la sala'}
       </button>
