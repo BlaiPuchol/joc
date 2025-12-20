@@ -47,16 +47,16 @@ export function TeamLeaderboard({
                     : 'border-white/10 bg-white/5'
               }`}
             >
-              <div className={`text-3xl font-bold w-14 text-center flex justify-center ${index < 3 ? 'text-white' : 'text-white/60'}`}>
+              <div className={`text-5xl font-bold w-14 text-center flex justify-center ${index < 3 ? 'text-white' : 'text-white/60'}`}>
                 {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
               </div>
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <span
-                  className="h-4 w-4 rounded-full border border-white/50"
+                  className="h-8 w-8 rounded-full border border-white/50"
                   style={{ backgroundColor: score.color_hex ?? '#475569' }}
                 ></span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-lg font-semibold truncate">
+                  <p className="text-2xl font-semibold truncate">
                     {score.name ?? 'Equip desconegut'}
                   </p>
                   {isHighlighted && highlightLabel && (

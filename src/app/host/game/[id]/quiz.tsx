@@ -575,11 +575,11 @@ function LineupGrid({
             <header className="flex items-center justify-between shrink-0">
               <div>
                 <p className="text-xs uppercase tracking-[0.5em] text-white/60">Equip</p>
-                <h3 className="text-2xl font-semibold" style={{ color: team.color_hex }}>
+                <h3 className="text-4xl font-semibold" style={{ color: team.color_hex }}>
                   {team.name}
                 </h3>
               </div>
-              <span className="text-white text-lg font-semibold">
+              <span className="text-white text-xl font-semibold">
                 {selected.size}/{limit || '∞'}
               </span>
             </header>
@@ -592,7 +592,7 @@ function LineupGrid({
                 return (
                   <div
                     key={player.id}
-                    className={`px-4 py-2 rounded-full border text-base font-semibold tracking-tight shadow-lg transition-all ${
+                    className={`px-4 py-2 rounded-full border text-2xl font-semibold tracking-tight shadow-lg transition-all ${
                       isPlaying
                         ? 'border-emerald-400 bg-emerald-400/20 text-emerald-100'
                         : 'border-white/15 bg-white/5 text-white/70'
@@ -626,7 +626,7 @@ function ResolutionDashboard({
   losingTeamIds: Set<string>
 }) {
   return (
-    <div className="grid grid-cols-1 gap-6 content-start">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full content-start">
       {perTeamScores.map((score) => {
         const votes = voteTotals.find((v) => v.team.id === score.team.id)
         const percentage = votes?.percentage ?? 0
@@ -637,7 +637,7 @@ function ResolutionDashboard({
         return (
           <article
             key={score.team.id}
-            className="glow-panel p-6 flex flex-col gap-6"
+            className="glow-panel p-6 flex flex-col gap-5"
             style={{
               borderColor: hexToRgba(score.team.color_hex, 0.35),
               background: `linear-gradient(145deg, ${hexToRgba(
@@ -646,66 +646,63 @@ function ResolutionDashboard({
               )}, rgba(2, 6, 23, 0.95))`,
             }}
           >
-            <div className="flex items-center justify-between">
+            <header className="flex items-start justify-between shrink-0">
               <div>
-                <h3 className="text-2xl font-bold" style={{ color: score.team.color_hex }}>
-                  {score.team.name}
-                </h3>
-                <div className="flex items-center gap-3 mt-1">
-                  {isLoser && (
-                    <span className="text-xs uppercase tracking-widest bg-rose-500/20 text-rose-200 px-2 py-1 rounded">
-                      Perdedor
-                    </span>
-                  )}
-                  <span className="text-sm text-white/60">
-                    {count} vots ({percentage}%)
-                  </span>
+                <p className="text-xs uppercase tracking-[0.4em] text-white/70">{score.team.name}</p>
+                <div className="flex items-baseline gap-2 mt-1">
+                  <span className="text-5xl font-black">{percentage}%</span>
+                  <span className="text-white/60 text-sm">({count} vots)</span>
                 </div>
               </div>
               <div className="text-right">
                 <span className="text-4xl font-black text-emerald-300">+{score.total}</span>
-                <p className="text-xs uppercase tracking-widest text-white/50">Punts totals</p>
+                {isLoser && (
+                  <div className="mt-1">
+                    <span className="text-xs uppercase tracking-widest bg-rose-500/20 text-rose-200 px-2 py-1 rounded">
+                      Perdedor
+                    </span>
+                  </div>
+                )}
+              </div>
+            </header>
+
+            <div className="space-y-2 shrink-0">
+              <div className="bg-white/20 rounded-full h-4 overflow-hidden">
+                <div
+                  className="h-full bg-white transition-all duration-1000 ease-out"
+                  style={{ width: `${percentage}%` }}
+                />
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <div className="bg-white/10 rounded-full h-2 overflow-hidden">
-                  <div
-                    className="h-full bg-white transition-all duration-1000"
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {voters.length === 0 && (
-                    <span className="text-white/40 text-sm italic">Sense vots</span>
-                  )}
-                  {voters.map((v) => (
-                    <span
-                      key={v.id}
-                      className="px-2 py-1 bg-white/10 rounded text-sm text-white/80"
-                    >
-                      {v.participant.nickname}
-                    </span>
-                  ))}
-                </div>
+            <dl className="grid grid-cols-2 gap-4 text-sm bg-black/20 p-3 rounded-xl shrink-0">
+              <div>
+                <dt className="text-white/60 text-xs uppercase tracking-wider">Apostes</dt>
+                <dd className="font-mono text-lg">+{score.votePoints}</dd>
               </div>
+              <div className="text-right">
+                <dt className="text-white/60 text-xs uppercase tracking-wider">Repte</dt>
+                <dd className="font-mono text-lg">+{score.challengePoints}</dd>
+              </div>
+            </dl>
 
-              <dl className="space-y-2 text-sm bg-black/20 p-4 rounded-xl">
-                <div className="flex justify-between">
-                  <dt className="text-white/60">Apostes encertades ({score.correctVotes})</dt>
-                  <dd className="font-mono">+{score.votePoints}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-white/60">Resultat del repte</dt>
-                  <dd className="font-mono">+{score.challengePoints}</dd>
-                </div>
-                <div className="border-t border-white/10 my-2 pt-2 flex justify-between font-bold text-base">
-                  <dt>Total</dt>
-                  <dd>+{score.total}</dd>
-                </div>
-              </dl>
+            <div className="flex-1 min-h-0 overflow-y-auto pr-2 space-y-2">
+              <p className="text-xs uppercase tracking-[0.5em] text-white/60">
+                Apostes ({score.correctVotes} encerts)
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {voters.length === 0 && (
+                  <span className="text-white/40 text-sm italic">Sense vots</span>
+                )}
+                {voters.map((v) => (
+                  <span
+                    key={v.id}
+                    className="px-2 py-1 bg-white/10 rounded text-sm text-white/80"
+                  >
+                    {v.participant.nickname}
+                  </span>
+                ))}
+              </div>
             </div>
           </article>
         )
@@ -882,7 +879,7 @@ function RankingModal({
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm uppercase tracking-[0.4em] text-white/50">Classificació global</p>
-            <h2 className="text-4xl font-black mt-2">Rànquing d&apos;equips</h2>
+            <h2 className="text-6xl font-black mt-2">Rànquing d&apos;equips</h2>
           </div>
           <button
             onClick={onClose}
