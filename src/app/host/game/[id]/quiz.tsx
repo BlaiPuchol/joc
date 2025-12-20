@@ -363,99 +363,77 @@ export default function RoundController({
             round={round}
           />
         ) : (
-          <div className="h-full w-full overflow-y-auto pr-2">
-            <div className="screen-frame space-y-10 pb-10 mx-auto">
-              <section
-                className="glow-panel relative overflow-hidden p-8 md:p-12"
-                style={{ background: heroBackground }}
-              >
-                <div className="relative z-10 grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-                  <div className="space-y-8">
-                    <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.5em] text-white/70">
-                      <span className="px-4 py-2 rounded-full bg-white/15">
-                        Repte {round.sequence + 1}
-                      </span>
-                      <span className="px-4 py-2 rounded-full bg-white/10">
-                        {phaseLabels[phase] ?? phase}
-                      </span>
-                      <span className="px-4 py-2 rounded-full bg-white/5">
-                        {votes.length} / {totalPlayers} vots
-                      </span>
-                    </div>
-                    <div className="space-y-4">
-                      <h1 className="text-4xl md:text-6xl font-black leading-tight">
-                        {challenge?.title ?? 'Repte en directe'}
-                      </h1>
-                      {challenge?.description && (
-                        <p className="text-lg md:text-2xl text-white/90 max-w-4xl">
-                          {challenge.description}
-                        </p>
-                      )}
-                    </div>
-                    <dl className="grid gap-6 sm:grid-cols-3 text-lg">
-                      <div>
-                        <dt className="text-xs uppercase tracking-[0.5em] text-white/60">
-                          Vots registrats
-                        </dt>
-                        <dd className="text-3xl font-bold">{votes.length}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-xs uppercase tracking-[0.5em] text-white/60">
-                          Equips llestos
-                        </dt>
-                        <dd className="text-3xl font-bold">
-                          {readyTeams.length} / {activeTeams.length}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-xs uppercase tracking-[0.5em] text-white/60">
-                          Jugadors actius
-                        </dt>
-                        <dd className="text-3xl font-bold">{totalPlayers}</dd>
-                      </div>
-                    </dl>
-                  </div>
+          <div className="flex flex-col lg:flex-row gap-6 h-full w-full">
+            <section
+              className="glow-panel lg:w-1/3 flex flex-col gap-6 p-8 shrink-0"
+              style={{ background: heroBackground }}
+            >
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.5em] text-white/70">
+                  <span className="px-3 py-1 rounded-full bg-white/15">
+                    Repte {round.sequence + 1}
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-white/10">Resultats</span>
                 </div>
-                <div
-                  className="absolute inset-0 opacity-30 pointer-events-none"
-                  style={{
-                    background:
-                      'radial-gradient(circle at top right, rgba(255,255,255,0.5), transparent 55%)',
-                  }}
-                ></div>
-              </section>
+                <h2 className="text-5xl font-black leading-tight">
+                  {challenge?.title ?? 'Repte en directe'}
+                </h2>
+                {challenge?.description && (
+                  <p className="text-lg text-white/80">{challenge.description}</p>
+                )}
+              </div>
 
-              {phase === 'resolution' && (
-                <section className="space-y-8">
-                  <VotesPanel
-                    voteTotals={voteTotals}
-                    revealNames
-                    losingTeamIds={losingTeamIds}
-                  />
-                  <Scoreboard perTeamScores={perTeamScores} />
-                  <div className="flex flex-col md:flex-row gap-4 flex-wrap">
-                    <button
-                      onClick={onNextRound}
-                      className="tactile-button flex-1 bg-blue-500 py-5 text-xl"
-                    >
-                      Següent repte
-                    </button>
-                    <button
-                      onClick={() => setShowRanking(true)}
-                      className="tactile-button flex-1 bg-white/15 border border-white/30 py-5 text-xl"
-                    >
-                      Veure classificació
-                    </button>
-                    <button
-                      onClick={onEndGame}
-                      className="tactile-button flex-1 bg-rose-500/30 border border-rose-200/60 py-5 text-xl text-rose-50"
-                    >
-                      Finalitzar partida
-                    </button>
+              <div className="space-y-4 flex-1">
+                <dl className="grid gap-4 text-lg">
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <dt className="text-xs uppercase tracking-[0.5em] text-white/60">
+                      Vots totals
+                    </dt>
+                    <dd className="text-3xl font-bold">{votes.length}</dd>
                   </div>
-                </section>
-              )}
-            </div>
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <dt className="text-xs uppercase tracking-[0.5em] text-white/60">
+                      Punts repartits
+                    </dt>
+                    <dd className="text-3xl font-bold text-emerald-300">
+                      +
+                      {perTeamScores.reduce((acc, s) => acc + s.total, 0).toLocaleString()}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div className="space-y-3 mt-auto">
+                <button
+                  onClick={onNextRound}
+                  className="tactile-button w-full bg-blue-500 text-white text-xl py-5"
+                >
+                  Següent repte
+                </button>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setShowRanking(true)}
+                    className="tactile-button bg-white/15 border border-white/30 py-4 text-lg"
+                  >
+                    Classificació
+                  </button>
+                  <button
+                    onClick={onEndGame}
+                    className="tactile-button bg-rose-500/20 border border-rose-500/50 text-rose-200 py-4 text-lg"
+                  >
+                    Finalitzar
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <section className="flex-1 min-h-0 overflow-y-auto rounded-3xl">
+              <ResolutionDashboard
+                perTeamScores={perTeamScores}
+                voteTotals={voteTotals}
+                losingTeamIds={losingTeamIds}
+              />
+            </section>
           </div>
         )}
 
@@ -632,61 +610,10 @@ function LineupGrid({
   )
 }
 
-function VotesPanel({
-  voteTotals,
-  revealNames = false,
-  losingTeamIds = new Set<string>(),
-}: {
-  voteTotals: { team: GameTeam; count: number; percentage: number; voters: RoundVote[] }[]
-  revealNames?: boolean
-  losingTeamIds?: Set<string>
-}) {
-  return (
-    <section className="game-grid grid-cols-1 md:grid-cols-2">
-      {voteTotals.map(({ team, count, percentage, voters }) => (
-        <article
-          key={team.id}
-          className="glow-panel p-6 md:p-7 space-y-4"
-          style={{
-            borderColor: hexToRgba(team.color_hex, 0.35),
-            background: `linear-gradient(145deg, ${hexToRgba(team.color_hex, 0.35)}, rgba(2, 6, 23, 0.95))`,
-          }}
-        >
-          <header className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.4em] text-white/70">{team.name}</p>
-              <p className="text-4xl font-black">{percentage}%</p>
-            </div>
-            {losingTeamIds.has(team.id) && (
-              <span className="px-4 py-2 rounded-full bg-white/20 text-xs uppercase tracking-[0.4em]">
-                Perdedor
-              </span>
-            )}
-          </header>
-          <div className="bg-white/25 rounded-full h-4 overflow-hidden">
-            <div className="h-full rounded-full" style={{ width: `${percentage}%`, backgroundColor: '#fff' }}></div>
-          </div>
-          <p className="text-white/80 text-lg">
-            {count} {count === 1 ? 'vot registrat' : 'vots registrats'}
-          </p>
-          {revealNames && (
-            <div className="space-y-2 max-h-40 overflow-y-auto pr-2 text-sm">
-              {voters.length === 0 && <p className="text-white/70">Sense apostes en este equip.</p>}
-              {voters.map((vote) => (
-                <div key={vote.id} className="bg-white/15 rounded-2xl px-3 py-2">
-                  {vote.participant.nickname}
-                </div>
-              ))}
-            </div>
-          )}
-        </article>
-      ))}
-    </section>
-  )
-}
-
-function Scoreboard({
+function ResolutionDashboard({
   perTeamScores,
+  voteTotals,
+  losingTeamIds,
 }: {
   perTeamScores: {
     team: GameTeam
@@ -695,38 +622,94 @@ function Scoreboard({
     challengePoints: number
     total: number
   }[]
+  voteTotals: { team: GameTeam; count: number; percentage: number; voters: RoundVote[] }[]
+  losingTeamIds: Set<string>
 }) {
   return (
-    <div className="game-grid md:grid-cols-2">
-      {perTeamScores.map(({ team, correctVotes, votePoints, challengePoints, total }) => (
-        <article
-          key={team.id}
-          className="glow-panel p-6 space-y-4"
-          style={{
-            borderColor: hexToRgba(team.color_hex, 0.35),
-            background: `linear-gradient(140deg, ${hexToRgba(team.color_hex, 0.35)}, rgba(2,6,23,0.95))`,
-          }}
-        >
-          <header className="flex items-center justify-between">
-            <h3 className="text-2xl font-bold" style={{ color: team.color_hex }}>
-              {team.name}
-            </h3>
-            <span className="text-4xl font-black text-emerald-200">+{total}</span>
-          </header>
-          <dl className="space-y-3 text-lg">
+    <div className="grid grid-cols-1 gap-6 content-start">
+      {perTeamScores.map((score) => {
+        const votes = voteTotals.find((v) => v.team.id === score.team.id)
+        const percentage = votes?.percentage ?? 0
+        const count = votes?.count ?? 0
+        const voters = votes?.voters ?? []
+        const isLoser = losingTeamIds.has(score.team.id)
+
+        return (
+          <article
+            key={score.team.id}
+            className="glow-panel p-6 flex flex-col gap-6"
+            style={{
+              borderColor: hexToRgba(score.team.color_hex, 0.35),
+              background: `linear-gradient(145deg, ${hexToRgba(
+                score.team.color_hex,
+                0.2
+              )}, rgba(2, 6, 23, 0.95))`,
+            }}
+          >
             <div className="flex items-center justify-between">
-              <dt className="text-white/70">Apostes encertades</dt>
-              <dd className="font-semibold">
-                +{votePoints} pts <span className="text-white/60">({correctVotes})</span>
-              </dd>
+              <div>
+                <h3 className="text-2xl font-bold" style={{ color: score.team.color_hex }}>
+                  {score.team.name}
+                </h3>
+                <div className="flex items-center gap-3 mt-1">
+                  {isLoser && (
+                    <span className="text-xs uppercase tracking-widest bg-rose-500/20 text-rose-200 px-2 py-1 rounded">
+                      Perdedor
+                    </span>
+                  )}
+                  <span className="text-sm text-white/60">
+                    {count} vots ({percentage}%)
+                  </span>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-4xl font-black text-emerald-300">+{score.total}</span>
+                <p className="text-xs uppercase tracking-widest text-white/50">Punts totals</p>
+              </div>
             </div>
-            <div className="flex items-center justify-between">
-              <dt className="text-white/70">Punts del repte</dt>
-              <dd className="font-semibold">+{challengePoints} pts</dd>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <div className="bg-white/10 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-full bg-white transition-all duration-1000"
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {voters.length === 0 && (
+                    <span className="text-white/40 text-sm italic">Sense vots</span>
+                  )}
+                  {voters.map((v) => (
+                    <span
+                      key={v.id}
+                      className="px-2 py-1 bg-white/10 rounded text-sm text-white/80"
+                    >
+                      {v.participant.nickname}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <dl className="space-y-2 text-sm bg-black/20 p-4 rounded-xl">
+                <div className="flex justify-between">
+                  <dt className="text-white/60">Apostes encertades ({score.correctVotes})</dt>
+                  <dd className="font-mono">+{score.votePoints}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-white/60">Resultat del repte</dt>
+                  <dd className="font-mono">+{score.challengePoints}</dd>
+                </div>
+                <div className="border-t border-white/10 my-2 pt-2 flex justify-between font-bold text-base">
+                  <dt>Total</dt>
+                  <dd>+{score.total}</dd>
+                </div>
+              </dl>
             </div>
-          </dl>
-        </article>
-      ))}
+          </article>
+        )
+      })}
     </div>
   )
 }
@@ -895,11 +878,11 @@ function RankingModal({
 }) {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur flex items-center justify-center p-4 z-50">
-      <div className="w-full max-w-3xl bg-slate-950 border border-white/10 rounded-3xl p-6 space-y-6 shadow-2xl">
+      <div className="w-full max-w-5xl bg-slate-950 border border-white/10 rounded-3xl p-8 space-y-8 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm uppercase tracking-[0.4em] text-white/50">Classificació global</p>
-            <h2 className="text-3xl font-semibold mt-2">Rànquing d&apos;equips</h2>
+            <h2 className="text-4xl font-black mt-2">Rànquing d&apos;equips</h2>
           </div>
           <button
             onClick={onClose}
@@ -911,7 +894,7 @@ function RankingModal({
         {loading ? (
           <p className="text-center text-white/70 py-10">Actualitzant classificació…</p>
         ) : (
-          <TeamLeaderboard scores={scores} dense />
+          <TeamLeaderboard scores={scores} dense={false} />
         )}
       </div>
     </div>

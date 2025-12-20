@@ -47,8 +47,8 @@ export function TeamLeaderboard({
                     : 'border-white/10 bg-white/5'
               }`}
             >
-              <div className={`text-3xl font-bold w-12 text-center ${index < 3 ? 'text-white' : 'text-white/60'}`}>
-                {index + 1}
+              <div className={`text-3xl font-bold w-14 text-center flex justify-center ${index < 3 ? 'text-white' : 'text-white/60'}`}>
+                {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
               </div>
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <span
