@@ -490,6 +490,7 @@ export default function HostGame({
   }
 
   const phase: HostPhase = (game?.phase as HostPhase) ?? 'lobby'
+  const isLastRound = (game?.current_round_sequence ?? 0) >= sortedChallenges.length - 1
 
   return (
     <main className="bg-slate-900 min-h-screen text-white">
@@ -524,6 +525,7 @@ export default function HostGame({
           onFinalizeResults={finalizeRoundResults}
           onNextRound={nextRound}
           onEndGame={endGame}
+          isLastRound={isLastRound}
         />
       )}
 

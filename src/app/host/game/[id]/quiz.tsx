@@ -43,6 +43,7 @@ type Props = {
   onFinalizeResults: () => void
   onNextRound: () => void
   onEndGame: () => void
+  isLastRound: boolean
 }
 
 export default function RoundController({
@@ -61,6 +62,7 @@ export default function RoundController({
   onFinalizeResults,
   onNextRound,
   onEndGame,
+  isLastRound,
 }: Props) {
   const [showRanking, setShowRanking] = useState(false)
   const [viewMode, setViewMode] = useState<'intro' | 'selection'>('intro')
@@ -213,7 +215,7 @@ export default function RoundController({
                 <p className="text-sm uppercase tracking-[0.5em] text-white/60">
                   Repte {round.sequence + 1}
                 </p>
-                <h1 className="text-5xl md:text-7xl font-black leading-tight">
+                <h1 className="text-6xl md:text-7xl font-black leading-tight">
                   {challenge?.title ?? 'Repte en directe'}
                 </h1>
                 {challenge?.description && (
@@ -242,11 +244,11 @@ export default function RoundController({
                     </span>
                     <span className="px-3 py-1 rounded-full bg-white/10">Selecció</span>
                   </div>
-                  <h2 className="text-5xl font-black leading-tight">
+                  <h2 className="text-6xl font-black leading-tight">
                     {challenge?.title ?? 'Repte en directe'}
                   </h2>
                   {challenge?.description && (
-                    <p className="text-lg text-white/80">{challenge.description}</p>
+                    <p className="text-2xl text-white/80">{challenge.description}</p>
                   )}
                 </div>
 
@@ -309,11 +311,11 @@ export default function RoundController({
                   </span>
                   <span className="px-3 py-1 rounded-full bg-white/10">Apostes</span>
                 </div>
-                <h2 className="text-5xl font-black leading-tight">
+                <h2 className="text-6xl font-black leading-tight">
                   {challenge?.title ?? 'Repte en directe'}
                 </h2>
                 {challenge?.description && (
-                  <p className="text-lg text-white/80">{challenge.description}</p>
+                  <p className="text-2xl text-white/80">{challenge.description}</p>
                 )}
               </div>
 
@@ -375,11 +377,11 @@ export default function RoundController({
                   </span>
                   <span className="px-3 py-1 rounded-full bg-white/10">Resultats</span>
                 </div>
-                <h2 className="text-5xl font-black leading-tight">
+                <h2 className="text-6xl font-black leading-tight">
                   {challenge?.title ?? 'Repte en directe'}
                 </h2>
                 {challenge?.description && (
-                  <p className="text-lg text-white/80">{challenge.description}</p>
+                  <p className="text-2xl text-white/80">{challenge.description}</p>
                 )}
               </div>
 
@@ -404,12 +406,14 @@ export default function RoundController({
               </div>
 
               <div className="space-y-3 mt-auto">
-                <button
-                  onClick={onNextRound}
-                  className="tactile-button w-full bg-blue-500 text-white text-xl py-5"
-                >
-                  Següent repte
-                </button>
+                {!isLastRound && (
+                  <button
+                    onClick={onNextRound}
+                    className="tactile-button w-full bg-blue-500 text-white text-xl py-5"
+                  >
+                    Següent repte
+                  </button>
+                )}
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => setShowRanking(true)}
@@ -759,11 +763,11 @@ function OutcomeConfigurator({
             </span>
             <span className="px-3 py-1 rounded-full bg-white/10">En marxa</span>
           </div>
-          <h2 className="text-5xl font-black leading-tight">
+          <h2 className="text-6xl font-black leading-tight">
             {challenge?.title ?? 'Repte en directe'}
           </h2>
           {challenge?.description && (
-            <p className="text-lg text-white/80">{challenge.description}</p>
+            <p className="text-2xl text-white/80">{challenge.description}</p>
           )}
         </div>
 
