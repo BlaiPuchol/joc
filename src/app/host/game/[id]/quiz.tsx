@@ -805,17 +805,17 @@ function OutcomeConfigurator({
           )}
         </div>
 
-        <div className="space-y-4 flex-1">
-          <div className="bg-white/5 rounded-xl p-6 space-y-4">
-            <h3 className="text-xl font-semibold">Instruccions</h3>
-            <p className="text-white/80 leading-relaxed">
-              Marca els equips que han perdut el repte. Cada aposta encertada sumarà{' '}
-              <span className="text-emerald-300 font-bold">
-                +{VOTE_REWARD_PER_CORRECT} punts
-              </span>
-              . Assigna també els punts obtinguts en la prova.
-            </p>
-          </div>
+        <div className="space-y-4 flex-1 min-h-0 overflow-y-auto">
+          {challenge?.rules ? (
+            <div className="bg-white/5 rounded-xl p-6 space-y-4 border border-white/10">
+              <h3 className="text-sm uppercase tracking-[0.3em] text-emerald-400 font-bold">Regles</h3>
+              <FormattedText text={challenge.rules} className="text-white/90 text-lg leading-relaxed" />
+            </div>
+          ) : (
+             <div className="bg-white/5 rounded-xl p-6 space-y-4 opacity-50">
+              <p className="text-white/60 italic">No hi ha regles definides per a aquest repte.</p>
+            </div>
+          )}
         </div>
 
         <div className="space-y-3 mt-auto">
