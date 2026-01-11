@@ -304,28 +304,23 @@ export default function TeamBuilder({
 
       {isRandomizing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-24 p-6 w-full max-w-7xl">
-            <div className="flex-1 space-y-4 animate-in fade-in slide-in-from-left duration-500 text-center md:text-right flex flex-col items-center md:items-end">
+          <div className="flex flex-col items-center gap-12 text-center p-6 w-full max-w-4xl">
+            <div className="space-y-4 animate-in fade-in zoom-in duration-500">
               <p className="text-white/60 text-lg uppercase tracking-widest">Assignant</p>
-              <h2 className="text-5xl md:text-8xl font-bold bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent transform transition-all break-words max-w-full">
+              <h2 className="text-6xl md:text-8xl font-bold bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent transform transition-all">
                 {currentInfo?.name}
               </h2>
-              {queue.length > 1 && (
-                <p className="text-white/40 animate-pulse text-lg pt-4">
-                  {queue.length - 1} jugadors restants...
-                </p>
-              )}
             </div>
 
-            <div className="relative scale-90 md:scale-125 flex-shrink-0">
-              {/* Pointer - Left side pointing Right */} 
-              <div className="absolute top-1/2 -left-10 -translate-y-1/2 z-10 text-emerald-400 text-5xl drop-shadow-[0_0_15px_rgba(52,211,153,0.5)] rotate-[-90deg]">
+            <div className="relative scale-125 md:scale-150 py-10">
+              {/* Pointer */}
+              <div className="absolute top-1/2 -left-12 -translate-y-1/2 z-10 text-emerald-400 text-5xl drop-shadow-[0_0_15px_rgba(52,211,153,0.5)] rotate-[-90deg]">
                 ▼
               </div>
 
               {/* Wheel */}
               <div
-                className="w-64 h-64 md:w-80 md:h-80 rounded-full border-4 border-white/10 shadow-2xl overflow-hidden relative bg-black"
+                className="w-64 h-64 md:w-80 md:h-80 rounded-full border-4 border-white/10 shadow-2xl overflow-hidden relative"
                 style={{
                   transform: `rotate(${rotation}deg)`,
                   transition: 'transform 3s cubic-bezier(0.25, 1, 0.5, 1)',
@@ -346,9 +341,12 @@ export default function TeamBuilder({
                 />
               </div>
             </div>
-            
-            {/* Spacer for desktop balance */}
-            <div className="hidden md:block flex-1" />
+
+            {queue.length > 1 && (
+              <p className="text-white/40 animate-pulse text-lg mt-8">
+                {queue.length - 1} jugadors restants...
+              </p>
+            )}
           </div>
         </div>
       )}
