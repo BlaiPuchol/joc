@@ -31,6 +31,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
   const [savingSettings, setSavingSettings] = useState(false)
   const [resettingLobby, setResettingLobby] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [expandedRules, setExpandedRules] = useState<Record<string, boolean>>({})
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -489,6 +490,31 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                     }
                     onBlur={(event) => updateChallenge(challenge.id, { description: event.target.value })}
                   />
+
+                  <div>
+                    <button
+                      onClick={() => setExpandedRules((prev) => ({ ...prev, [challenge.id]: !prev[challenge.id] }))}
+                      className="text-xs font-semibold text-emerald-300 hover:text-emerald-200 flex items-center gap-1 mb-2"
+                    >
+                      {expandedRules[challenge.id] ? '▼ Amagar regles' : '▶ Editar regles de la prova'}
+                    </button>
+                    {expandedRules[challenge.id] && (
+                      <textarea
+                        className="w-full bg-black/30 border border-emerald-400/30 rounded-2xl p-3 text-sm min-h-[150px] font-mono text-white/90 focus:outline-none focus:border-emerald-400/60 transition"
+                        value={challenge.rules ?? ''}
+                        placeholder={`Regles detallades (Markdown suportat):\n- Llista de normes\n- **Negreta**\n1. Passos numerats`}
+                        onChange={(event) =>
+                          setChallenges((prev) =>
+                            prev.map((item) =>
+                              item.id === challenge.id ? { ...item, rules: event.target.value } : item
+                            )
+                          )
+                        }
+                        onBlur={(event) => updateChallenge(challenge.id, { rules: event.target.value })}
+                      />
+                    )}
+                  </div>
+
                   <div className="flex flex-wrap items-center gap-3 text-sm">
                     <label className="uppercase tracking-[0.3em] text-white/50">Jugadors / equip</label>
                     <select

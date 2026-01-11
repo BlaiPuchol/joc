@@ -22,7 +22,9 @@ export type RoundVote = Database['public']['Tables']['round_votes']['Row'] & {
 
 export type Game = Database['public']['Tables']['games']['Row']
 
-export type GameChallenge = Database['public']['Tables']['game_challenges']['Row']
+export type GameChallenge = Database['public']['Tables']['game_challenges']['Row'] & {
+  rules?: string | null
+}
 
 export type RoundLineup = Database['public']['Tables']['round_lineups']['Row']
 

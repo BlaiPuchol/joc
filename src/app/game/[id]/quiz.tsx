@@ -1,4 +1,5 @@
 import { TeamLeaderboard } from '@/components/team-leaderboard'
+import { FormattedText } from '@/components/formatted-text'
 import { useTeamScores } from '@/hooks/useTeamScores'
 import { GameChallenge, GameRound, GameTeam, Participant, RoundLineup, RoundOutcome, RoundVote, supabase } from '@/types/types'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -422,6 +423,13 @@ export default function Challenge({
                 ? 'Has de participar! Bona sort en el repte!'
                 : 'Descansa en aquest repte i anima als teus companys!'}
             </div>
+            
+            {challenge?.rules && (
+              <div className="bg-slate-900/50 rounded-xl p-5 border border-white/10 text-left">
+                <p className="text-xs uppercase tracking-[0.25em] text-white/40 mb-3 font-semibold">Regles</p>
+                <FormattedText text={challenge.rules} className="text-white/80" />
+              </div>
+            )}
           </div>
         )}
 

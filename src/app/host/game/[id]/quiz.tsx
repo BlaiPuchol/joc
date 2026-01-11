@@ -1,5 +1,6 @@
 import { VOTE_REWARD_PER_CORRECT } from '@/constants'
 import { TeamLeaderboard } from '@/components/team-leaderboard'
+import { FormattedText } from '@/components/formatted-text'
 import { useTeamScores } from '@/hooks/useTeamScores'
 import {
   GameChallenge,
@@ -223,6 +224,12 @@ export default function RoundController({
                   <p className="text-2xl md:text-3xl text-white/90 leading-relaxed">
                     {challenge.description}
                   </p>
+                )}
+                {challenge?.rules && (
+                  <div className="bg-white/5 rounded-2xl p-6 text-left border border-white/10 w-full">
+                    <p className="text-sm uppercase tracking-[0.3em] text-emerald-400 mb-4 font-bold">Regles</p>
+                    <FormattedText text={challenge.rules} className="text-xl md:text-2xl text-white/80" />
+                  </div>
                 )}
               </div>
               <button
