@@ -245,7 +245,7 @@ export default function RoundController({
                 className="glow-panel lg:w-1/3 flex flex-col gap-6 p-8 shrink-0"
                 style={{ background: heroBackground }}
               >
-                <div className="space-y-4">
+                <div className="space-y-4 shrink-0">
                   <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.5em] text-white/70">
                     <span className="px-3 py-1 rounded-full bg-white/15">
                       Repte {round.sequence + 1}
@@ -260,7 +260,16 @@ export default function RoundController({
                   )}
                 </div>
 
-                <div className="space-y-4 flex-1">
+                <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
+                  {challenge?.rules && (
+                    <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+                      <h3 className="text-sm uppercase tracking-[0.3em] text-emerald-400 font-bold mb-2">Regles</h3>
+                      <FormattedText text={challenge.rules} className="text-white/80" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4 shrink-0 mt-auto">
                   <dl className="grid grid-cols-2 gap-4 text-lg">
                     <div className="bg-white/5 rounded-xl p-4">
                       <dt className="text-xs uppercase tracking-[0.5em] text-white/60">
@@ -285,15 +294,15 @@ export default function RoundController({
                       )}
                     </div>
                   </dl>
-                </div>
 
-                <button
-                  onClick={() => onOpenVoting(lineupSummary)}
-                  disabled={!lineupReady}
-                  className="tactile-button w-full bg-emerald-400 text-black text-xl py-5 disabled:opacity-50 mt-auto"
-                >
-                  Obrir apostes
-                </button>
+                  <button
+                    onClick={() => onOpenVoting(lineupSummary)}
+                    disabled={!lineupReady}
+                    className="tactile-button w-full bg-emerald-400 text-black text-xl py-5 disabled:opacity-50"
+                  >
+                    Obrir apostes
+                  </button>
+                </div>
               </section>
 
               <section className="flex-1 min-h-0 overflow-y-auto rounded-3xl">
