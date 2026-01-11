@@ -1,6 +1,6 @@
 import { GameTeam, Participant } from '@/types/types'
 import type { DragEvent } from 'react'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export default function TeamBuilder({
   teams,
@@ -28,6 +28,97 @@ export default function TeamBuilder({
   const UNASSIGNED_ZONE = 'unassigned'
   const [dragParticipantId, setDragParticipantId] = useState<string | null>(null)
   const [activeDropZone, setActiveDropZone] = useState<string | null>(null)
+
+  // Random assignment logic
+  const [isRandomizing, setIsRandomizing] = useState(false)
+  const [queue, setQueue] = useState<{ p: Participant; t: GameTeam }[]>([])
+  const [currentInfo, setCurrentInfo] = useState<{ name: string } | null>(null)
+  const [rotation, setRotation] = useState(0)
+  const rotationRef = useRef(0)
+
+  useEffect(() => {
+    if (!isRandomizing) {
+      rotationRef.current = 0
+      setRotation(0)
+    }
+  }, [isRandomizing])
+
+  useEffect(() => {
+    if (!isRandomizing || queue.length === 0) {
+      if (isRandomizing && queue.length === 0) {
+        const t = setTimeout(() => setIsRandomizing(false), 2000)
+        return () => clearTimeout(t)
+      }
+      return
+    }
+
+    const item = queue[0]
+    setCurrentInfo({ name: item.p.nickname })
+
+    const teamIndex = activeTeams.findIndex((t) => t.id === item.t.id)
+    if (teamIndex === -1) return
+
+    const segmentAngle = 360 / activeTeams.length
+    // Center of target segment needs to be at 0deg (top)
+    const targetAngle = -(teamIndex * segmentAngle + segmentAngle / 2)
+
+    const spins = 4 + Math.floor(Math.random() * 2)
+    const spinDegrees = spins * 360
+    const current = rotationRef.current
+    let next = current + spinDegrees
+
+    const normalize = (deg: number) => ((deg % 360) + 360) % 360
+    const targetNormalized = normalize(targetAngle)
+    const currentNormalized = normalize(next)
+    const diff = targetNormalized - currentNormalized
+    const adjustment = diff >= 0 ? diff : 360 + diff
+    
+    next += adjustment
+    rotationRef.current = next
+
+    const spinTimer = setTimeout(() => {
+      setRotation(next)
+    }, 50)
+
+    const assignTimer = setTimeout(() => {
+      onAssign(item.p.id, item.t.id)
+      setQueue((prev) => prev.slice(1))
+    }, 3500)
+
+    return () => {
+      clearTimeout(spinTimer)
+      clearTimeout(assignTimer)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queue.length, isRandomizing]) // Only trigger on step change
+
+  const handleRandomize = () => {
+    const unassignedMembers = participants.filter((p) => !p.game_team_id)
+    if (unassignedMembers.length === 0) return
+
+    const counts: Record<string, number> = {}
+    activeTeams.forEach((t) => (counts[t.id] = participants.filter((p) => p.game_team_id === t.id).length))
+
+    const shuffled = [...unassignedMembers].sort(() => Math.random() - 0.5)
+    const newQueue: { p: Participant; t: GameTeam }[] = []
+
+    shuffled.forEach((p) => {
+      let min = Infinity
+      let cand: GameTeam[] = []
+      activeTeams.forEach((t) => {
+        if (counts[t.id] < min) {
+          min = counts[t.id]
+          cand = [t]
+        } else if (counts[t.id] === min) cand.push(t)
+      })
+      const target = cand[Math.floor(Math.random() * cand.length)]
+      counts[target.id]++
+      newQueue.push({ p, t: target })
+    })
+
+    setQueue(newQueue)
+    setIsRandomizing(true)
+  }
 
   const handleDragStart = (participantId: string) => (event: DragEvent<HTMLDivElement>) => {
     setDragParticipantId(participantId)
@@ -93,7 +184,16 @@ export default function TeamBuilder({
           onDragLeave={handleDragLeaveZone(UNASSIGNED_ZONE)}
           onDrop={handleDropOnZone(null)}
         >
-          <h2 className="text-xl font-semibold mb-1">Jugadors en espera ({unassigned.length})</h2>
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-xl font-semibold">Jugadors en espera ({unassigned.length})</h2>
+            <button
+              onClick={handleRandomize}
+              disabled={unassigned.length === 0}
+              className="text-xs bg-white/10 hover:bg-white/20 disabled:opacity-50 px-3 py-1.5 rounded-lg transition border border-white/10"
+            >
+              Assignació aleatòria ✨
+            </button>
+          </div>
           <p className="text-sm text-white/60 mb-3">Arrossega&apos;ls fins a un equip per a assignar-los.</p>
           <div className="flex flex-wrap gap-2 min-h-[64px]">
             {unassigned.map((participant) => (
@@ -201,6 +301,55 @@ export default function TeamBuilder({
           )}
         </footer>
       </div>
+
+      {isRandomizing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md">
+          <div className="flex flex-col items-center gap-12 text-center p-6 w-full max-w-4xl">
+            <div className="space-y-4 animate-in fade-in zoom-in duration-500">
+              <p className="text-white/60 text-lg uppercase tracking-widest">Assignant</p>
+              <h2 className="text-6xl md:text-8xl font-bold bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent transform transition-all">
+                {currentInfo?.name}
+              </h2>
+            </div>
+
+            <div className="relative scale-125 md:scale-150 py-10">
+              {/* Pointer */}
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 z-10 text-emerald-400 text-5xl drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]">
+                ▼
+              </div>
+
+              {/* Wheel */}
+              <div
+                className="w-64 h-64 md:w-80 md:h-80 rounded-full border-4 border-white/10 shadow-2xl overflow-hidden relative"
+                style={{
+                  transform: `rotate(${rotation}deg)`,
+                  transition: 'transform 3s cubic-bezier(0.25, 1, 0.5, 1)',
+                }}
+              >
+                <div
+                  className="absolute inset-0 w-full h-full"
+                  style={{
+                    background: `conic-gradient(${activeTeams
+                      .map((t, i) => {
+                        const items = activeTeams.length
+                        const start = (i / items) * 100
+                        const end = ((i + 1) / items) * 100
+                        return `${t.color_hex} ${start}% ${end}%`
+                      })
+                      .join(', ')})`,
+                  }}
+                />
+              </div>
+            </div>
+
+            {queue.length > 1 && (
+              <p className="text-white/40 animate-pulse text-lg mt-8">
+                {queue.length - 1} jugadors restants...
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   )
 }

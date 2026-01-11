@@ -689,7 +689,7 @@ function ResolutionDashboard({
                 <span className="text-4xl font-black text-emerald-300">+{score.total}</span>
                 {isLoser && (
                   <div className="mt-1">
-                    <span className="text-lg uppercase tracking-widest bg-red-800 text-rose-200 px-2 py-1 rounded">
+                    <span className="text-base uppercase tracking-widest bg-red-800 text-rose-200 px-2 py-1 rounded">
                       Perdedor
                     </span>
                   </div>
