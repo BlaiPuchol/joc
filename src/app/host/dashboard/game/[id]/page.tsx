@@ -393,8 +393,8 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
-      <div className="max-w-6xl mx-auto px-4 py-6 md:px-6 md:py-10 space-y-6 md:space-y-8">
-        <header className="flex flex-col gap-4">
+      <div className="max-w-6xl mx-auto px-0 py-6 md:px-6 md:py-10 space-y-6 md:space-y-8">
+        <header className="flex flex-col gap-4 px-4 sm:px-0">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-sm text-white/60">
             <button onClick={() => router.back()} className="text-emerald-300 hover:text-emerald-200">
               ← Tornar al tauler
@@ -428,8 +428,8 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-          <section className="bg-black/40 border border-white/10 rounded-3xl p-2 sm:p-6 space-y-6 min-w-0">
-            <div className="flex flex-col sm:flex-row sm:items-center p-3 justify-between gap-4">
+          <section className="bg-black/40 border border-white/10 rounded-3xl p-4 sm:p-6 space-y-6 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-semibold">Reptes</h2>
                 <p className="text-white/60 text-sm">Afig títols, descripcions i grandària d&apos;equip per a cada repte.</p>
@@ -443,7 +443,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
             </div>
             <div className="space-y-4">
               {challenges.map((challenge, index) => (
-                <article key={challenge.id} className="bg-white/5 border border-white/10 rounded-3xl p-3 sm:p-5 space-y-4">
+                <article key={challenge.id} className="bg-white/5 border border-white/10 rounded-3xl p-4 sm:p-6 space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <span className="text-xl sm:text-2xl font-bold text-white/30 select-none">#{index + 1}</span>
@@ -547,7 +547,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
             </div>
           </section>
 
-          <aside className="space-y-6 min-w-0">
+          <aside className="space-y-6 min-w-0 px-4 sm:px-0">
             <section className="bg-white/5 border border-white/10 rounded-3xl p-4 sm:p-5 space-y-4">
               <h2 className="text-xl font-semibold">Configuració del joc</h2>
               <div className="space-y-3">
