@@ -404,8 +404,8 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
           </div>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="uppercase text-xs tracking-[0.4em] text-white/40">Reptes del joc</p>
-              <h1 className="text-3xl sm:text-4xl font-semibold mt-2">{game.title}</h1>
+              <p className="uppercase text-xs tracking-widest text-white/40">Reptes del joc</p>
+              <h1 className="text-2xl sm:text-4xl font-semibold mt-2 break-words">{game.title}</h1>
               <p className="text-white/70">Creat el {new Date(game.created_at).toLocaleString()}</p>
             </div>
             <div className="flex flex-col items-start sm:items-end gap-3 w-full sm:w-auto">
@@ -416,7 +416,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                 Duplicar joc
               </button>
               <span
-                className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold w-full sm:w-auto justify-center ${
+                className={`inline-flex items-center px-3 py-2 rounded-full text-xs sm:text-sm font-semibold w-full sm:w-auto justify-center text-center leading-tight ${
                   readyForShow ? 'bg-emerald-400/20 text-emerald-300 border border-emerald-400/30' : 'bg-white/10 text-white/70 border border-white/15'
                 }`}
               >
@@ -428,7 +428,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-          <section className="bg-black/40 border border-white/10 rounded-3xl p-3 sm:p-6 space-y-6">
+          <section className="bg-black/40 border border-white/10 rounded-3xl p-3 sm:p-6 space-y-6 min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-semibold">Reptes</h2>
@@ -547,11 +547,11 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
             </div>
           </section>
 
-          <aside className="space-y-6">
+          <aside className="space-y-6 min-w-0">
             <section className="bg-white/5 border border-white/10 rounded-3xl p-4 sm:p-5 space-y-4">
               <h2 className="text-xl font-semibold">Configuració del joc</h2>
               <div className="space-y-3">
-                <label className="text-sm uppercase tracking-[0.3em] text-white/50">Títol</label>
+                <label className="text-sm uppercase tracking-widest text-white/50">Títol</label>
                 <input
                   className="w-full rounded-2xl bg-black/30 border border-white/10 px-4 py-2"
                   value={form.title}
