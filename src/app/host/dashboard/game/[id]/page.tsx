@@ -539,6 +539,16 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                   </div>
                 </article>
               ))}
+
+              {challenges.length > 0 && (
+                <button
+                  onClick={addChallenge}
+                  className="w-full border-2 border-dashed border-white/10 rounded-3xl p-4 text-emerald-300/70 hover:text-emerald-300 hover:border-emerald-400/30 hover:bg-emerald-400/5 transition font-semibold"
+                >
+                  + Afegir repte
+                </button>
+              )}
+
               {challenges.length === 0 && (
                 <div className="border border-dashed border-white/20 rounded-3xl p-8 text-center text-white/60">
                   Encara no hi ha reptes. Afig-ne un per a planificar l&apos;espectacle.
