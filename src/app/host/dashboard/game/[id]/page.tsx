@@ -428,7 +428,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-          <section className="bg-black/40 border border-white/10 rounded-3xl p-4 sm:p-6 space-y-6">
+          <section className="bg-black/40 border border-white/10 rounded-3xl p-3 sm:p-6 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-semibold">Reptes</h2>
@@ -443,9 +443,9 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
             </div>
             <div className="space-y-4">
               {challenges.map((challenge, index) => (
-                <article key={challenge.id} className="bg-white/5 border border-white/10 rounded-3xl p-4 sm:p-5 space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex items-center gap-3 flex-1">
+                <article key={challenge.id} className="bg-white/5 border border-white/10 rounded-3xl p-3 sm:p-5 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
                       <span className="text-xl sm:text-2xl font-bold text-white/30 select-none">#{index + 1}</span>
                       <input
                         className="text-xl sm:text-2xl font-semibold bg-transparent border-b border-white/20 focus:outline-none w-full"
