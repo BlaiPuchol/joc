@@ -646,7 +646,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                   <div key={team.id} className="bg-black/30 border border-white/10 rounded-2xl p-4 space-y-3">
                     <div className="flex gap-2 items-center">
                       <input
-                        className="flex-1 bg-transparent border-b border-white/20 focus:outline-none text-lg font-semibold"
+                        className="flex-1 min-w-0 bg-transparent border-b border-white/20 focus:outline-none text-lg font-semibold"
                         value={team.name}
                         onChange={(event) =>
                           setTeams((prev) =>
@@ -658,7 +658,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                       <input
                         type="color"
                         value={team.color_hex}
-                        className="w-10 h-10 rounded-xl border border-white/10"
+                        className="w-10 h-10 rounded-xl border border-white/10 shrink-0"
                         onChange={(event) => updateTeam(team.id, { color_hex: event.target.value })}
                       />
                     </div>
