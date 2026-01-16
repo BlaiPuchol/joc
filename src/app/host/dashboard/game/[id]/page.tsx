@@ -393,22 +393,22 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
-      <div className="max-w-6xl mx-auto px-6 py-10 space-y-8">
+      <div className="max-w-6xl mx-auto px-4 py-6 md:px-6 md:py-10 space-y-6 md:space-y-8">
         <header className="flex flex-col gap-4">
-          <div className="flex items-center gap-3 text-sm text-white/60">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-sm text-white/60">
             <button onClick={() => router.back()} className="text-emerald-300 hover:text-emerald-200">
               ← Tornar al tauler
             </button>
-            <span>•</span>
+            <span className="hidden sm:inline">•</span>
             <span>ID del joc: {game.id.slice(0, 8)}</span>
           </div>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="uppercase text-xs tracking-[0.4em] text-white/40">Reptes del joc</p>
-              <h1 className="text-4xl font-semibold mt-2">{game.title}</h1>
+              <h1 className="text-3xl sm:text-4xl font-semibold mt-2">{game.title}</h1>
               <p className="text-white/70">Creat el {new Date(game.created_at).toLocaleString()}</p>
             </div>
-            <div className="flex flex-col items-end gap-3">
+            <div className="flex flex-col items-start sm:items-end gap-3 w-full sm:w-auto">
               <button 
                 onClick={duplicateGame}
                 className="text-sm text-white/60 hover:text-white underline decoration-white/30 underline-offset-4"
@@ -416,7 +416,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                 Duplicar joc
               </button>
               <span
-                className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
+                className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold w-full sm:w-auto justify-center ${
                   readyForShow ? 'bg-emerald-400/20 text-emerald-300 border border-emerald-400/30' : 'bg-white/10 text-white/70 border border-white/15'
                 }`}
               >
@@ -428,27 +428,27 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-          <section className="bg-black/40 border border-white/10 rounded-3xl p-6 space-y-6">
-            <div className="flex items-center justify-between">
+          <section className="bg-black/40 border border-white/10 rounded-3xl p-4 sm:p-6 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-semibold">Reptes</h2>
                 <p className="text-white/60 text-sm">Afig títols, descripcions i grandària d&apos;equip per a cada repte.</p>
               </div>
               <button
                 onClick={addChallenge}
-                className="bg-emerald-400 text-black font-semibold rounded-2xl px-5 py-2 hover:bg-emerald-300"
+                className="bg-emerald-400 text-black font-semibold rounded-2xl px-5 py-2 hover:bg-emerald-300 w-full sm:w-auto"
               >
                 Afegir repte
               </button>
             </div>
             <div className="space-y-4">
               {challenges.map((challenge, index) => (
-                <article key={challenge.id} className="bg-white/5 border border-white/10 rounded-3xl p-5 space-y-4">
+                <article key={challenge.id} className="bg-white/5 border border-white/10 rounded-3xl p-4 sm:p-5 space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex items-center gap-3 flex-1">
-                      <span className="text-2xl font-bold text-white/30 select-none">#{index + 1}</span>
+                      <span className="text-xl sm:text-2xl font-bold text-white/30 select-none">#{index + 1}</span>
                       <input
-                        className="text-2xl font-semibold bg-transparent border-b border-white/20 focus:outline-none w-full"
+                        className="text-xl sm:text-2xl font-semibold bg-transparent border-b border-white/20 focus:outline-none w-full"
                         value={challenge.title}
                         onChange={(event) =>
                           setChallenges((prev) =>
@@ -460,7 +460,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                         onBlur={(event) => updateChallenge(challenge.id, { title: event.target.value })}
                       />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 self-end sm:self-auto">
                       <button
                         disabled={index === 0}
                         onClick={() => shiftChallenge(challenge.id, 'up')}
@@ -548,7 +548,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
           </section>
 
           <aside className="space-y-6">
-            <section className="bg-white/5 border border-white/10 rounded-3xl p-5 space-y-4">
+            <section className="bg-white/5 border border-white/10 rounded-3xl p-4 sm:p-5 space-y-4">
               <h2 className="text-xl font-semibold">Configuració del joc</h2>
               <div className="space-y-3">
                 <label className="text-sm uppercase tracking-[0.3em] text-white/50">Títol</label>
@@ -618,15 +618,15 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
               </button>
             </section>
 
-            <section className="bg-white/5 border border-white/10 rounded-3xl p-5 space-y-4">
-              <div className="flex items-center justify-between">
+            <section className="bg-white/5 border border-white/10 rounded-3xl p-4 sm:p-5 space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
                   <h2 className="text-xl font-semibold">Equips</h2>
                   <p className="text-white/60 text-sm">Personalitza noms, colors i estat actiu de cada equip.</p>
                 </div>
                 <button
                   onClick={addTeam}
-                  className="bg-emerald-400/80 text-black font-semibold rounded-xl px-3 py-1"
+                  className="bg-emerald-400/80 text-black font-semibold rounded-xl px-3 py-1 w-full sm:w-auto"
                 >
                   Afegir equip
                 </button>
@@ -691,7 +691,7 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
               </div>
             </section>
 
-            <section className="bg-black/40 border border-white/10 rounded-3xl p-5 space-y-3">
+            <section className="bg-black/40 border border-white/10 rounded-3xl p-4 sm:p-5 space-y-3">
               <h2 className="text-xl font-semibold text-red-200">Restablir lobby</h2>
               <p className="text-white/60 text-sm">
                 Elimina tots els jugadors registrats i les rondes guardades per a tornar a començar des de zero. Esta acció

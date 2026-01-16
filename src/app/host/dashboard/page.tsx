@@ -192,17 +192,17 @@ export default function HostDashboard() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
-      <div className="max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div className="max-w-6xl mx-auto px-4 py-8 md:px-6 md:py-12 space-y-6 md:space-y-10">
         <header className="space-y-4">
           <p className="text-sm uppercase tracking-[0.4em] text-emerald-300/70">Tauler de control d&apos;amfitrió</p>
-          <h1 className="text-4xl sm:text-5xl font-semibold">Crea, edita i projecta els teus jocs</h1>
+          <h1 className="text-3xl sm:text-5xl font-semibold">Crea, edita i projecta els teus jocs</h1>
           <p className="text-white/70 max-w-3xl">
             Gestiona cada conjunt de reptes com si fora una llista de Kahoot. Prepara diversos jocs,
             ajusta l&apos;estructura dels equips i inicia l&apos;espectacle.
           </p>
         </header>
 
-        <section className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur">
+        <section className="bg-white/5 border border-white/10 rounded-3xl p-4 sm:p-6 backdrop-blur">
           <div className="flex flex-col lg:flex-row gap-4 lg:items-end">
             <div className="flex-1">
               <label className="text-sm uppercase tracking-[0.3em] text-white/40">Títol del joc</label>
@@ -273,7 +273,7 @@ function GameShelf({
         {games.map((game) => (
           <article
             key={game.id}
-            className="bg-black/40 border border-white/10 rounded-3xl p-6 flex flex-col justify-between hover:border-emerald-400/60 transition"
+            className="bg-black/40 border border-white/10 rounded-3xl p-5 sm:p-6 flex flex-col justify-between hover:border-emerald-400/60 transition"
           >
             <div className="space-y-3">
               <p className="text-sm uppercase tracking-[0.3em] text-white/40">{STATUS_LABELS[game.status] ?? game.status}</p>
