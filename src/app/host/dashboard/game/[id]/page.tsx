@@ -428,8 +428,8 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-          <section className="bg-black/40 border border-white/10 rounded-3xl p-3 sm:p-6 space-y-6 min-w-0">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <section className="bg-black/40 border border-white/10 rounded-3xl p-2 sm:p-6 space-y-6 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center p-3 justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-semibold">Reptes</h2>
                 <p className="text-white/60 text-sm">Afig títols, descripcions i grandària d&apos;equip per a cada repte.</p>
