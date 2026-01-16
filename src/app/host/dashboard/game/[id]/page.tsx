@@ -515,10 +515,10 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                     )}
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3 text-sm">
-                    <label className="uppercase tracking-[0.3em] text-white/50">Jugadors / equip</label>
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <label className="uppercase tracking-widest text-xs text-white/50">Jugadors / equip</label>
                     <select
-                      className="bg-black/30 border border-white/10 rounded-xl px-3 py-2"
+                      className="bg-black/30 border border-white/10 rounded-xl px-3 py-2 flex-grow sm:flex-grow-0 w-full sm:w-auto"
                       value={challenge.participants_per_team ? String(challenge.participants_per_team) : 'all'}
                       onChange={(event) =>
                         updateChallenge(challenge.id, {
@@ -526,15 +526,15 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
                         })
                       }
                     >
-                      <option value="all">Tota la plantilla</option>
+                      <option value="all">Tots</option>
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
                         <option key={value} value={value}>
                           {value}
                         </option>
                       ))}
                     </select>
-                    <button className="text-red-400 ml-auto" onClick={() => deleteChallenge(challenge.id)}>
-                      Llevar
+                    <button className="text-red-400 mt-2 sm:mt-0 w-full sm:w-auto sm:ml-auto" onClick={() => deleteChallenge(challenge.id)}>
+                      Llevar repte
                     </button>
                   </div>
                 </article>
