@@ -67,6 +67,7 @@ export default function RoundController({
 }: Props) {
   const [showRanking, setShowRanking] = useState(false)
   const [showEndGameConfirmation, setShowEndGameConfirmation] = useState(false)
+  const [showRules, setShowRules] = useState(false)
   const [viewMode, setViewMode] = useState<'intro' | 'selection'>('intro')
 
   const phaseLabels: Record<Phase | 'lobby', string> = {
@@ -225,12 +226,12 @@ export default function RoundController({
                     {challenge.description}
                   </p>
                 )}
-                {challenge?.rules && (
+                {/* {challenge?.rules && (
                   <div className="bg-white/5 rounded-2xl p-6 text-left border border-white/10 w-full">
                     <p className="text-sm uppercase tracking-[0.3em] text-emerald-400 mb-4 font-bold">Regles</p>
                     <FormattedText text={challenge.rules} className="text-xl md:text-2xl text-white/80" />
                   </div>
-                )}
+                )} */}
               </div>
               <button
                 onClick={() => setViewMode('selection')}
@@ -262,10 +263,17 @@ export default function RoundController({
 
                 <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
                   {challenge?.rules && (
-                    <div className="bg-white/5 rounded-xl p-5 border border-white/10">
-                      <h3 className="text-sm uppercase tracking-[0.3em] text-emerald-400 font-bold mb-2">Regles</h3>
-                      <FormattedText text={challenge.rules} className="text-white/80" />
-                    </div>
+                    <button
+                      onClick={() => setShowRules(true)}
+                      className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-6 text-left transition-colors flex items-center justify-between group"
+                    >
+                      <span className="text-sm uppercase tracking-[0.3em] text-emerald-400 font-bold">
+                        Veure regles
+                      </span>
+                      <span className="text-white/60 text-2xl group-hover:scale-125 transition-transform">
+                        📜
+                      </span>
+                    </button>
                   )}
                 </div>
 
@@ -464,6 +472,42 @@ export default function RoundController({
             loading={rankingLoading}
             onClose={() => setShowRanking(false)}
           />
+        )}
+
+        {showRules && challenge?.rules && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-slate-900 border border-white/10 rounded-2xl p-8 max-w-4xl w-full max-h-[85vh] flex flex-col space-y-6 shadow-2xl relative">
+              <button
+                onClick={() => setShowRules(false)}
+                className="absolute top-4 right-4 text-white/50 hover:text-white p-2"
+              >
+                ✕
+              </button>
+
+              <div className="space-y-2 shrink-0 border-b border-white/10 pb-4">
+                <p className="text-sm uppercase tracking-[0.3em] text-emerald-400 font-bold">
+                  Regles del repte
+                </p>
+                <h3 className="text-3xl font-bold">{challenge.title}</h3>
+              </div>
+
+              <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
+                <FormattedText
+                  text={challenge.rules}
+                  className="text-xl md:text-2xl text-white/90 leading-relaxed space-y-4"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-white/10 shrink-0">
+                <button
+                  onClick={() => setShowRules(false)}
+                  className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-4 rounded-xl transition-colors uppercase tracking-[0.2em]"
+                >
+                  Tancar
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {showEndGameConfirmation && (
@@ -814,7 +858,7 @@ function OutcomeConfigurator({
           )}
         </div>
 
-        <div className="space-y-4 flex-1 min-h-0 overflow-y-auto">
+        {/* <div className="space-y-4 flex-1 min-h-0 overflow-y-auto">
           {challenge?.rules ? (
             <div className="bg-white/5 rounded-xl p-6 space-y-4 border border-white/10">
               <h3 className="text-sm uppercase tracking-[0.3em] text-emerald-400 font-bold">Regles</h3>
@@ -825,7 +869,7 @@ function OutcomeConfigurator({
               <p className="text-white/60 italic">No hi ha regles definides per a aquest repte.</p>
             </div>
           )}
-        </div>
+        </div> */}
 
         <div className="space-y-3 mt-auto">
           <button
