@@ -177,7 +177,8 @@ export default function GameEditor({ params: { id } }: { params: { id: string } 
               title: c.title,
               description: c.description,
               position: c.position,
-              participants_per_team: c.participants_per_team
+              participants_per_team: c.participants_per_team,
+              rules: c.rules
             }))
           )
         if (challengesError) throw challengesError
