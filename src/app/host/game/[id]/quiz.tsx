@@ -388,6 +388,7 @@ export default function RoundController({
             onFinalizeResults={onFinalizeResults}
             challenge={challenge}
             round={round}
+            onShowRules={() => setShowRules(true)}
           />
         ) : (
           <div className="flex flex-col lg:flex-row gap-6 h-full w-full">
@@ -809,6 +810,7 @@ function OutcomeConfigurator({
   onFinalizeResults,
   challenge,
   round,
+  onShowRules,
 }: {
   teams: GameTeam[]
   outcomes: RoundOutcome[]
@@ -819,6 +821,7 @@ function OutcomeConfigurator({
   onFinalizeResults: () => void
   challenge: GameChallenge | null
   round: GameRound
+  onShowRules: () => void
 }) {
   const losingTeamIds = useMemo(() => {
     return new Set(
@@ -858,18 +861,25 @@ function OutcomeConfigurator({
           )}
         </div>
 
-        {/* <div className="space-y-4 flex-1 min-h-0 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
           {challenge?.rules ? (
-            <div className="bg-white/5 rounded-xl p-6 space-y-4 border border-white/10">
-              <h3 className="text-sm uppercase tracking-[0.3em] text-emerald-400 font-bold">Regles</h3>
-              <FormattedText text={challenge.rules} className="text-white/90 text-lg leading-relaxed" />
-            </div>
+            <button
+              onClick={onShowRules}
+              className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-6 text-left transition-colors flex items-center justify-between group"
+            >
+              <span className="text-sm uppercase tracking-[0.3em] text-emerald-400 font-bold">
+                Veure regles
+              </span>
+              <span className="text-white/60 text-2xl group-hover:scale-125 transition-transform">
+                📜
+              </span>
+            </button>
           ) : (
-             <div className="bg-white/5 rounded-xl p-6 space-y-4 opacity-50">
+            <div className="bg-white/5 rounded-xl p-6 space-y-4 opacity-50">
               <p className="text-white/60 italic">No hi ha regles definides per a aquest repte.</p>
             </div>
           )}
-        </div> */}
+        </div>
 
         <div className="space-y-3 mt-auto">
           <button
